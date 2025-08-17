@@ -40,3 +40,11 @@ self.addEventListener("fetch", (e) => {
   );
 });
 
+
+// cache:  param($m) 'h3xt0-pwa-v' + ([int]$m.Groups[1].Value + 1) 
+
+
+// cache:  param($m) 'h3xt0-pwa-v' + ([int]$m.Groups[1].Value + 1) 
+
+
+// cache: h3xt0-pwa-v1
