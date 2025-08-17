@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "h3xt0-pwa-v1";
+﻿const CACHE_NAME = " param($m) 'h3xt0-pwa-v' + ([int]$m.Groups[1].Value + 1) ";
 const ASSETS = [
   "./budget.html",
   "./manifest.webmanifest",
@@ -39,3 +39,4 @@ self.addEventListener("fetch", (e) => {
     })
   );
 });
+
