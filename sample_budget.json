@@ -1,0 +1,14 @@
+﻿{
+  "ownerName": "Alex",
+  "income": 5200,
+  "fixed": 2600,
+  "goalAmt": 8000,
+  "goalNow": 1200,
+  "goalDate": "2026-06-01",
+  "strategy": "avalanche",
+  "debts": [
+    {"name": "Visa", "balance": 3500, "apr": 22.9, "term": 0, "min": 70},
+    {"name": "Auto Loan", "balance": 12500, "apr": 6.5, "term": 48, "min": 0},
+    {"name": "Student Loan", "balance": 18000, "apr": 4.9, "term": 120, "min": 0}
+  ]
+}
