@@ -407,6 +407,18 @@
 </script>
 <!-- H3xt0 HELP & TOUR -->
 <style>
+  <style>
+/* FAB tune */
+.help-fab{
+  position:fixed; right:16px;
+  bottom:calc(env(safe-area-inset-bottom) + 18px);
+  z-index:9999; border-radius:999px;
+  border:1px solid #2a3a4a; background:#101824; color:#dfe6ee;
+  padding:9px 10px; font-size:14px; box-shadow:0 8px 20px rgba(0,0,0,.35)
+}
+.help-fab--mini{ padding:8px 9px; font-size:13px }
+</style>
+
 .help-fab{position:fixed;right:16px;bottom:16px;z-index:9999;border-radius:999px;border:1px solid #2a3a4a;background:#101824;color:#dfe6ee;padding:12px 14px;font-size:16px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
 .help-fab:active{transform:translateY(1px)}
 .help-modal{position:fixed;inset:0;z-index:9998;display:none}
@@ -1016,6 +1028,7 @@ window.addEventListener('load', ()=>{
 </script>
 </body>
 </html>
+
 
 
 
