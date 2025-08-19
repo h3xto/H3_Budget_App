@@ -405,6 +405,188 @@
   })();
 })();
 </script>
+<!-- H3xt0 HELP & TOUR -->
+<style>
+.help-fab{position:fixed;right:16px;bottom:16px;z-index:9999;border-radius:999px;border:1px solid #2a3a4a;background:#101824;color:#dfe6ee;padding:12px 14px;font-size:16px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.help-fab:active{transform:translateY(1px)}
+.help-modal{position:fixed;inset:0;z-index:9998;display:none}
+.help-back{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.help-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,92vw);max-height:85vh;overflow:auto;background:#0e141a;border:1px solid #1b2733;border-radius:12px;padding:16px}
+.help-card h2{margin:4px 0 8px 0}
+.help-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+.help-tabs button{border:1px solid #2a3a4a;background:#0b1117;color:#dfe6ee;padding:8px 10px;border-radius:8px}
+.help-tabs button.active{outline:2px solid #4a7dff}
+.help-sec{display:none}
+.help-sec.active{display:block}
+.help-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:10px}
+.help-kbd{font-family:ui-monospace,monospace;background:#0b1117;border:1px solid #2a3a4a;border-radius:6px;padding:2px 6px}
+.coach-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9997;display:none}
+.coach-target{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,.55),0 0 0 2px #4a7dff;transition:.2s}
+.coach-tip{position:fixed;z-index:9998;max-width:min(420px,90vw);background:#0e141a;border:1px solid #1b2733;border-radius:10px;padding:10px}
+.coach-tip h4{margin:0 0 6px 0}
+.coach-ctr{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.tipbar{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;background:#0b1117;border:1px solid #2a3a4a;border-radius:6px;padding:6px 10px;color:#cfe3ff;display:none;z-index:9996}
+@media (max-width:520px){.help-card{padding:12px}}
+</style>
+
+<button id="helpFab" class="help-fab">❓ Help</button>
+<div id="helpModal" class="help-modal" aria-hidden="true">
+  <div class="help-back"></div>
+  <div class="help-card">
+    <h2>H3xt0 Help</h2>
+    <div class="help-tabs" id="helpTabs">
+      <button data-tab="qstart" class="active">Quick Start</button>
+      <button data-tab="income">Income</button>
+      <button data-tab="ess">Essentials</button>
+      <button data-tab="debts">Debts & Strategy</button>
+      <button data-tab="goals">Goals & What-If</button>
+      <button data-tab="remind">Payday Reminders</button>
+      <button data-tab="privacy">Privacy & Tip Jar</button>
+    </div>
+    <div class="help-sec active" id="sec-qstart">
+      <ol style="line-height:1.6">
+        <li>Enter **Income** and **Essentials**. You can use the new <em>Income by Pay</em> and <em>Essentials (Itemized)</em> cards below to normalize and auto-fill totals.</li>
+        <li>Add **Debts**: name, balance, APR %, term (months), min payment. H3xt0 recommends where extra dollars go.</li>
+        <li>Set a **Goal date** and move the **What-If** slider to see cash-flow and payoff curves update.</li>
+        <li>Optional: generate **Payday reminders** (.ics) to nudge avalanche payments on each payday.</li>
+      </ol>
+      <div class="help-actions">
+        <button id="startTour" class="help-fab" style="position:static;padding:8px 12px">▶️ Start 90-sec Tour</button>
+        <span class="help-kbd">Tip: long-press any input for a short tip.</span>
+      </div>
+    </div>
+    <div class="help-sec" id="sec-income">
+      <p>Use <strong>Income by Pay Schedule</strong> to enter per-paycheck net and choose frequency:
+        <span class="help-kbd">Monthly=12</span>,
+        <span class="help-kbd">Bi-weekly=26</span>,
+        <span class="help-kbd">Twice-monthly=24</span>.
+        The monthly total updates automatically. Click <em>Copy monthly total</em> to auto-fill your main Income field.</p>
+    </div>
+    <div class="help-sec" id="sec-ess">
+      <p>Add rent, utilities, subscriptions, etc. Seasonal changes? Just edit the rows. Click <em>Copy monthly total</em> to auto-fill your main Essentials field.</p>
+    </div>
+    <div class="help-sec" id="sec-debts">
+      <p>Enter debts. H3xt0 uses an <strong>APR-aware avalanche</strong> (pay highest APR first) while honoring your goal date. Extra dollars are suggested in <em>Plan Summary</em>.</p>
+    </div>
+    <div class="help-sec" id="sec-goals">
+      <p>Set your target purchase date. Use the <em>What-If</em> slider to see cash-flow and payoff curves respond instantly.</p>
+    </div>
+    <div class="help-sec" id="sec-remind">
+      <p>Pick your pay frequency and next payday, then download the **.ics** file. Import to your phone’s calendar for reliable reminders that work offline on Android & iPhone.</p>
+    </div>
+    <div class="help-sec" id="sec-privacy">
+      <p><strong>Private by design.</strong> H3xt0 stores everything on your device. No accounts, no cloud, no ads.</p>
+      <p><strong>Tip Jar:</strong> Totally optional. Tipping only supports development and keeping the app free. <em>Tips do not unlock features.</em></p>
+    </div>
+  </div>
+</div>
+
+<div id="coachMask" class="coach-mask"></div>
+<div id="tipbar" class="tipbar"></div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  // Modal open/close
+  const modal=$("#helpModal"), fab=$("#helpFab");
+  const open=()=>{ modal.style.display="block"; modal.setAttribute("aria-hidden","false"); };
+  const close=()=>{ modal.style.display="none"; modal.setAttribute("aria-hidden","true"); stopTour(); };
+  fab.addEventListener("click", open);
+  $(".help-back").addEventListener("click", close);
+  // Tabs
+  $$("#helpTabs button").forEach(b=>{
+    b.addEventListener("click",()=>{
+      $$("#helpTabs button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      const id="sec-"+b.dataset.tab;
+      $$(".help-sec").forEach(s=>s.classList.toggle("active", s.id===id));
+    });
+  });
+
+  // Field tips on focus (heuristic)
+  const tipbar=$("#tipbar");
+  function showTip(msg){ tipbar.textContent=msg; tipbar.style.display="block"; clearTimeout(showTip._t); showTip._t=setTimeout(()=>tipbar.style.display="none", 3000); }
+  document.addEventListener("focusin", (e)=>{
+    const el=e.target; if(!(el instanceof HTMLElement)) return;
+    if(el.matches("input,textarea,select") && !el.closest(".help-card")){
+      const ph=(el.placeholder||"").toLowerCase(), nm=(el.name||"").toLowerCase();
+      if(/apr/.test(ph+nm)) showTip("Enter APR as a percent (e.g., 19.99).");
+      else if(/balance|amount|pay|per month/.test(ph+nm)) showTip("Type the amount; H3xt0 formats $ and commas when you leave the field.");
+      else if(/term|months?/.test(ph+nm)) showTip("Enter remaining months for this debt.");
+      else showTip("Tip: you can long-press labels for Help, or tap ❓ anytime.");
+    }
+  });
+
+  // Guided Tour (spotlight)
+  const mask=$("#coachMask"); let box, tip, stepIdx=0, steps=[];
+  function rect(el){ const r=el.getBoundingClientRect(); return {x:r.left+window.scrollX,y:r.top+window.scrollY,w:r.width,h:r.height}; }
+  function mk(el, html){
+    if(!box){ box=document.createElement("div"); box.className="coach-target"; document.body.appendChild(box); }
+    if(!tip){ tip=document.createElement("div"); tip.className="coach-tip"; document.body.appendChild(tip); }
+    const r=rect(el);
+    box.style.display="block"; mask.style.display="block";
+    box.style.left=(r.x-8)+"px"; box.style.top=(r.y-8)+"px"; box.style.width=(r.w+16)+"px"; box.style.height=(r.h+16)+"px";
+    el.scrollIntoView({behavior:"smooth", block:"center"});
+    tip.innerHTML = html;
+    const below = r.y + r.h + 16;
+    tip.style.left = Math.max(12, Math.min(window.scrollX + window.innerWidth - 12 - 360, r.x))+"px";
+    tip.style.top  = (below)+"px";
+    tip.style.display="block";
+  }
+  function clearMk(){ if(box){ box.style.display="none"; } if(tip){ tip.style.display="none"; } mask.style.display="none"; }
+  function stopTour(){ clearMk(); steps=[]; stepIdx=0; }
+  function next(){ stepIdx++; runStep(); }
+  function prev(){ stepIdx=Math.max(0, stepIdx-1); runStep(); }
+  function findAny(selectors, text){
+    for(const s of (selectors||[])){ const el=document.querySelector(s); if(el) return el; }
+    if(text){
+      const cands=[...document.querySelectorAll("h1,h2,h3,section,div")];
+      const hit=cands.find(n=> (n.textContent||"").toLowerCase().includes(text));
+      if(hit) return hit;
+    }
+    return null;
+  }
+  function runStep(){
+    if(stepIdx>=steps.length){ stopTour(); return; }
+    const st=steps[stepIdx];
+    const el=findAny(st.sel, st.text);
+    if(!el){ stepIdx++; return runStep(); }
+    mk(el, `<h4>${st.title}</h4><div>${st.body}</div>
+      <div class="coach-ctr">
+        <button class="help-fab" style="position:static;padding:6px 10px" id="tourPrev">◀ Prev</button>
+        <button class="help-fab" style="position:static;padding:6px 10px" id="tourNext">${stepIdx===steps.length-1?"Finish":"Next ▶"}</button>
+      </div>`);
+    $("#tourPrev").onclick = prev;
+    $("#tourNext").onclick = next;
+  }
+  $("#startTour").addEventListener("click", ()=>{
+    steps = [
+      {title:"Personalize", body:"Set your display name; the header updates.", text:"personalize"},
+      {title:"Income", body:"Enter monthly income, or use the Income-by-Pay card below to normalize and auto-fill.", text:"income"},
+      {title:"Essentials", body:"Add essentials. Itemize below if easier, then auto-fill.", text:"essentials"},
+      {title:"Debts", body:"Add balances, APR %, term, and min pay. H3xt0 suggests where extra cash goes.", text:"debts"},
+      {title:"Goal & What-If", body:"Pick your purchase date and try the What-If slider.", text:"goal"},
+      {title:"Charts", body:"Watch cash-flow and payoff curves update as you tweak numbers.", text:"chart"},
+      {title:"Payday Reminders", body:"Generate an .ics with events on your paydays—great for avalanche payments.", sel:["#paydayReminders"]},
+      {title:"Tip Jar & Privacy", body:"Tips are optional and do not unlock features. Data stays on your device.", text:"tip"}
+    ];
+    close(); runStep();
+  });
+  mask.addEventListener("click", stopTour);
+
+  // Add small ? icons to our add-on cards (if present)
+  ["#incomeByPay","#essentialsItemized","#paydayReminders"].forEach(sel=>{
+    const card=document.querySelector(sel);
+    if(card){
+      const b=document.createElement("button");
+      b.textContent="❓"; b.className="help-fab"; b.style.position="static"; b.style.padding="4px 8px"; b.style.marginLeft="8px";
+      card.querySelector("h3")?.appendChild(b);
+      b.addEventListener("click", open);
+    }
+  });
+})();
+</script>
 
 <body>
 <header>
@@ -834,6 +1016,7 @@ window.addEventListener('load', ()=>{
 </script>
 </body>
 </html>
+
 
 
 
