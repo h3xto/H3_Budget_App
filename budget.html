@@ -111,6 +111,173 @@
   .ptr.show{ height:46px }
 </style>
 </head>
+  <!-- H3xt0 Add-ons START -->
+<style>
+.addon-card{background:#0e141a;border:1px solid #1b2733;border-radius:10px;padding:12px;margin:10px 0}
+.addon-card h3{margin:0 0 6px 0;font-size:1.05rem}
+.addon-row{display:grid;grid-template-columns:1.2fr .9fr .9fr auto;gap:8px;align-items:center;margin:6px 0}
+.addon-row input,.addon-row select{padding:10px;border-radius:8px;border:1px solid #2a3a4a;background:#0b0f14;color:#dfe6ee;width:100%}
+.addon-mini{font-size:.85rem;opacity:.8}
+.addon-btn{padding:10px 12px;border-radius:8px;border:1px solid #2a3a4a;background:#111823;color:#dfe6ee}
+.addon-btn:disabled{opacity:.5}
+.addon-actions{display:flex;gap:8px;flex-wrap:wrap}
+.addon-total{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:#0b1117;border:1px solid #223041;margin-top:8px}
+.badge{font-size:.78rem;padding:2px 8px;border:1px solid #2a3a4a;border-radius:99px;background:#0b1117}
+.nowrap{white-space:nowrap}
+@media (max-width:520px){
+  .addon-row{grid-template-columns:1fr 1fr;grid-auto-rows:auto}
+  .addon-row .col-span{grid-column:1 / -1}
+}
+</style>
+
+<section class="addon-card" id="incomeByPay">
+  <h3>Income by Pay Schedule <span class="badge">12 / 26 / 24</span></h3>
+  <div id="incRows"></div>
+  <div class="addon-actions">
+    <button class="addon-btn" id="addInc">+ Add income source</button>
+    <button class="addon-btn" id="copyInc">Copy monthly total</button>
+  </div>
+  <div class="addon-total"><span>Monthly Net (normalized)</span><strong id="incMonthly">$0.00</strong></div>
+  <div class="addon-mini">“Monthly” = paycheck × (periods/year ÷ 12). Bi-weekly uses 26, Twice-monthly uses 24.</div>
+</section>
+
+<section class="addon-card" id="essentialsItemized">
+  <h3>Essentials (Itemized)</h3>
+  <div id="essRows"></div>
+  <div class="addon-actions">
+    <button class="addon-btn" id="addEss">+ Add essential</button>
+    <button class="addon-btn" id="copyEss">Copy monthly total</button>
+  </div>
+  <div class="addon-total"><span>Monthly Essentials Total</span><strong id="essMonthly">$0.00</strong></div>
+  <div class="addon-mini">Add rent, utilities, subscriptions, etc. Easy to adjust for seasonal changes.</div>
+</section>
+
+<section class="addon-card" id="paydayReminders">
+  <h3>Payday Reminders (Calendar .ics)</h3>
+  <div class="addon-row">
+    <select id="payFreq">
+      <option value="12">Monthly (12)</option>
+      <option value="26" selected>Bi-weekly (26)</option>
+      <option value="24">Twice-monthly (24)</option>
+    </select>
+    <input type="date" id="nextPay" title="Next payday date">
+    <input type="time" id="payTime" value="09:00" title="Reminder time">
+    <input type="number" id="monthsSpan" min="1" max="36" value="12" title="Duration (months)">
+  </div>
+  <div class="addon-row">
+    <input type="number" step="0.01" id="extraPerCheck" placeholder="Extra per paycheck for avalanche ($)" class="col-span">
+    <input type="number" id="tmDay1" min="1" max="31" placeholder="Twice-monthly: day #1">
+    <input type="number" id="tmDay2" min="1" max="31" placeholder="Twice-monthly: day #2">
+  </div>
+  <div class="addon-actions">
+    <button class="addon-btn" id="makeICS">Download .ics</button>
+    <span class="addon-mini">Events repeat on paydays with note “Pay highest-APR debt”.</span>
+  </div>
+</section>
+
+<script>
+(function(){
+  const nf = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
+  const $ = s=>document.querySelector(s);
+  const money = v => nf.format(Number(v||0)||0);
+  const parseMoney = s => Number(String(s).replace(/[^\d.-]/g,""))||0;
+
+  // Income by Pay
+  const incWrap=$("#incRows"), incMonthly=$("#incMonthly");
+  $("#addInc")?.addEventListener("click",()=>addIncRow());
+  $("#copyInc")?.addEventListener("click",()=>{ navigator.clipboard.writeText(incMonthly.textContent||""); alert("Monthly income copied. Paste into your main Income field.");});
+  function addIncRow(d={name:"",amt:"",freq:"26"}){
+    const row=document.createElement("div"); row.className="addon-row";
+    row.innerHTML=`<input placeholder="Source" value="${(d.name||"").replace(/"/g,'&quot;')}">
+      <select>
+        <option value="12"${d.freq=="12"?" selected":""}>Monthly (12)</option>
+        <option value="26"${d.freq=="26"?" selected":""}>Bi-weekly (26)</option>
+        <option value="24"${d.freq=="24"?" selected":""}>Twice-monthly (24)</option>
+      </select>
+      <input inputmode="decimal" placeholder="$ per paycheck" value="${d.amt||""}">
+      <button class="addon-btn">Del</button>`;
+    const [ , sel, amt, del] = row.children;
+    amt.addEventListener("blur", ()=>{ amt.value = amt.value.replace(/[^\d.]/g,""); if(amt.value) amt.value = parseFloat(amt.value).toFixed(2); recalcInc();});
+    sel.addEventListener("change", recalcInc);
+    del.addEventListener("click", ()=>{ row.remove(); recalcInc();});
+    incWrap.appendChild(row); recalcInc();
+  }
+  function recalcInc(){
+    let sum=0;
+    [...incWrap.children].forEach(r=>{
+      const perYear = Number(r.children[1].value)||26;
+      const paycheck = parseMoney(r.children[2].value);
+      sum += paycheck*(perYear/12);
+    });
+    incMonthly.textContent = money(sum);
+  }
+  if(!incWrap.children.length) addIncRow();
+
+  // Essentials itemized
+  const essWrap=$("#essRows"), essMonthly=$("#essMonthly");
+  $("#addEss")?.addEventListener("click",()=>addEssRow());
+  $("#copyEss")?.addEventListener("click",()=>{ navigator.clipboard.writeText(essMonthly.textContent||""); alert("Essentials total copied. Paste into your main Essentials field.");});
+  function addEssRow(d={name:"",amt:""}){
+    const row=document.createElement("div"); row.className="addon-row";
+    row.innerHTML=`<input placeholder="Name (e.g., Rent)" value="${(d.name||"").replace(/"/g,'&quot;')}">
+      <input inputmode="decimal" placeholder="$ per month" value="${d.amt||""}">
+      <span class="addon-mini nowrap col-span"></span>
+      <button class="addon-btn">Del</button>`;
+    const amt=row.children[1], del=row.children[3];
+    amt.addEventListener("blur", ()=>{ amt.value = amt.value.replace(/[^\d.]/g,""); if(amt.value) amt.value = parseFloat(amt.value).toFixed(2); recalcEss();});
+    del.addEventListener("click", ()=>{ row.remove(); recalcEss();});
+    essWrap.appendChild(row); recalcEss();
+  }
+  function recalcEss(){
+    let sum=0; [...essWrap.children].forEach(r=> sum += parseMoney(r.children[1].value));
+    essMonthly.textContent = money(sum);
+  }
+  if(!essWrap.children.length) addEssRow();
+
+  // Payday reminders (.ics)
+  const elFreq=$("#payFreq"), elNext=$("#nextPay"), elTime=$("#payTime"), elSpan=$("#monthsSpan"),
+        elExtra=$("#extraPerCheck"), d1=$("#tmDay1"), d2=$("#tmDay2");
+  $("#makeICS")?.addEventListener("click", ()=>{
+    const freq=Number(elFreq.value||26);
+    const next=new Date(elNext.value); if(!elNext.value||isNaN(next)) return alert("Set a valid Next payday date.");
+    const [hh,mm]=(elTime.value||"09:00").split(":").map(x=>parseInt(x||0,10));
+    const months=Math.min(Math.max(parseInt(elSpan.value||12,10),1),36);
+    const extra=parseMoney(elExtra.value||0);
+    const day1=parseInt(d1.value||"0",10), day2=parseInt(d2.value||"0",10);
+
+    const events=[], end=new Date(next); end.setMonth(end.getMonth()+months);
+    if(freq===26){ let t=new Date(next); while(t<=end){ events.push(new Date(t)); t=new Date(t.getFullYear(),t.getMonth(),t.getDate()+14);} }
+    else if(freq===24){
+      if(!(day1>=1&&day1<=31)&&!(day2>=1&&day2<=31)) return alert("Enter two days (1–31) for twice-monthly.");
+      const base=new Date(next);
+      for(let m=0;m<months;m++){
+        const y=base.getFullYear(), mon=(base.getMonth()+m)%12, yr=base.getFullYear()+Math.floor((base.getMonth()+m)/12);
+        events.push(clamp(yr,mon,day1)); events.push(clamp(yr,mon,day2));
+      }
+    } else { let t=new Date(next); while(t<=end){ events.push(new Date(t)); t.setMonth(t.getMonth()+1);} }
+
+    const pad=n=>String(n).padStart(2,"0");
+    const toICS=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(hh)}${pad(mm)}00`;
+    const dtstamp=toICS(new Date());
+    let ics="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//H3xt0//Budget//EN\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
+    events.forEach((d,i)=>{ d.setHours(hh,mm,0,0);
+      const uid=`h3xt0-${Date.now()}-${i}@local`;
+      ics+="BEGIN:VEVENT\r\n";
+      ics+=`DTSTAMP:${dtstamp}\r\nUID:${uid}\r\nDTSTART:${toICS(d)}\r\n`;
+      ics+=`SUMMARY:H3xt0 Payday Avalanche Payment\r\n`;
+      ics+=`DESCRIPTION:Pay highest-APR debt today. Extra per paycheck: ${nf.format(extra)}\\n(Generated by H3xt0)\r\n`;
+      ics+="END:VEVENT\r\n";
+    });
+    ics+="END:VCALENDAR\r\n";
+    const url=URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));
+    const a=document.createElement("a"); a.href=url; a.download="h3xt0-payday-reminders.ics"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+
+    function clamp(y,m,day){ const last=new Date(y,m+1,0).getDate(); return new Date(y,m,Math.min(day,last)); }
+  });
+})();
+</script>
+<!-- H3xt0 Add-ons END -->
+
 <body>
 <header>
   <h1 id="title">H3xt0</h1>
@@ -539,6 +706,7 @@ window.addEventListener('load', ()=>{
 </script>
 </body>
 </html>
+
 
 
 
