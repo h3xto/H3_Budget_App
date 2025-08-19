@@ -1029,6 +1029,21 @@ window.addEventListener('load', ()=>{
   window.addEventListener('resize', compute);
 });
 </script>
+  <style>
+.rotate-overlay{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.8); color:#e6f0ff; z-index:99999; text-align:center; padding:20px
+}
+.rotate-overlay .card{
+  background:#0e141a; border:1px solid #1b2733; border-radius:12px; padding:18px; max-width:420px
+}
+@media (orientation:landscape){ .rotate-overlay{ display:flex; } }
+</style>
+<div class="rotate-overlay" id="rotateOverlay"><div class="card">
+  <h3>Best in Portrait</h3>
+  <p>For the cleanest layout and charts, please rotate your phone upright.</p>
+</div></div>
+
 </body>
   <style>
 /* Phone-first frame */
@@ -1042,6 +1057,7 @@ input, select, textarea, button { font-size:16px; }
 </style>
 
 </html>
+
 
 
 
