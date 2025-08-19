@@ -277,6 +277,134 @@
 })();
 </script>
 <!-- H3xt0 Add-ons END -->
+<!-- H3xt0 Bind Targets (auto-fill your main inputs) -->
+<script>
+(function(){
+  const storeKeys = { income: 'h3xt0.bind.income', ess: 'h3xt0.bind.ess' };
+  const $ = s => document.querySelector(s);
+
+  // Create a unique selector for any element (prefers #id; falls back to data tag)
+  function uniqueSelector(el){
+    if (!el) return '';
+    if (el.id) return '#'+CSS.escape(el.id);
+    if (!el.dataset.h3xt0Id) el.dataset.h3xt0Id = 'h3xt0-' + Math.random().toString(36).slice(2,7);
+    return `[data-h3xt0-id="${el.dataset.h3xt0Id}"]`;
+  }
+
+  // Find good candidate inputs on the page (skip our add-on cards)
+  function findCandidates(){
+    const inCards = '#incomeByPay,#essentialsItemized,#paydayReminders';
+    return [...document.querySelectorAll('input,textarea')].filter(el=>{
+      if (el.closest(inCards)) return false;
+      if (!el.offsetParent) return false;           // visible only
+      const t = (el.type||'').toLowerCase();
+      const im = (el.getAttribute('inputmode')||'').toLowerCase();
+      const ph = (el.placeholder||'').toLowerCase();
+      const name = (el.name||'').toLowerCase();
+      // numeric-ish fields are best
+      const isNumeric = t==='number' || im.includes('decimal') || /\$|amount|total|income|essential|expense/.test(ph+name);
+      return isNumeric || t==='text';
+    });
+  }
+
+  // Add a small linker UI to a card (Income or Essentials)
+  function attachBinder(cardId, lsKey, label){
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    const actions = card.querySelector('.addon-actions');
+    const gear = document.createElement('button');
+    gear.className = 'addon-btn';
+    gear.textContent = '⚙️ Link target';
+    actions.appendChild(gear);
+
+    const panel = document.createElement('div');
+    panel.className = 'addon-row';
+    panel.style.display = 'none';
+    panel.innerHTML = `
+      <select class="col-span"></select>
+      <button class="addon-btn">Save</button>
+    `;
+    actions.after(panel);
+
+    gear.addEventListener('click', ()=>{
+      const opts = findCandidates();
+      const sel = panel.querySelector('select');
+      sel.innerHTML = '';
+      if (!opts.length) {
+        const o = document.createElement('option');
+        o.textContent = 'No inputs found on page';
+        sel.appendChild(o);
+      } else {
+        opts.forEach((el,i)=>{
+          const labelGuess = el.id ? '#'+el.id
+            : (el.getAttribute('aria-label')||el.placeholder||el.name||el.type||'input');
+          const o = document.createElement('option');
+          o.value = uniqueSelector(el);
+          o.textContent = `${i+1}. ${labelGuess}`;
+          sel.appendChild(o);
+        });
+      }
+      panel.style.display = 'grid';
+    });
+
+    panel.querySelector('button').addEventListener('click', ()=>{
+      const sel = panel.querySelector('select');
+      if (!sel.value) return alert('Pick a target field first.');
+      localStorage.setItem(lsKey, sel.value);
+      panel.style.display = 'none';
+      alert(`${label} target linked ✅`);
+    });
+  }
+
+  // Write value into bound target, format to 2 decimals, fire events, flash highlight
+  function fillTarget(lsKey, amount){
+    const sel = localStorage.getItem(lsKey);
+    if (!sel) return false;
+    const el = document.querySelector(sel);
+    if (!el) return false;
+    const val = (Number(amount)||0).toFixed(2);
+    el.value = val;
+    el.dispatchEvent(new Event('input',  {bubbles:true}));
+    el.dispatchEvent(new Event('change', {bubbles:true}));
+    el.blur();
+    try { el.scrollIntoView({behavior:'smooth', block:'center'}); } catch {}
+    // flash highlight
+    const prev = el.style.boxShadow;
+    el.style.boxShadow = '0 0 0 2px rgba(80,140,255,.95) inset';
+    setTimeout(()=>{ el.style.boxShadow = prev; }, 1200);
+    return true;
+  }
+
+  // Hook the copy buttons: try auto-fill; clipboard remains as a fallback
+  const n = s => Number(String(s).replace(/[^\d.-]/g,''))||0;
+  $('#copyInc')?.addEventListener('click', ()=>{
+    const v = n($('#incMonthly')?.textContent||'0');
+    fillTarget(storeKeys.income, v);
+  });
+  $('#copyEss')?.addEventListener('click', ()=>{
+    const v = n($('#essMonthly')?.textContent||'0');
+    fillTarget(storeKeys.ess, v);
+  });
+
+  // Add binder controls to both cards
+  attachBinder('incomeByPay',      storeKeys.income, 'Income');
+  attachBinder('essentialsItemized', storeKeys.ess,   'Essentials');
+
+  // Light auto-detect (one-time) based on labels, if present
+  (function autoDetectOnce(){
+    if (!localStorage.getItem(storeKeys.income)) {
+      const lab = [...document.querySelectorAll('label')].find(l=>/income/i.test(l.textContent||''));
+      const el = lab?.htmlFor ? document.getElementById(lab.htmlFor) : lab?.closest('div')?.querySelector('input,textarea');
+      if (el) localStorage.setItem(storeKeys.income, uniqueSelector(el));
+    }
+    if (!localStorage.getItem(storeKeys.ess)) {
+      const lab = [...document.querySelectorAll('label')].find(l=>/essential|needs|expenses/i.test(l.textContent||''));
+      const el = lab?.htmlFor ? document.getElementById(lab.htmlFor) : lab?.closest('div')?.querySelector('input,textarea');
+      if (el) localStorage.setItem(storeKeys.ess, uniqueSelector(el));
+    }
+  })();
+})();
+</script>
 
 <body>
 <header>
@@ -706,6 +834,7 @@ window.addEventListener('load', ()=>{
 </script>
 </body>
 </html>
+
 
 
 
