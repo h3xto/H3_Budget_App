@@ -1,5 +1,5 @@
 // H3xt0 service worker — clean, cache-first
-const CACHE_NAME = "h3xt0-pwa-v14";
+const CACHE_NAME = "h3xt0-pwa-v15";
 const ASSETS = [
   "./budget.html",
   "./manifest.webmanifest",
@@ -41,6 +41,7 @@ self.addEventListener("fetch", (e) => {
     })
   );
 });
+
 
 
 
