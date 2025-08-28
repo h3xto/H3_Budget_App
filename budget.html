@@ -1049,6 +1049,254 @@ window.addEventListener('load', ()=>{
   <h3>Best in Portrait</h3>
   <p>For the cleanest layout and charts, please rotate your phone upright.</p>
 </div></div>
+<!-- H3xt0 • Guided Entry sheets -->
+<style>
+/* Full-screen sheet */
+.hx-sheet{position:fixed;inset:0;z-index:10000;display:none}
+.hx-mask{position:absolute;inset:0;background:rgba(0,0,0,.65)}
+.hx-card{position:absolute;left:50%;top:0;transform:translateX(-50%);width:min(720px,100vw);
+  height:100%;background:#0b0f14;color:#e6f0ff;border:1px solid #1b2733;border-top:none;
+  border-radius:14px 14px 0 0;display:flex;flex-direction:column}
+.hx-head{padding:14px 14px 8px;border-bottom:1px solid #162232;display:flex;justify-content:space-between;align-items:center}
+.hx-title{font-size:1.05rem;margin:0}
+.hx-step{font-size:.9rem;opacity:.8}
+.hx-body{padding:14px;flex:1;overflow:auto}
+.hx-foot{padding:12px;border-top:1px solid #162232;display:flex;gap:10px;justify-content:space-between}
+.hx-btn{padding:11px 14px;border-radius:10px;border:1px solid #2a3a4a;background:#111823;color:#dfe6ee}
+.hx-btn.primary{background:#1a2a45;border-color:#3b5ea8}
+.hx-field{display:flex;flex-direction:column;gap:8px;margin:6px 0}
+.hx-label{font-weight:600}
+.hx-help{font-size:.9rem;opacity:.9;line-height:1.45}
+.hx-input, .hx-select{padding:12px;border-radius:10px;border:1px solid #223041;background:#0e141a;color:#e6f0ff;font-size:16px}
+.hx-radio{display:flex;gap:8px;flex-wrap:wrap}
+.hx-chip input{display:none}
+.hx-chip label{display:inline-block;padding:8px 10px;border:1px solid #2a3a4a;border-radius:999px;background:#0e141a}
+.hx-chip input:checked + label{outline:2px solid #4a7dff}
+.hx-review{background:#0e141a;border:1px solid #1b2733;border-radius:12px;padding:12px}
+@media (min-width:821px){ .hx-card{border-radius:16px; top:6vh; height:88vh;} }
+</style>
+
+<!-- Income Guided Sheet -->
+<div class="hx-sheet" id="hxIncomeSheet" role="dialog" aria-modal="true" aria-label="Guided income">
+  <div class="hx-mask"></div>
+  <div class="hx-card">
+    <div class="hx-head">
+      <h3 class="hx-title">Add Income (Guided)</h3>
+      <div class="hx-step" id="hxIncStep">Step 1 of 4</div>
+    </div>
+    <div class="hx-body" id="hxIncBody"></div>
+    <div class="hx-foot">
+      <button class="hx-btn" id="hxIncBack">◀ Back</button>
+      <div style="display:flex;gap:8px">
+        <button class="hx-btn" id="hxIncCancel">Cancel</button>
+        <button class="hx-btn primary" id="hxIncNext">Next ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Essentials Guided Sheet -->
+<div class="hx-sheet" id="hxEssSheet" role="dialog" aria-modal="true" aria-label="Guided essential">
+  <div class="hx-mask"></div>
+  <div class="hx-card">
+    <div class="hx-head">
+      <h3 class="hx-title">Add Essential (Guided)</h3>
+      <div class="hx-step" id="hxEssStep">Step 1 of 3</div>
+    </div>
+    <div class="hx-body" id="hxEssBody"></div>
+    <div class="hx-foot">
+      <button class="hx-btn" id="hxEssBack">◀ Back</button>
+      <div style="display:flex;gap:8px">
+        <button class="hx-btn" id="hxEssCancel">Cancel</button>
+        <button class="hx-btn primary" id="hxEssNext">Next ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Utilities
+  const $ = s => document.querySelector(s);
+  const money = n => new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"}).format(Number(n||0)||0);
+
+  // ===== Insert small "Guided" buttons next to your existing +Add buttons =====
+  function injectGuidedButtons(){
+    const incActions = document.querySelector('#incomeByPay .addon-actions');
+    if (incActions && !incActions.querySelector('#btnIncGuided')){
+      const b = document.createElement('button');
+      b.id='btnIncGuided'; b.className='addon-btn'; b.textContent='✨ Guided';
+      incActions.insertBefore(b, incActions.firstChild);
+      b.addEventListener('click', openIncomeSheet);
+    }
+    const essActions = document.querySelector('#essentialsItemized .addon-actions');
+    if (essActions && !essActions.querySelector('#btnEssGuided')){
+      const b = document.createElement('button');
+      b.id='btnEssGuided'; b.className='addon-btn'; b.textContent='✨ Guided';
+      essActions.insertBefore(b, essActions.firstChild);
+      b.addEventListener('click', openEssSheet);
+    }
+  }
+  injectGuidedButtons();
+
+  // Handy hooks to your existing quick-add functions from prior code
+  const incWrap = $('#incRows');
+  const essWrap = $('#essRows');
+  function addIncRowViaGuided(name, freq, amt){
+    // Create exactly like quick-add does
+    const row = document.createElement('div'); row.className='addon-row';
+    row.innerHTML = `
+      <input placeholder="Source (e.g., Employer)" value="${(name||'').replace(/"/g,'&quot;')}">
+      <select>
+        <option value="12"${freq==='12'?' selected':''}>Monthly (12)</option>
+        <option value="26"${freq==='26'?' selected':''}>Bi-weekly (26)</option>
+        <option value="24"${freq==='24'?' selected':''}>Twice-monthly (24)</option>
+      </select>
+      <input inputmode="decimal" placeholder="$ per paycheck" value="${Number(amt||0).toFixed(2)}">
+      <button class="addon-btn">Del</button>`;
+    const sel = row.children[1], amtInput = row.children[2], del = row.children[3];
+    amtInput.addEventListener("blur", ()=>{ if(amtInput.value) amtInput.value = parseFloat(amtInput.value.replace(/[^\d.]/g,'')).toFixed(2); recalcInc&&recalcInc();});
+    sel.addEventListener("change", ()=>recalcInc&&recalcInc());
+    del.addEventListener("click", ()=>{ row.remove(); recalcInc&&recalcInc(); });
+    incWrap.appendChild(row);
+    recalcInc&&recalcInc();
+  }
+  function addEssRowViaGuided(name, amt){
+    const row = document.createElement('div'); row.className='addon-row';
+    row.innerHTML = `
+      <input placeholder="Name (e.g., Rent)" value="${(name||'').replace(/"/g,'&quot;')}">
+      <input inputmode="decimal" placeholder="$ per month" value="${Number(amt||0).toFixed(2)}">
+      <span class="addon-mini nowrap col-span"></span>
+      <button class="addon-btn">Del</button>`;
+    const amtInput = row.children[1], del=row.children[3];
+    amtInput.addEventListener("blur", ()=>{ if(amtInput.value) amtInput.value = parseFloat(amtInput.value.replace(/[^\d.]/g,'')).toFixed(2); recalcEss&&recalcEss();});
+    del.addEventListener("click", ()=>{ row.remove(); recalcEss&&recalcEss();});
+    essWrap.appendChild(row);
+    recalcEss&&recalcEss();
+  }
+
+  // ===== Income Sheet logic =====
+  const incSheet = $('#hxIncomeSheet'), incBody = $('#hxIncBody'), incStep = $('#hxIncStep');
+  const incState = { i:0, name:'', freq:'26', amt:'' };
+  const incSteps = [
+    {
+      title:'Income Source',
+      render(){ return `
+        <div class="hx-field">
+          <div class="hx-label">What should we call this income?</div>
+          <input class="hx-input" id="incName" placeholder="Employer or side gig (e.g., Acme Co.)" value="${incState.name}">
+          <div class="hx-help">Use your employer or task name. This label helps identify entries later.</div>
+        </div>`; },
+      collect(){ incState.name = $('#incName').value.trim(); return incState.name.length>0; }
+    },
+    {
+      title:'Pay Frequency',
+      render(){ return `
+        <div class="hx-field">
+          <div class="hx-label">How often do you get paid?</div>
+          <div class="hx-radio">
+            <span class="hx-chip"><input type="radio" name="incFreq" id="f12" value="12"${incState.freq==='12'?' checked':''}><label for="f12">Monthly (12)</label></span>
+            <span class="hx-chip"><input type="radio" name="incFreq" id="f26" value="26"${incState.freq==='26'?' checked':''}><label for="f26">Bi-weekly (26)</label></span>
+            <span class="hx-chip"><input type="radio" name="incFreq" id="f24" value="24"${incState.freq==='24'?' checked':''}><label for="f24">Twice-monthly (24)</label></span>
+          </div>
+          <div class="hx-help">Bi-weekly means every 2 weeks (26 checks/year). Twice-monthly means two fixed dates each month (24 checks/year).</div>
+        </div>`; },
+      collect(){ incState.freq = (document.querySelector('input[name="incFreq"]:checked')?.value)||'26'; return true; }
+    },
+    {
+      title:'Amount per Paycheck (Net)',
+      render(){ return `
+        <div class="hx-field">
+          <div class="hx-label">How much hits your bank per paycheck?</div>
+          <input class="hx-input" id="incAmt" inputmode="decimal" placeholder="e.g., 1835.50" value="${incState.amt}">
+          <div class="hx-help"><strong>Net</strong> is after taxes/deductions (what you actually receive). <em>Gross</em> is before taxes—don’t use that number here.</div>
+        </div>`; },
+      collect(){ const v = Number(String($('#incAmt').value).replace(/[^\d.]/g,'')); if(!v||v<=0) return false; incState.amt=v.toFixed(2); return true; }
+    },
+    {
+      title:'Review & Save',
+      render(){ 
+        const monthly = (Number(incState.amt)||0) * (Number(incState.freq)/12);
+        return `
+          <div class="hx-review">
+            <div><strong>Source:</strong> ${incState.name}</div>
+            <div><strong>Frequency:</strong> ${incState.freq} per year</div>
+            <div><strong>Per paycheck:</strong> ${money(incState.amt)}</div>
+            <div><strong>Monthly equivalent:</strong> ${money(monthly)}</div>
+          </div>
+          <div class="hx-help" style="margin-top:8px">We’ll add this to your Income list and recalc totals immediately.</div>`; 
+      },
+      collect(){ return true; },
+      done(){ addIncRowViaGuided(incState.name, incState.freq, incState.amt); }
+    }
+  ];
+  function renderIncStep(){
+    $('#hxIncNext').textContent = incState.i >= incSteps.length-1 ? 'Save ▶' : 'Next ▶';
+    incStep.textContent = `Step ${incState.i+1} of ${incSteps.length}`;
+    incBody.innerHTML = `<h3 style="margin:0 0 8px">${incSteps[incState.i].title}</h3>` + incSteps[incState.i].render();
+  }
+  function openIncomeSheet(){ incState.i=0; incState.name=''; incState.freq='26'; incState.amt=''; incSheet.style.display='block'; renderIncStep(); }
+  $('#hxIncCancel').addEventListener('click', ()=> incSheet.style.display='none');
+  $('#hxIncBack').addEventListener('click', ()=>{ if(incState.i>0){ incState.i--; renderIncStep(); }});
+  $('#hxIncNext').addEventListener('click', ()=>{
+    if(!incSteps[incState.i].collect()) return alert('Please complete this step.');
+    if(incState.i < incSteps.length-1){ incState.i++; renderIncStep(); }
+    else { incSteps[incState.i].done?.(); incSheet.style.display='none'; }
+  });
+  incSheet.querySelector('.hx-mask').addEventListener('click', ()=> incSheet.style.display='none');
+
+  // ===== Essentials Sheet logic =====
+  const essSheet = $('#hxEssSheet'), essBody = $('#hxEssBody'), essStep = $('#hxEssStep');
+  const essState = { i:0, name:'', amt:'' };
+  const essSteps = [
+    {
+      title:'Essential Name',
+      render(){ return `
+        <div class="hx-field">
+          <div class="hx-label">What is this essential expense?</div>
+          <input class="hx-input" id="essName" placeholder="e.g., Rent, Power, Internet" value="${essState.name}">
+          <div class="hx-help">Name it so you can find and update it later.</div>
+        </div>`; },
+      collect(){ essState.name = $('#essName').value.trim(); return essState.name.length>0; }
+    },
+    {
+      title:'Monthly Amount',
+      render(){ return `
+        <div class="hx-field">
+          <div class="hx-label">How much do you pay per month?</div>
+          <input class="hx-input" id="essAmt" inputmode="decimal" placeholder="e.g., 1200.00" value="${essState.amt}">
+          <div class="hx-help">If it varies seasonally, enter an average—you can edit any time.</div>
+        </div>`; },
+      collect(){ const v = Number(String($('#essAmt').value).replace(/[^\d.]/g,'')); if(!v||v<=0) return false; essState.amt=v.toFixed(2); return true; }
+    },
+    {
+      title:'Review & Save',
+      render(){ return `
+        <div class="hx-review">
+          <div><strong>Name:</strong> ${essState.name}</div>
+          <div><strong>Per month:</strong> ${money(essState.amt)}</div>
+        </div>`; },
+      collect(){ return true; },
+      done(){ addEssRowViaGuided(essState.name, essState.amt); }
+    }
+  ];
+  function renderEssStep(){
+    $('#hxEssNext').textContent = essState.i >= essSteps.length-1 ? 'Save ▶' : 'Next ▶';
+    essStep.textContent = `Step ${essState.i+1} of ${essSteps.length}`;
+    essBody.innerHTML = `<h3 style="margin:0 0 8px">${essSteps[essState.i].title}</h3>` + essSteps[essState.i].render();
+  }
+  function openEssSheet(){ essState.i=0; essState.name=''; essState.amt=''; essSheet.style.display='block'; renderEssStep(); }
+  $('#hxEssCancel').addEventListener('click', ()=> essSheet.style.display='none');
+  $('#hxEssBack').addEventListener('click', ()=>{ if(essState.i>0){ essState.i--; renderEssStep(); }});
+  $('#hxEssNext').addEventListener('click', ()=>{
+    if(!essSteps[essState.i].collect()) return alert('Please complete this step.');
+    if(essState.i < essSteps.length-1){ essState.i++; renderEssStep(); }
+    else { essSteps[essState.i].done?.(); essSheet.style.display='none'; }
+  });
+  essSheet.querySelector('.hx-mask').addEventListener('click', ()=> essSheet.style.display='none');
+
+})();
+</script>
 
 </body>
   <style>
@@ -1063,6 +1311,7 @@ input, select, textarea, button { font-size:16px; }
 </style>
 
 </html>
+
 
 
 
