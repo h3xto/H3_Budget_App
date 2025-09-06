@@ -1,1327 +1,429 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>H3xt0</title>
-  <meta name="theme-color" content="#0b0f14">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-    :root{
-    --bg:#0b0f14; --card:#101823; --border:#1b2636; --text:#e6edf3; --muted:#91a4b7;
-    --btn:#2d3a4d; --btn-text:#e6edf3; --chip:#0f2236; --chip-border:#24425e;
-    --ok:#19c37d; --warn:#fdbc40; --danger:#ff5d5d;
-    --pad:14px; --radius:14px; --gap:12px; --font:system-ui,-apple-system,Segoe UI,Roboto,Arial
-  }
-  *{box-sizing:border-box}
-  body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text)}
-  header{position:sticky;top:0;z-index:5;padding:14px 16px;border-bottom:1px solid var(--border);
-         background:linear-gradient(180deg,rgba(11,15,20,.95),rgba(11,15,20,.85));backdrop-filter:blur(7px)}
-  h1{font-size:18px;margin:0 0 4px}
-  h3{margin:0 0 8px}
-  .sub{color:var(--muted);font-size:13px}
-  .wrap{padding:16px;display:grid;gap:14px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--pad);box-shadow:0 1px 4px rgba(0,0,0,.35)}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  @media (max-width:720px){ .row{grid-template-columns:1fr} }
-  label{font-size:12px;color:var(--muted)}
-  input,select,button{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:16px;background:#0b1420;color:var(--text)}
-  input.textlike{caret-color:#fff}
-  input[readonly]{background:#0f1826}
-  .mono{font-variant-numeric:tabular-nums}
-  .muted{color:var(--muted)}
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .small a{color:#cfe0ff;text-decoration:none}
-  .small a:hover{text-decoration:underline}
-  .table-scroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;table-layout:fixed}
-  th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
-  th.right,td.right{text-align:right}
-  tfoot td{font-weight:600}
-  .btn{background:var(--btn);color:var(--btn-text);border:1px solid var(--border);cursor:pointer}
-  .btn.sec{background:#0e1724;color:#cfe0ff;border:1px solid var(--chip-border)}
-  .danger{color:var(--danger)} .ok{color:var(--ok)}
-  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-  @media (max-width:720px){ .grid-3{grid-template-columns:1fr} }
-  .right{text-align:right}
-  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#11243a;border:1px solid var(--chip-border);font-size:12px}
-  .footer{height:24px}
-  .canvas-wrap{position:relative;width:100%;height:220px}
-  .canvas-wrap.small{height:170px}
-  canvas{width:100%;height:100%;display:block}
-  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
-  .legend .item{display:flex;align-items:center;gap:6px;font-size:13px}
-  .swatch{width:12px;height:12px;border-radius:3px;border:1px solid var(--chip-border)}
-  .tooltip{position:absolute;pointer-events:none;background:rgba(12,18,28,.95);color:#e5eefb;border:1px solid #2b3a4f;border-radius:8px;
-           padding:6px 8px;font-size:12px;z-index:10;transform:translate(-50%,-120%);white-space:nowrap}
-  .tip-hidden{display:none}
 
-  /* Debts: compact columns + expand-on-focus for Name */
-  #debtsTbl th:nth-child(1), #debtsTbl td:nth-child(1){width:6ch}
-  #debtsTbl th:nth-child(2), #debtsTbl td:nth-child(2){width:12ch}
-  #debtsTbl th:nth-child(3), #debtsTbl td:nth-child(3){width:8ch}
-  #debtsTbl th:nth-child(4), #debtsTbl td:nth-child(4){width:5ch}
-  #debtsTbl th:nth-child(5), #debtsTbl td:nth-child(5){width:12ch}
-  #debtsTbl th:nth-child(6), #debtsTbl td:nth-child(6){width:6ch;text-align:center}
-  #debtsTbl input{ padding:8px }
-  .name-cell{ position:relative }
-  .debt-name{ width:4ch; transition:width .18s ease; overflow:hidden; text-overflow:ellipsis }
-  .debt-name:focus{
-    position:absolute; left:8px; right:auto;
-    width:20ch; max-width:70vw;
-    z-index:5; background:#0b1420; box-shadow:0 8px 24px rgba(0,0,0,.45)
-  }
-  @media (max-width:420px){ .debt-name:focus{ width:22ch; max-width:72vw } }
+  <!-- PWA -->
+  <meta name="theme-color" content="#0f9a9b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
 
-  /* Install banner */
-  .install-banner{
-    position:fixed; left:12px; right:12px; bottom:90px; z-index:20;
-    display:none; gap:10px; align-items:center; padding:12px 14px;
-    background:#0e1724; border:1px solid #24425e; border-radius:14px; color:#cfe0ff
-  }
-  .install-banner.show{ display:flex }
-  .install-banner .spacer{ flex:1 }
-
-  /* Sticky bottom bar (phones, bigger buttons) */
-  .sticky-bar{
-    position:fixed; left:12px; right:12px; bottom:12px; z-index:15;
-    display:flex; gap:10px; padding:12px;
-    background:#0e1724; border:1px solid #24425e; border-radius:16px;
-    box-shadow:0 4px 24px rgba(0,0,0,.35)
-  }
-  .sticky-bar .btn{ flex:1; min-height:48px; font-size:16px; border-radius:12px }
-  @media (min-width:700px){ .sticky-bar{ display:none } }
-
-  /* Update snackbar */
-  .update-bar{
-    position:fixed; left:12px; right:12px; bottom:150px; z-index:18;
-    display:none; gap:10px; align-items:center; padding:10px 12px;
-    background:#102233; border:1px solid #24425e; border-radius:12px; color:#cfe0ff
-  }
-  .update-bar.show{ display:flex }
-
-  /* Pull-to-refresh indicator */
-  .ptr{ position:fixed; top:0; left:0; right:0; height:0; overflow:hidden;
-        display:flex; align-items:center; justify-content:center;
-        background:#0e1724; color:#cfe0ff; border-bottom:1px solid #24425e;
-        transition:height .18s ease; z-index:25 }
-  .ptr.show{ height:46px }
-</style>
-</head>
-  <!-- H3xt0 Add-ons START -->
-<style>
-.addon-card{background:#0e141a;border:1px solid #1b2733;border-radius:10px;padding:12px;margin:10px 0}
-.addon-card h3{margin:0 0 6px 0;font-size:1.05rem}
-.addon-row{display:grid;grid-template-columns:1.2fr .9fr .9fr auto;gap:8px;align-items:center;margin:6px 0}
-.addon-row input,.addon-row select{padding:10px;border-radius:8px;border:1px solid #2a3a4a;background:#0b0f14;color:#dfe6ee;width:100%}
-.addon-mini{font-size:.85rem;opacity:.8}
-.addon-btn{padding:10px 12px;border-radius:8px;border:1px solid #2a3a4a;background:#111823;color:#dfe6ee}
-.addon-btn:disabled{opacity:.5}
-.addon-actions{display:flex;gap:8px;flex-wrap:wrap}
-.addon-total{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:#0b1117;border:1px solid #223041;margin-top:8px}
-.badge{font-size:.78rem;padding:2px 8px;border:1px solid #2a3a4a;border-radius:99px;background:#0b1117}
-.nowrap{white-space:nowrap}
-@media (max-width:520px){
-  .addon-row{grid-template-columns:1fr 1fr;grid-auto-rows:auto}
-  .addon-row .col-span{grid-column:1 / -1}
-}
-</style>
-
-<section class="addon-card" id="incomeByPay">
-  <h3>Income by Pay Schedule </h3>
-  <div id="incRows"></div>
-  <div class="addon-actions">
-    <button class="addon-btn" id="addInc">+ Add income source</button>
-    <button class="addon-btn" id="copyInc">Copy monthly total</button>
-  </div>
-  <div class="addon-total"><span>Monthly Net (normalized)</span><strong id="incMonthly">$0.00</strong></div>
-  <div class="addon-mini">“Monthly” = paycheck × (periods/year ÷ 12). Bi-weekly uses 26, Twice-monthly uses 24.</div>
-</section>
-
-<section class="addon-card" id="essentialsItemized">
-  <h3>Essentials (Itemized)</h3>
-  <div id="essRows"></div>
-  <div class="addon-actions">
-    <button class="addon-btn" id="addEss">+ Add essential</button>
-    <button class="addon-btn" id="copyEss">Copy monthly total</button>
-  </div>
-  <div class="addon-total"><span>Monthly Essentials Total</span><strong id="essMonthly">$0.00</strong></div>
-  <div class="addon-mini">Add rent, utilities, subscriptions, etc. Easy to adjust for seasonal changes.</div>
-</section>
-
-<section class="addon-card" id="paydayReminders">
-  <h3>Payday Reminders (Calendar .ics)</h3>
-  <div class="addon-row">
-    <select id="payFreq">
-      <option value="12">Monthly (12)</option>
-      <option value="26" selected>Bi-weekly (26)</option>
-      <option value="24">Twice-monthly (24)</option>
-    </select>
-    <input type="date" id="nextPay" title="Next payday date">
-    <input type="time" id="payTime" value="09:00" title="Reminder time">
-    <input type="number" id="monthsSpan" min="1" max="36" value="12" title="Duration (months)">
-  </div>
-  <div class="addon-row">
-    <input type="number" step="0.01" id="extraPerCheck" placeholder="Extra per paycheck for avalanche ($)" class="col-span">
-    <input type="number" id="tmDay1" min="1" max="31" placeholder="Twice-monthly: day #1">
-    <input type="number" id="tmDay2" min="1" max="31" placeholder="Twice-monthly: day #2">
-  </div>
-  <div class="addon-actions">
-    <button class="addon-btn" id="makeICS">Download .ics</button>
-    <span class="addon-mini">Events repeat on paydays with note “Pay highest-APR debt”.</span>
-  </div>
-</section>
-
-<script>
-(function(){
-  const nf = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
-  const $ = s=>document.querySelector(s);
-  const money = v => nf.format(Number(v||0)||0);
-  const parseMoney = s => Number(String(s).replace(/[^\d.-]/g,""))||0;
-
-  // Income by Pay
-  const incWrap=$("#incRows"), incMonthly=$("#incMonthly");
-  $("#addInc")?.addEventListener("click",()=>addIncRow());
-  $("#copyInc")?.addEventListener("click",()=>{ navigator.clipboard.writeText(incMonthly.textContent||""); alert("Monthly income copied. Paste into your main Income field.");});
-  function addIncRow(d={name:"",amt:"",freq:"26"}){
-    const row=document.createElement("div"); row.className="addon-row";
-    row.innerHTML=`<input placeholder="Source" value="${(d.name||"").replace(/"/g,'&quot;')}">
-      <select>
-        <option value="12"${d.freq=="12"?" selected":""}>Monthly (12)</option>
-        <option value="26"${d.freq=="26"?" selected":""}>Bi-weekly (26)</option>
-        <option value="24"${d.freq=="24"?" selected":""}>Twice-monthly (24)</option>
-      </select>
-      <input inputmode="decimal" placeholder="$ per paycheck" value="${d.amt||""}">
-      <button class="addon-btn">Del</button>`;
-    const [ , sel, amt, del] = row.children;
-    amt.addEventListener("blur", ()=>{ amt.value = amt.value.replace(/[^\d.]/g,""); if(amt.value) amt.value = parseFloat(amt.value).toFixed(2); recalcInc();});
-    sel.addEventListener("change", recalcInc);
-    del.addEventListener("click", ()=>{ row.remove(); recalcInc();});
-    incWrap.appendChild(row); recalcInc();
-  }
-  function recalcInc(){
-    let sum=0;
-    [...incWrap.children].forEach(r=>{
-      const perYear = Number(r.children[1].value)||26;
-      const paycheck = parseMoney(r.children[2].value);
-      sum += paycheck*(perYear/12);
-    });
-    incMonthly.textContent = money(sum);
-  }
-  if(!incWrap.children.length) addIncRow();
-
-  // Essentials itemized
-  const essWrap=$("#essRows"), essMonthly=$("#essMonthly");
-  $("#addEss")?.addEventListener("click",()=>addEssRow());
-  $("#copyEss")?.addEventListener("click",()=>{ navigator.clipboard.writeText(essMonthly.textContent||""); alert("Essentials total copied. Paste into your main Essentials field.");});
-  function addEssRow(d={name:"",amt:""}){
-    const row=document.createElement("div"); row.className="addon-row";
-    row.innerHTML=`<input placeholder="Name (e.g., Rent)" value="${(d.name||"").replace(/"/g,'&quot;')}">
-      <input inputmode="decimal" placeholder="$ per month" value="${d.amt||""}">
-      <span class="addon-mini nowrap col-span"></span>
-      <button class="addon-btn">Del</button>`;
-    const amt=row.children[1], del=row.children[3];
-    amt.addEventListener("blur", ()=>{ amt.value = amt.value.replace(/[^\d.]/g,""); if(amt.value) amt.value = parseFloat(amt.value).toFixed(2); recalcEss();});
-    del.addEventListener("click", ()=>{ row.remove(); recalcEss();});
-    essWrap.appendChild(row); recalcEss();
-  }
-  function recalcEss(){
-    let sum=0; [...essWrap.children].forEach(r=> sum += parseMoney(r.children[1].value));
-    essMonthly.textContent = money(sum);
-  }
-  if(!essWrap.children.length) addEssRow();
-
-  // Payday reminders (.ics)
-  const elFreq=$("#payFreq"), elNext=$("#nextPay"), elTime=$("#payTime"), elSpan=$("#monthsSpan"),
-        elExtra=$("#extraPerCheck"), d1=$("#tmDay1"), d2=$("#tmDay2");
-  $("#makeICS")?.addEventListener("click", ()=>{
-    const freq=Number(elFreq.value||26);
-    const next=new Date(elNext.value); if(!elNext.value||isNaN(next)) return alert("Set a valid Next payday date.");
-    const [hh,mm]=(elTime.value||"09:00").split(":").map(x=>parseInt(x||0,10));
-    const months=Math.min(Math.max(parseInt(elSpan.value||12,10),1),36);
-    const extra=parseMoney(elExtra.value||0);
-    const day1=parseInt(d1.value||"0",10), day2=parseInt(d2.value||"0",10);
-
-    const events=[], end=new Date(next); end.setMonth(end.getMonth()+months);
-    if(freq===26){ let t=new Date(next); while(t<=end){ events.push(new Date(t)); t=new Date(t.getFullYear(),t.getMonth(),t.getDate()+14);} }
-    else if(freq===24){
-      if(!(day1>=1&&day1<=31)&&!(day2>=1&&day2<=31)) return alert("Enter two days (1–31) for twice-monthly.");
-      const base=new Date(next);
-      for(let m=0;m<months;m++){
-        const y=base.getFullYear(), mon=(base.getMonth()+m)%12, yr=base.getFullYear()+Math.floor((base.getMonth()+m)/12);
-        events.push(clamp(yr,mon,day1)); events.push(clamp(yr,mon,day2));
-      }
-    } else { let t=new Date(next); while(t<=end){ events.push(new Date(t)); t.setMonth(t.getMonth()+1);} }
-
-    const pad=n=>String(n).padStart(2,"0");
-    const toICS=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(hh)}${pad(mm)}00`;
-    const dtstamp=toICS(new Date());
-    let ics="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//H3xt0//Budget//EN\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
-    events.forEach((d,i)=>{ d.setHours(hh,mm,0,0);
-      const uid=`h3xt0-${Date.now()}-${i}@local`;
-      ics+="BEGIN:VEVENT\r\n";
-      ics+=`DTSTAMP:${dtstamp}\r\nUID:${uid}\r\nDTSTART:${toICS(d)}\r\n`;
-      ics+=`SUMMARY:H3xt0 Payday Avalanche Payment\r\n`;
-      ics+=`DESCRIPTION:Pay highest-APR debt today. Extra per paycheck: ${nf.format(extra)}\\n(Generated by H3xt0)\r\n`;
-      ics+="END:VEVENT\r\n";
-    });
-    ics+="END:VCALENDAR\r\n";
-    const url=URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));
-    const a=document.createElement("a"); a.href=url; a.download="h3xt0-payday-reminders.ics"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-
-    function clamp(y,m,day){ const last=new Date(y,m+1,0).getDate(); return new Date(y,m,Math.min(day,last)); }
-  });
-})();
-</script>
-<!-- H3xt0 Add-ons END -->
-<!-- H3xt0 Bind Targets (auto-fill your main inputs) -->
-<script>
-(function(){
-  const storeKeys = { income: 'h3xt0.bind.income', ess: 'h3xt0.bind.ess' };
-  const $ = s => document.querySelector(s);
-
-  // Create a unique selector for any element (prefers #id; falls back to data tag)
-  function uniqueSelector(el){
-    if (!el) return '';
-    if (el.id) return '#'+CSS.escape(el.id);
-    if (!el.dataset.h3xt0Id) el.dataset.h3xt0Id = 'h3xt0-' + Math.random().toString(36).slice(2,7);
-    return `[data-h3xt0-id="${el.dataset.h3xt0Id}"]`;
-  }
-
-  // Find good candidate inputs on the page (skip our add-on cards)
-  function findCandidates(){
-    const inCards = '#incomeByPay,#essentialsItemized,#paydayReminders';
-    return [...document.querySelectorAll('input,textarea')].filter(el=>{
-      if (el.closest(inCards)) return false;
-      if (!el.offsetParent) return false;           // visible only
-      const t = (el.type||'').toLowerCase();
-      const im = (el.getAttribute('inputmode')||'').toLowerCase();
-      const ph = (el.placeholder||'').toLowerCase();
-      const name = (el.name||'').toLowerCase();
-      // numeric-ish fields are best
-      const isNumeric = t==='number' || im.includes('decimal') || /\$|amount|total|income|essential|expense/.test(ph+name);
-      return isNumeric || t==='text';
-    });
-  }
-
-  // Add a small linker UI to a card (Income or Essentials)
-  function attachBinder(cardId, lsKey, label){
-    const card = document.getElementById(cardId);
-    if (!card) return;
-    const actions = card.querySelector('.addon-actions');
-    const gear = document.createElement('button');
-    gear.className = 'addon-btn';
-    gear.textContent = '⚙️ Link target';
-    actions.appendChild(gear);
-
-    const panel = document.createElement('div');
-    panel.className = 'addon-row';
-    panel.style.display = 'none';
-    panel.innerHTML = `
-      <select class="col-span"></select>
-      <button class="addon-btn">Save</button>
-    `;
-    actions.after(panel);
-
-    gear.addEventListener('click', ()=>{
-      const opts = findCandidates();
-      const sel = panel.querySelector('select');
-      sel.innerHTML = '';
-      if (!opts.length) {
-        const o = document.createElement('option');
-        o.textContent = 'No inputs found on page';
-        sel.appendChild(o);
-      } else {
-        opts.forEach((el,i)=>{
-          const labelGuess = el.id ? '#'+el.id
-            : (el.getAttribute('aria-label')||el.placeholder||el.name||el.type||'input');
-          const o = document.createElement('option');
-          o.value = uniqueSelector(el);
-          o.textContent = `${i+1}. ${labelGuess}`;
-          sel.appendChild(o);
-        });
-      }
-      panel.style.display = 'grid';
-    });
-
-    panel.querySelector('button').addEventListener('click', ()=>{
-      const sel = panel.querySelector('select');
-      if (!sel.value) return alert('Pick a target field first.');
-      localStorage.setItem(lsKey, sel.value);
-      panel.style.display = 'none';
-      alert(`${label} target linked ✅`);
-    });
-  }
-
-  // Write value into bound target, format to 2 decimals, fire events, flash highlight
-  function fillTarget(lsKey, amount){
-    const sel = localStorage.getItem(lsKey);
-    if (!sel) return false;
-    const el = document.querySelector(sel);
-    if (!el) return false;
-    const val = (Number(amount)||0).toFixed(2);
-    el.value = val;
-    el.dispatchEvent(new Event('input',  {bubbles:true}));
-    el.dispatchEvent(new Event('change', {bubbles:true}));
-    el.blur();
-    try { el.scrollIntoView({behavior:'smooth', block:'center'}); } catch {}
-    // flash highlight
-    const prev = el.style.boxShadow;
-    el.style.boxShadow = '0 0 0 2px rgba(80,140,255,.95) inset';
-    setTimeout(()=>{ el.style.boxShadow = prev; }, 1200);
-    return true;
-  }
-
-  // Hook the copy buttons: try auto-fill; clipboard remains as a fallback
-  const n = s => Number(String(s).replace(/[^\d.-]/g,''))||0;
-  $('#copyInc')?.addEventListener('click', ()=>{
-    const v = n($('#incMonthly')?.textContent||'0');
-    fillTarget(storeKeys.income, v);
-  });
-  $('#copyEss')?.addEventListener('click', ()=>{
-    const v = n($('#essMonthly')?.textContent||'0');
-    fillTarget(storeKeys.ess, v);
-  });
-
-  // Add binder controls to both cards
-  attachBinder('incomeByPay',      storeKeys.income, 'Income');
-  attachBinder('essentialsItemized', storeKeys.ess,   'Essentials');
-
-  // Light auto-detect (one-time) based on labels, if present
-  (function autoDetectOnce(){
-    if (!localStorage.getItem(storeKeys.income)) {
-      const lab = [...document.querySelectorAll('label')].find(l=>/income/i.test(l.textContent||''));
-      const el = lab?.htmlFor ? document.getElementById(lab.htmlFor) : lab?.closest('div')?.querySelector('input,textarea');
-      if (el) localStorage.setItem(storeKeys.income, uniqueSelector(el));
-    }
-    if (!localStorage.getItem(storeKeys.ess)) {
-      const lab = [...document.querySelectorAll('label')].find(l=>/essential|needs|expenses/i.test(l.textContent||''));
-      const el = lab?.htmlFor ? document.getElementById(lab.htmlFor) : lab?.closest('div')?.querySelector('input,textarea');
-      if (el) localStorage.setItem(storeKeys.ess, uniqueSelector(el));
-    }
-  })();
-})();
-</script>
-<!-- H3xt0 HELP & TOUR -->
-<style>
   <style>
-/* FAB tune */
-.help-fab{
-  position:fixed; right:16px;
-  bottom:calc(env(safe-area-inset-bottom) + 18px);
-  z-index:9999; border-radius:999px;
-  border:1px solid #2a3a4a; background:#101824; color:#dfe6ee;
-  padding:9px 10px; font-size:14px; box-shadow:0 8px 20px rgba(0,0,0,.35)
-}
-.help-fab--mini{ padding:8px 9px; font-size:13px }
-</style>
-
-.help-fab{position:fixed;right:16px;bottom:16px;z-index:9999;border-radius:999px;border:1px solid #2a3a4a;background:#101824;color:#dfe6ee;padding:12px 14px;font-size:16px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
-.help-fab:active{transform:translateY(1px)}
-.help-modal{position:fixed;inset:0;z-index:9998;display:none}
-.help-back{position:absolute;inset:0;background:rgba(0,0,0,.6)}
-.help-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,92vw);max-height:85vh;overflow:auto;background:#0e141a;border:1px solid #1b2733;border-radius:12px;padding:16px}
-.help-card h2{margin:4px 0 8px 0}
-.help-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
-.help-tabs button{border:1px solid #2a3a4a;background:#0b1117;color:#dfe6ee;padding:8px 10px;border-radius:8px}
-.help-tabs button.active{outline:2px solid #4a7dff}
-.help-sec{display:none}
-.help-sec.active{display:block}
-.help-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;margin-top:10px}
-.help-kbd{font-family:ui-monospace,monospace;background:#0b1117;border:1px solid #2a3a4a;border-radius:6px;padding:2px 6px}
-.coach-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9997;display:none}
-.coach-target{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,.55),0 0 0 2px #4a7dff;transition:.2s}
-.coach-tip{position:fixed;z-index:9998;max-width:min(420px,90vw);background:#0e141a;border:1px solid #1b2733;border-radius:10px;padding:10px}
-.coach-tip h4{margin:0 0 6px 0}
-.coach-ctr{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
-.tipbar{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;background:#0b1117;border:1px solid #2a3a4a;border-radius:6px;padding:6px 10px;color:#cfe3ff;display:none;z-index:9996}
-@media (max-width:520px){.help-card{padding:12px}}
-</style>
-
-<button id="helpFab" class="help-fab help-fab--mini">❓ Help</button>
-<div id="helpModal" class="help-modal" aria-hidden="true">
-  <div class="help-back"></div>
-  <div class="help-card">
-    <h2>H3xt0 Help</h2>
-    <div class="help-tabs" id="helpTabs">
-      <button data-tab="qstart" class="active">Quick Start</button>
-      <button data-tab="income">Income</button>
-      <button data-tab="ess">Essentials</button>
-      <button data-tab="debts">Debts & Strategy</button>
-      <button data-tab="goals">Goals & What-If</button>
-      <button data-tab="remind">Payday Reminders</button>
-      <button data-tab="privacy">Privacy & Tip Jar</button>
-    </div>
-    <div class="help-sec active" id="sec-qstart">
-      <ol style="line-height:1.6">
-        <li>Enter **Income** and **Essentials**. You can use the new <em>Income by Pay</em> and <em>Essentials (Itemized)</em> cards below to normalize and auto-fill totals.</li>
-        <li>Add **Debts**: name, balance, APR %, term (months), min payment. H3xt0 recommends where extra dollars go.</li>
-        <li>Set a **Goal date** and move the **What-If** slider to see cash-flow and payoff curves update.</li>
-        <li>Optional: generate **Payday reminders** (.ics) to nudge avalanche payments on each payday.</li>
-      </ol>
-      <div class="help-actions">
-        <button id="startTour" class="help-fab" style="position:static;padding:8px 12px">▶️ Start 90-sec Tour</button>
-        <span class="help-kbd">Tip: long-press any input for a short tip.</span>
-      </div>
-    </div>
-    <div class="help-sec" id="sec-income">
-      <p>Use <strong>Income by Pay Schedule</strong> to enter per-paycheck net and choose frequency:
-        <span class="help-kbd">Monthly=12</span>,
-        <span class="help-kbd">Bi-weekly=26</span>,
-        <span class="help-kbd">Twice-monthly=24</span>.
-        The monthly total updates automatically. Click <em>Copy monthly total</em> to auto-fill your main Income field.</p>
-    </div>
-    <div class="help-sec" id="sec-ess">
-      <p>Add rent, utilities, subscriptions, etc. Seasonal changes? Just edit the rows. Click <em>Copy monthly total</em> to auto-fill your main Essentials field.</p>
-    </div>
-    <div class="help-sec" id="sec-debts">
-      <p>Enter debts. H3xt0 uses an <strong>APR-aware avalanche</strong> (pay highest APR first) while honoring your goal date. Extra dollars are suggested in <em>Plan Summary</em>.</p>
-    </div>
-    <div class="help-sec" id="sec-goals">
-      <p>Set your target purchase date. Use the <em>What-If</em> slider to see cash-flow and payoff curves respond instantly.</p>
-    </div>
-    <div class="help-sec" id="sec-remind">
-      <p>Pick your pay frequency and next payday, then download the **.ics** file. Import to your phone’s calendar for reliable reminders that work offline on Android & iPhone.</p>
-    </div>
-    <div class="help-sec" id="sec-privacy">
-      <p><strong>Private by design.</strong> H3xt0 stores everything on your device. No accounts, no cloud, no ads.</p>
-      <p><strong>Tip Jar:</strong> Totally optional. Tipping only supports development and keeping the app free. <em>Tips do not unlock features.</em></p>
-    </div>
-  </div>
-</div>
-
-<div id="coachMask" class="coach-mask"></div>
-<div id="tipbar" class="tipbar"></div>
-
-<script>
-(function(){
-  const $ = s => document.querySelector(s);
-  const $$ = s => [...document.querySelectorAll(s)];
-  // Modal open/close
-  const modal=$("#helpModal"), fab=$("#helpFab");
-  const open=()=>{ modal.style.display="block"; modal.setAttribute("aria-hidden","false"); };
-  const close=()=>{ modal.style.display="none"; modal.setAttribute("aria-hidden","true"); stopTour(); };
-  fab.addEventListener("click", open);
-  $(".help-back").addEventListener("click", close);
-  // Tabs
-  $$("#helpTabs button").forEach(b=>{
-    b.addEventListener("click",()=>{
-      $$("#helpTabs button").forEach(x=>x.classList.remove("active"));
-      b.classList.add("active");
-      const id="sec-"+b.dataset.tab;
-      $$(".help-sec").forEach(s=>s.classList.toggle("active", s.id===id));
-    });
-  });
-
-  // Field tips on focus (heuristic)
-  const tipbar=$("#tipbar");
-  function showTip(msg){ tipbar.textContent=msg; tipbar.style.display="block"; clearTimeout(showTip._t); showTip._t=setTimeout(()=>tipbar.style.display="none", 3000); }
-  document.addEventListener("focusin", (e)=>{
-    const el=e.target; if(!(el instanceof HTMLElement)) return;
-    if(el.matches("input,textarea,select") && !el.closest(".help-card")){
-      const ph=(el.placeholder||"").toLowerCase(), nm=(el.name||"").toLowerCase();
-      if(/apr/.test(ph+nm)) showTip("Enter APR as a percent (e.g., 19.99).");
-      else if(/balance|amount|pay|per month/.test(ph+nm)) showTip("Type the amount; H3xt0 formats $ and commas when you leave the field.");
-      else if(/term|months?/.test(ph+nm)) showTip("Enter remaining months for this debt.");
-      else showTip("Tip: you can long-press labels for Help, or tap ❓ anytime.");
+    /* ========= Calm Teal visual system (matches your screenshot) ========= */
+    :root{
+      /* brand */
+      --brand:#0f9a9b;          /* teal base */
+      --brand-2:#16b5b7;        /* lighter teal for gradient */
+      --ink:#0a1b1c;            /* main text (very dark teal/black) */
+      --muted:#5c7a7b;          /* secondary */
+      /* surfaces */
+      --bg:#f6fbfb;             /* page bg (very light teal) */
+      --card:#ffffff;           /* cards */
+      --line:#d4ebeb;           /* borders */
+      /* controls */
+      --focus:#0f9a9b;
+      --chip-bg:#e9f6f6;
+      --chip-line:#cdecec;
+      --btn:#e8f3f3;
+      --btn-line:#cfe6e6;
+      --btn-ink:#174344;
     }
-  });
 
-  // Guided Tour (spotlight)
-  const mask=$("#coachMask"); let box, tip, stepIdx=0, steps=[];
-  function rect(el){ const r=el.getBoundingClientRect(); return {x:r.left+window.scrollX,y:r.top+window.scrollY,w:r.width,h:r.height}; }
-  function mk(el, html){
-    if(!box){ box=document.createElement("div"); box.className="coach-target"; document.body.appendChild(box); }
-    if(!tip){ tip=document.createElement("div"); tip.className="coach-tip"; document.body.appendChild(tip); }
-    const r=rect(el);
-    box.style.display="block"; mask.style.display="block";
-    box.style.left=(r.x-8)+"px"; box.style.top=(r.y-8)+"px"; box.style.width=(r.w+16)+"px"; box.style.height=(r.h+16)+"px";
-    el.scrollIntoView({behavior:"smooth", block:"center"});
-    tip.innerHTML = html;
-    const below = r.y + r.h + 16;
-    tip.style.left = Math.max(12, Math.min(window.scrollX + window.innerWidth - 12 - 360, r.x))+"px";
-    tip.style.top  = (below)+"px";
-    tip.style.display="block";
-  }
-  function clearMk(){ if(box){ box.style.display="none"; } if(tip){ tip.style.display="none"; } mask.style.display="none"; }
-  function stopTour(){ clearMk(); steps=[]; stepIdx=0; }
-  function next(){ stepIdx++; runStep(); }
-  function prev(){ stepIdx=Math.max(0, stepIdx-1); runStep(); }
-  function findAny(selectors, text){
-    for(const s of (selectors||[])){ const el=document.querySelector(s); if(el) return el; }
-    if(text){
-      const cands=[...document.querySelectorAll("h1,h2,h3,section,div")];
-      const hit=cands.find(n=> (n.textContent||"").toLowerCase().includes(text));
-      if(hit) return hit;
-    }
-    return null;
-  }
-  function runStep(){
-    if(stepIdx>=steps.length){ stopTour(); return; }
-    const st=steps[stepIdx];
-    const el=findAny(st.sel, st.text);
-    if(!el){ stepIdx++; return runStep(); }
-    mk(el, `<h4>${st.title}</h4><div>${st.body}</div>
-      <div class="coach-ctr">
-        <button class="help-fab" style="position:static;padding:6px 10px" id="tourPrev">◀ Prev</button>
-        <button class="help-fab" style="position:static;padding:6px 10px" id="tourNext">${stepIdx===steps.length-1?"Finish":"Next ▶"}</button>
-      </div>`);
-    $("#tourPrev").onclick = prev;
-    $("#tourNext").onclick = next;
-  }
-  $("#startTour").addEventListener("click", ()=>{
-    steps = [
-      {title:"Personalize", body:"Set your display name; the header updates.", text:"personalize"},
-      {title:"Income", body:"Enter monthly income, or use the Income-by-Pay card below to normalize and auto-fill.", text:"income"},
-      {title:"Essentials", body:"Add essentials. Itemize below if easier, then auto-fill.", text:"essentials"},
-      {title:"Debts", body:"Add balances, APR %, term, and min pay. H3xt0 suggests where extra cash goes.", text:"debts"},
-      {title:"Goal & What-If", body:"Pick your purchase date and try the What-If slider.", text:"goal"},
-      {title:"Charts", body:"Watch cash-flow and payoff curves update as you tweak numbers.", text:"chart"},
-      {title:"Payday Reminders", body:"Generate an .ics with events on your paydays—great for avalanche payments.", sel:["#paydayReminders"]},
-      {title:"Tip Jar & Privacy", body:"Tips are optional and do not unlock features. Data stays on your device.", text:"tip"}
-    ];
-    close(); runStep();
-  });
-  mask.addEventListener("click", stopTour);
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+      font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .container{max-width:720px;margin:0 auto;padding:14px}
 
-  // Add small ? icons to our add-on cards (if present)
-  ["#incomeByPay","#essentialsItemized","#paydayReminders"].forEach(sel=>{
-    const card=document.querySelector(sel);
-    if(card){
-      const b=document.createElement("button");
-      b.textContent="❓"; b.className="help-fab"; b.style.position="static"; b.style.padding="4px 8px"; b.style.marginLeft="8px";
-      card.querySelector("h3")?.appendChild(b);
-      b.addEventListener("click", open);
+    /* top app bar (teal, like the mockup) */
+    .topbar{position:sticky;top:0;z-index:20;
+      background:linear-gradient(180deg,var(--brand),var(--brand-2));
+      color:#fff;border-bottom:1px solid #0001}
+    .topbar .inner{max-width:720px;margin:0 auto;padding:12px 14px;
+      display:flex;align-items:center;gap:10px}
+    .logo{height:22px}
+    .brand{font-weight:800;letter-spacing:.2px}
+    .tag{opacity:.9}
+
+    /* cards */
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+      padding:14px 12px 12px;margin:12px 0;box-shadow:0 10px 26px rgba(9,130,130,.08)}
+    h2,h3{margin:6px 0 10px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:10px;align-items:center}
+    .grow{flex:1}
+
+    /* inputs */
+    input,select,button{font:16px system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    input,select{
+      width:100%;height:46px;border-radius:12px;
+      border:1px solid #cfe6e6;background:#fff;color:var(--ink);
+      padding:10px 12px; box-shadow:0 2px 0 #eef6f6 inset;
     }
-  });
-})();
-</script>
+    input::placeholder{color:#8faeae}
+    input:focus,select:focus{outline:2px solid var(--focus);border-color:var(--focus)}
+
+    /* buttons (rounded like your mockup) */
+    .btn{height:46px;padding:10px 14px;border-radius:12px;border:1px solid var(--btn-line);
+      background:var(--btn);color:var(--btn-ink);cursor:pointer}
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn.link{border:none;background:transparent;color:#fff;opacity:.95}
+    .btn.link.dark{color:var(--brand)}
+
+    .totals{display:flex;justify-content:space-between;margin-top:10px}
+    .kpi{background:#edf7f7;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+
+    /* compact list */
+    .list{width:100%;border-collapse:separate;border-spacing:0 8px}
+    .list th{font-size:13px;text-align:left;color:var(--muted);font-weight:600}
+    .list td{background:#fff;border:1px solid #e6f0f0;padding:10px;border-radius:12px}
+    .right{margin-left:auto}
+    .space{height:8px}
+
+    /* ======== Guided full-screen sheets (teal header like mockup) ======== */
+    .sheet{position:fixed;inset:0;z-index:1000;display:none}
+    .mask{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+    .panel{position:absolute;left:50%;top:0;transform:translateX(-50%);
+      width:min(720px,100vw);height:100%;display:flex;flex-direction:column;
+      background:var(--bg);border:1px solid var(--line)}
+    .head{padding:16px;border-bottom:none;background:linear-gradient(180deg,var(--brand),var(--brand-2));
+      color:#fff;display:flex;justify-content:space-between;align-items:center}
+    .body{padding:14px;flex:1;overflow:auto}
+    .foot{padding:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;background:#fff5}
+    .field{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+    .help{color:var(--muted)}
+    .review{background:#edf7f7;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .chipset{display:flex;gap:10px;flex-wrap:wrap}
+    .chip{border:1px solid var(--chip-line);background:var(--chip-bg);color:#265a5b;border-radius:999px;padding:10px 12px;cursor:pointer}
+    .chip[aria-selected="true"]{outline:2px solid var(--brand)}
+
+    /* Help FAB (teal) */
+    .fab{position:fixed;right:16px;bottom:16px;z-index:900;border-radius:999px;border:1px solid #0d7e7f;
+      background:#0d7e7f;color:#fff;padding:12px 14px;box-shadow:0 10px 22px rgba(0,0,0,.25)}
+
+    /* Portrait hint overlay for landscape */
+    .rotate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:1500;color:#fff;text-align:center;padding:20px}
+    @media (orientation:landscape){ .rotate{display:flex;} }
+  </style>
+</head>
 
 <body>
-<header>
-  <h1 id="title">H3xt0</h1>
-  <div class="sub" id="tagline">Private • Goal-Focused • Offline</div>
-</header>
-
-<div class="wrap">
-
-  <!-- Personalize -->
-  <section class="card">
-    <h3>Personalize</h3>
-    <div class="row">
-      <div>
-        <label>Display Name (appears in header)</label>
-        <input id="ownerName" placeholder="Your name (optional)">
-      </div>
-      <div><label>&nbsp;</label></div>
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="inner">
+      <img class="logo" src="icons/app-h3-cube-contrast-Hwhite.svg" alt="H³">
+      <span class="brand">H3xt0</span>
+      <span class="tag">• Private • Goal-Focused • Offline</span>
+      <button id="helpBtn" class="btn link right">Help</button>
     </div>
-  </section>
+  </div>
 
-  <section class="card">
-    <h3>Income & Essentials</h3>
-    <div class="row">
-      <div><label>Monthly Net Income</label><input id="income" class="mono textlike" placeholder="$0.00"></div>
-      <div><label>Monthly Fixed Expenses (rent, utilities, etc.)</label><input id="fixed" class="mono textlike" placeholder="$0.00"></div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h3>Goal</h3>
-    <div class="row">
-      <div><label>Goal Amount</label><input id="goalAmt" class="mono textlike" placeholder="$0.00"></div>
-      <div><label>Goal Target Date</label><input type="date" id="goalDate"></div>
-    </div>
-    <div class="row">
-      <div><label>Current Savings Toward Goal</label><input id="goalNow" class="mono textlike" placeholder="$0.00"></div>
-      <div><label>Strategy</label>
-        <select id="strategy" aria-label="Paydown strategy">
-          <option value="avalanche">Avalanche (highest APR first)</option>
-          <option value="snowball">Snowball (lowest balance first)</option>
-        </select>
+  <div class="container">
+    <!-- Personalize + Guided toggle -->
+    <div class="card">
+      <div class="row">
+        <div class="grow">
+          <label class="muted">Display name</label>
+          <input id="displayName" placeholder="Your name (optional)">
+        </div>
+        <div>
+          <label class="muted">Guided Mode</label>
+          <div class="row" title="Full-screen, step-by-step data entry">
+            <input type="checkbox" id="guidedToggle" checked style="width:22px;height:22px">
+            <span id="guidedState" class="muted">ON</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="row">
-      <div><label>Months to Goal</label><input id="monthsToGoal" readonly class="mono"></div>
-      <div><label>Required Monthly Saving</label><input id="reqSave" readonly class="mono"></div>
-    </div>
-  </section>
 
-  <section class="card">
-    <h3>Debts</h3>
-    <div class="table-scroll">
-      <table id="debtsTbl">
-        <thead>
-          <tr><th>Debt</th><th class="right">Balance</th><th class="right">APR %</th><th class="right">Term (mo)</th><th class="right">Min Pay</th><th>Del</th></tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-          <tr><td>Total</td><td class="right mono" id="totBal">$0.00</td><td></td><td></td><td class="right mono" id="totMin">$0.00</td><td></td></tr>
-        </tfoot>
+    <!-- Income by pay schedule -->
+    <div class="card" id="cardIncome">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <h3>Income by Pay Schedule</h3>
+        <button class="btn link dark" id="editIncome">Edit →</button>
+      </div>
+      <table class="list">
+        <thead><tr><th>Source</th><th>Freq</th><th>Per pay</th><th>Monthly</th></tr></thead>
+        <tbody id="incRows"></tbody>
       </table>
-    </div>
-    <div class="chips" role="group" aria-label="Debt actions">
-      <button class="btn" id="addDebt">+ Add Debt</button>
-      <button class="btn sec" id="clearZeroes">Clean up paid-off</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <h3>Plan Summary</h3>
-    <div class="grid-3">
-      <div><div class="muted">Available for Debts (after mins & goal save)</div><div class="mono" id="extraPool">$0.00</div></div>
-      <div><div class="muted">Recommended Extra Target</div><div id="targetDebt" class="pill">—</div></div>
-      <div><div class="muted">Projected All-Debts Payoff</div><div class="mono" id="projDone">—</div></div>
-    </div>
-    <div id="flags" style="margin-top:10px"></div>
-  </section>
-
-  <section class="card">
-    <h3>What-If: Shift Goal Date</h3>
-    <div class="row">
-      <div>
-        <label>Shift by months (–24 to +60)</label>
-        <input type="range" id="whatIfMonths" min="-24" max="60" step="1" value="0">
+      <div class="totals">
+        <div class="kpi">Monthly income</div>
+        <div class="kpi" id="incMonthly">$0.00</div>
       </div>
-      <div>
-        <label>Preview</label>
-        <div class="mono" id="whatIfLabel">—</div>
+      <div class="space"></div>
+      <button id="addInc" class="btn">+ Add Income Source</button>
+    </div>
+
+    <!-- Essentials -->
+    <div class="card" id="cardEss">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <h3>Essentials (itemized)</h3>
+        <button class="btn link dark" id="editEss">Edit →</button>
+      </div>
+      <table class="list">
+        <thead><tr><th>Name</th><th>Monthly</th></tr></thead>
+        <tbody id="essRows"></tbody>
+      </table>
+      <div class="totals">
+        <div class="kpi">Monthly essentials</div>
+        <div class="kpi" id="essMonthly">$0.00</div>
+      </div>
+      <div class="space"></div>
+      <button id="addEss" class="btn">+ Add Expense</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <h3>Plan Summary</h3>
+      <div class="row" style="gap:12px;flex-wrap:wrap">
+        <div class="kpi grow">Net monthly (income − essentials)</div>
+        <div class="kpi" id="netMonthly">$0.00</div>
       </div>
     </div>
-    <div class="chips">
-      <button class="btn" id="applyWhatIf">Apply this goal date</button>
-      <button class="btn sec" id="resetWhatIf">Reset slider</button>
-    </div>
-  </section>
 
-  <section class="card">
-    <h3>Charts</h3>
-    <div class="canvas-wrap small"><canvas id="cashFlowChart"></canvas></div>
-    <div class="legend" id="cashLegend"></div>
-    <div style="height:12px"></div>
-    <div class="canvas-wrap"><canvas id="payoffChart"></canvas><div id="tipTotal" class="tooltip tip-hidden"></div></div>
-    <div class="muted" style="margin-top:6px" id="payoffNote">—</div>
-    <div style="height:12px"></div>
-    <h3 style="margin-top:8px">Per-Debt Payoff</h3>
-    <div class="canvas-wrap"><canvas id="perDebtChart"></canvas><div id="tipPerDebt" class="tooltip tip-hidden"></div></div>
-    <div class="legend" id="perDebtLegend"></div>
-  </section>
-
-  <section class="card">
-    <h3>Backup & Share</h3>
-    <div class="row">
-      <button class="btn sec" id="exportBtn">Export JSON</button>
-      <label class="btn sec" for="importFile" style="text-align:center;cursor:pointer">Import JSON</label>
-      <input type="file" id="importFile" accept="application/json" style="display:none">
-      <button class="btn sec" id="shareBtn">Copy Share Link</button>
-      <button class="btn" id="saveBtn">Save</button>
-      <button class="btn sec" id="resetBtn">Reset</button>
-    </div>
-    <div class="muted" style="margin-top:10px">
-      Data stays on your device (localStorage). Export to back up; Share Link creates a snapshot URL.
-    </div>
-    <div class="muted" id="pwaStatus" style="margin-top:6px">Status: checking…</div>
-    <div class="muted small" style="margin-top:6px">• <a href="privacy.html" target="_blank" rel="noopener">Privacy</a></div>
-  </section>
-
-  
-<section class="card" id="tipJar">
-  <h3>Support H3xt0 (Tip Jar)</h3>
-  <div class="row">
-    <button class="btn sec" id="tip099" disabled>.99&cent; Tip</button>
-    <button class="btn sec" id="tip299" disabled>$2.99 Tip</button>
-    <button class="btn sec" id="tip499" disabled>$4.99 Tip</button>
+    <div style="height:42px"></div>
   </div>
-  <div class="muted" id="tipStatus" style="margin-top:8px">
-    Tips are optional and do not unlock features. Available in the Play-installed Android app.
+
+  <!-- Help sheet -->
+  <div class="sheet" id="helpSheet" aria-hidden="true">
+    <div class="mask"></div>
+    <div class="panel">
+      <div class="head"><strong>Help</strong><button class="btn" data-close="#helpSheet">Close</button></div>
+      <div class="body">
+        <p><strong>Welcome!</strong> H3xt0 keeps everything local (no accounts). Use <em>Guided Mode</em> for full-screen entry exactly like the screenshots.</p>
+        <ul>
+          <li><strong>Income by Pay:</strong> choose Monthly (12), Bi-weekly (26), or Twice-monthly (24). Enter <em>net</em> per paycheck.</li>
+          <li><strong>Essentials:</strong> itemize rent, power, internet, etc. Edit anytime.</li>
+          <li>The Summary shows what’s left each month for goals/debt.</li>
+        </ul>
+      </div>
+      <div class="foot"><span></span><button class="btn primary" data-close="#helpSheet">Got it</button></div>
+    </div>
   </div>
-</section>
-<div class="footer"></div>
-</div>
 
-<!-- Sticky bottom bar (phones) -->
-<div class="sticky-bar" id="stickyBar">
-  <button class="btn" id="saveBtn2">Save</button>
-  <button class="btn sec" id="shareBtn2">Share</button>
-  <button class="btn sec" id="exportBtn2">Export</button>
-</div>
+  <!-- Guided: Income -->
+  <div class="sheet" id="incSheet" aria-hidden="true">
+    <div class="mask"></div>
+    <div class="panel">
+      <div class="head"><strong>Income by Pay Schedule</strong><span id="incStep" class="muted">Step 1 of 4</span></div>
+      <div class="body" id="incBody"></div>
+      <div class="foot">
+        <button class="btn" id="incBack">◀ Back</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn" data-close="#incSheet">Cancel</button>
+          <button class="btn primary" id="incNext">Next ▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<!-- Android / iOS install banner -->
-<div class="install-banner" id="installBanner" role="dialog" aria-live="polite">
-  <div id="installText">Install H3xt0 on this device?</div>
-  <div class="spacer"></div>
-  <button class="btn" id="installBtn">Install</button>
-  <button class="btn sec" id="dismissBtn">Not now</button>
-</div>
+  <!-- Guided: Essentials -->
+  <div class="sheet" id="essSheet" aria-hidden="true">
+    <div class="mask"></div>
+    <div class="panel">
+      <div class="head"><strong>Essentials (itemized)</strong><span id="essStep" class="muted">Step 1 of 3</span></div>
+      <div class="body" id="essBody"></div>
+      <div class="foot">
+        <button class="btn" id="essBack">◀ Back</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn" data-close="#essSheet">Cancel</button>
+          <button class="btn primary" id="essNext">Next ▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<!-- Update available snackbar -->
-<div class="update-bar" id="updateBar">
-  <span>Update available</span>
-  <div class="spacer"></div>
-  <button class="btn" id="refreshBtn">Refresh</button>
-</div>
+  <!-- Portrait hint -->
+  <div class="rotate"><div>
+    <h3>Best in Portrait</h3>
+    Rotate your phone upright for the cleanest layout.
+  </div></div>
 
-<!-- Pull-to-refresh indicator -->
-<div class="ptr" id="ptr">↓ Pull to refresh</div>
+  <button class="fab" id="fabHelp">❓ Help</button>
 
-<script>
-/*** PWA register ***/
-window.addEventListener('load', ()=>{ if('serviceWorker' in navigator && location.protocol.startsWith('http')){ navigator.serviceWorker.register('./sw.js'); }});
+  <script>
+    // ========= helpers =========
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    const money = v => new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'}).format(Number(v||0));
+    const num = s => { const n = Number(String(s).replace(/[^\d.]/g,'')); return isFinite(n)?n:0; };
+    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
 
-/*** CONSTANTS ***/
-const K = "h3xt0_pwa_v3";
-const CURRENCY = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+    // ========= state =========
+    let incomes = [];    // {name, freq: '12'|'24'|'26', amount}
+    let essentials = []; // {name, amount}
 
-/*** UTILS ***/
-const $ = (id)=>document.getElementById(id);
-const fmtMoney = (n)=> (isNaN(n)||n===null) ? "$0.00" : CURRENCY.format(n);
-function parseMoney(str){ if(str==null) return NaN; const v = String(str).replace(/[^0-9.\\-]/g,''); const num = parseFloat(v); return isNaN(num)?NaN:num; }
-function monthsBetween(d1,d2){ const a=new Date(d1), b=new Date(d2); if(isNaN(a)||isNaN(b)) return 1; const days=(b - a)/86400000; return Math.max(1, Math.ceil(days/30.4375)); }
-function ymd(date){ const d=new Date(date); if(isNaN(d)) return ""; const m=("0"+(d.getMonth()+1)).slice(-2); const day=("0"+d.getDate()).slice(-2); return `${d.getFullYear()}-${m}-${day}`; }
-function titleFromName(name){ const n=(name||"").trim(); if(!n) return "H3xt0"; const endsS=/s$/i.test(n); return endsS?`${n}' H3xt0`:`${n}'s H3xt0`; }
+    // ========= load saved =========
+    try{
+      const saved = JSON.parse(localStorage.getItem('h3xt0.data')||'{}');
+      if(saved.name) $('#displayName').value = saved.name;
+      incomes = Array.isArray(saved.incomes)?saved.incomes:[];
+      essentials = Array.isArray(saved.essentials)?saved.essentials:[];
+    }catch(_){}
 
-/*** MONEY MASK ***/
-function wireMoneyMask(input){
-  input.addEventListener('focus', ()=>{ const v=parseMoney(input.value); input.value=isNaN(v)?'':String(v); });
-  input.addEventListener('blur', ()=>{ const v=parseMoney(input.value); input.value=isNaN(v)?'':CURRENCY.format(v); compute(); });
-  input.addEventListener('input', compute);
-}
+    // ========= top actions =========
+    $('#helpBtn').onclick = ()=> openSheet('#helpSheet');
+    $('#fabHelp').onclick  = ()=> openSheet('#helpSheet');
+    $$('#helpSheet [data-close], #helpSheet .mask').forEach(b=> b.onclick=()=> closeSheet('#helpSheet'));
 
-/*** STATE ***/
-function read(){
-  const debts=[];
-  document.querySelectorAll('#debtsTbl tbody tr').forEach(tr=>{
-    const [name,balance,apr,term,min]=Array.from(tr.querySelectorAll('input')).map(i=>i.value);
-    debts.push({ name:(name||'Debt').trim(), balance:parseMoney(balance)||0, apr:parseFloat(apr||0), term:parseInt(term||0,10), min:parseMoney(min)||0 });
-  });
-  const income=parseMoney($('income').value)||0, fixed=parseMoney($('fixed').value)||0;
-  const goalAmt=parseMoney($('goalAmt').value)||0, goalNow=parseMoney($('goalNow').value)||0;
-  const goalDate=$('goalDate').value, strategy=$('strategy').value, ownerName=$('ownerName').value||'';
-  return {income,fixed,goalAmt,goalNow,goalDate,strategy,debts,ownerName};
-}
-function save(){ localStorage.setItem(K, JSON.stringify(read())); }
-function load(){
-  const raw = localStorage.getItem(K); if(!raw) return;
-  try{
-    const st=JSON.parse(raw);
-    $('income').value=st.income?CURRENCY.format(st.income):'';
-    $('fixed').value=st.fixed?CURRENCY.format(st.fixed):'';
-    $('goalAmt').value=st.goalAmt?CURRENCY.format(st.goalAmt):'';
-    $('goalNow').value=st.goalNow?CURRENCY.format(st.goalNow):'';
-    $('goalDate').value=st.goalDate??'';
-    $('strategy').value=st.strategy??'avalanche';
-    $('ownerName').value=st.ownerName??''; $('title').textContent=titleFromName(st.ownerName);
-    const tb=document.querySelector('#debtsTbl tbody'); tb.innerHTML='';
-    (st.debts||[]).forEach(d=>tb.appendChild(row(d)));
-  }catch(e){}
-}
+    // guided toggle (default ON)
+    const gKey='h3xt0.guided';
+    const gOn = ()=> (localStorage.getItem(gKey)||'on')==='on';
+    const gToggle = $('#guidedToggle'); const gState = $('#guidedState');
+    gToggle.checked = gOn(); gState.textContent = gOn()?'ON':'OFF';
+    gToggle.onchange = ()=>{ localStorage.setItem(gKey, gToggle.checked?'on':'off'); gState.textContent = gOn()?'ON':'OFF'; };
 
-/*** ROW ***/
-function row(debt={}){
-  const tr=document.createElement('tr');
-  tr.innerHTML = `
-    <td class="name-cell"><input class="debt-name" placeholder="e.g., Visa" value="${debt.name??''}" aria-label="Debt name" title="${(debt.name||'').replace(/"/g,'&quot;')}"></td>
-    <td class="right"><input class="mono textlike" placeholder="$0.00" value="${debt.balance??''}" aria-label="Balance"></td>
-    <td class="right"><input type="text" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" placeholder="000.00" value="${debt.apr??''}" class="mono" aria-label="APR percent"></td>
-    <td class="right"><input type="text" inputmode="numeric" pattern="\\d*" placeholder="00" value="${debt.term??''}" class="mono" aria-label="Term months"></td>
-    <td class="right"><input class="mono textlike" placeholder="$0.00" value="${debt.min??''}" aria-label="Minimum payment"></td>
-    <td class="right"><button class="btn sec del" title="Delete debt" aria-label="Delete debt">Del</button></td>`;
-  const inp = tr.querySelectorAll('input');
-  wireMoneyMask(inp[1]); wireMoneyMask(inp[4]);
-  [inp[0],inp[2],inp[3]].forEach(i=>i.addEventListener('input', compute));
-  tr.querySelector('.del').addEventListener('click', ()=>{ tr.remove(); compute(); });
-  return tr;
-}
+    // intercept +Add to open guided when ON
+    function intercept(btnSel, openFn){
+      const b = $(btnSel);
+      if(!b) return;
+      b.addEventListener('click', (e)=>{
+        if(gOn()){ e.preventDefault(); e.stopImmediatePropagation(); openFn(); }
+      }, true);
+    }
+    intercept('#addInc', openIncomeSheet);
+    intercept('#editIncome', openIncomeSheet);
+    intercept('#addEss', openEssSheet);
+    intercept('#editEss', openEssSheet);
 
-/*** MATH + SIM ***/
-function normalizeDebts(list){
-  let totBal=0, totMin=0;
-  const arr=list.filter(d=>d.balance>0).map(d=>{
-    const r=(d.apr||0)/100/12;
-    const min = d.min>0 ? d.min : ((d.term>0 && r>0) ? ((d.balance*r)/(1-Math.pow(1+r,-d.term))) : Math.min(d.balance,25));
-    totBal += d.balance; totMin += min;
-    return {...d,r,min};
-  });
-  return {arr,totBal,totMin};
-}
-function simulateFull(debts, extra, strategy){
-  let ds=debts.map(d=>({...d, bal:d.balance, alive:true}));
-  const totalSeries=[], perDebtSeries=ds.map(d=>({name:d.name, series:[d.balance]}));
-  let guard=0;
-  while(ds.some(d=>d.alive) && guard<1200){
-    ds.forEach(d=>{
-      if(!d.alive) return;
-      const interest=d.bal*d.r, due=d.bal+interest, pay=Math.min(d.min, due);
-      d.bal=due-pay; if(d.bal<=0.01){ d.bal=0; d.alive=false; }
+    // ========= renderers =========
+    function recalc(){
+      // incomes
+      const tbI = $('#incRows'); tbI.innerHTML='';
+      let incMonth = 0;
+      incomes.forEach(i=>{
+        const m = num(i.amount)*(Number(i.freq)/12);
+        incMonth += m;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${esc(i.name||'—')}</td><td>${i.freq}</td><td>${money(i.amount)}</td><td>${money(m)}</td>`;
+        tbI.appendChild(tr);
+      });
+      $('#incMonthly').textContent = money(incMonth);
+
+      // essentials
+      const tbE = $('#essRows'); tbE.innerHTML='';
+      let essMonth = 0;
+      essentials.forEach(e=>{
+        essMonth += num(e.amount);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${esc(e.name||'—')}</td><td>${money(e.amount)}</td>`;
+        tbE.appendChild(tr);
+      });
+      $('#essMonthly').textContent = money(essMonth);
+
+      // net
+      $('#netMonthly').textContent = money(incMonth - essMonth);
+
+      // persist
+      localStorage.setItem('h3xt0.data', JSON.stringify({incomes, essentials, name:$('#displayName').value||''}));
+    }
+
+    // save name live
+    $('#displayName').addEventListener('input', e=>{
+      localStorage.setItem('h3xt0.data', JSON.stringify({incomes, essentials, name:e.target.value||''}));
     });
-    const alive=ds.filter(d=>d.alive);
-    if(alive.length){
-      alive.sort((a,b)=> strategy==='avalanche' ? (b.apr-a.apr) : (a.bal-b.bal));
-      let t=alive[0];
-      if(extra>0){ t.bal=Math.max(0, t.bal-extra); if(t.bal<=0.01){ t.bal=0; t.alive=false; } }
-    }
-    totalSeries.push(ds.reduce((s,d)=>s+(d.bal||0),0));
-    ds.forEach((d,i)=> perDebtSeries[i].series.push(d.bal));
-    guard++;
-  }
-  return {months: totalSeries.length, totalSeries, perDebtSeries};
-}
 
-/*** Charts ***/
-const COLORS={fixed:'#f59e0b',goal:'#10b981',mins:'#60a5fa',extra:'#a78bfa',short:'#ef4444',axis:'#243347',line:'#e6edf3',text:'#cfe0ff'};
-function setupCanvas(canvas){ const dpr=window.devicePixelRatio||1, r=canvas.getBoundingClientRect(); canvas.width=r.width*dpr; canvas.height=r.height*dpr; const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr); ctx.clearRect(0,0,r.width,r.height); ctx.font='12px system-ui'; return {ctx,w:r.width,h:r.height}; }
-function drawCashFlow(income, fixed, reqSave, mins, extra){
-  const c=$('cashFlowChart'); const {ctx,w,h}=setupCanvas(c); const pad=14, barH=26, y=h/2-barH/2;
-  const shortfall=Math.max(0,-extra), extraPos=Math.max(0,extra);
-  const segs=[{label:'Fixed',val:Math.max(0,fixed),color:COLORS.fixed},{label:'Goal',val:Math.max(0,reqSave),color:COLORS.goal},{label:'Mins',val:Math.max(0,mins),color:COLORS.mins},{label:'Extra',val:extraPos,color:COLORS.extra},{label:'Short',val:shortfall,color:COLORS.short}].filter(s=>s.val>1e-4);
-  const total=segs.reduce((s,a)=>s+a.val,0)||1;
-  ctx.strokeStyle=COLORS.axis; ctx.strokeRect(pad,y-8,w-2*pad,barH+16);
-  let x=pad; segs.forEach(s=>{ const segW=(s.val/total)*(w-2*pad); ctx.fillStyle=s.color; ctx.fillRect(x,y,segW,barH); x+=segW; });
-  ctx.fillStyle=COLORS.text; ctx.fillText(`Income: ${fmtMoney(income)}`, pad, y-14);
-  const legend=$('cashLegend'); legend.innerHTML=''; segs.forEach(s=>{ const item=document.createElement('div'); item.className='item'; const sw=document.createElement('span'); sw.className='swatch'; sw.style.background=s.color; const txt=document.createElement('span'); txt.textContent=`${s.label}: ${fmtMoney(s.val)}`; item.appendChild(sw); item.appendChild(txt); legend.appendChild(item); });
-}
-let payoffMeta=null;
-function drawTotalPayoff(balances){
-  const c=$('payoffChart'); const {ctx,w,h}=setupCanvas(c); const pad={l:48,r:12,t:10,b:24};
-  if(!balances||balances.length===0){ ctx.fillStyle=COLORS.text; ctx.fillText('Add debts to see payoff curve.',16,h/2); payoffMeta=null; return; }
-  const maxY=Math.max(...balances), len=balances.length;
-  ctx.strokeStyle=COLORS.axis; ctx.beginPath(); ctx.moveTo(pad.l,h-pad.b); ctx.lineTo(w-pad.r,h-pad.b); ctx.moveTo(pad.l,h-pad.b); ctx.lineTo(pad.l,pad.t); ctx.stroke();
-  ctx.fillStyle=COLORS.text; [0,maxY/2,maxY].forEach(v=>{ const y=mapY(v); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); ctx.fillText(fmtMoney(v),6,y-2); });
-  [0,Math.floor(len/2),len-1].filter((v,i,a)=>a.indexOf(v)===i).forEach(ix=>{ const x=mapX(ix); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,h-pad.b); ctx.stroke(); ctx.fillText(`${ix} mo`, x-12,h-6); });
-  ctx.strokeStyle=COLORS.line; ctx.lineWidth=2; ctx.beginPath(); balances.forEach((v,i)=>{ const x=mapX(i), y=mapY(v); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.stroke();
-  const endX=mapX(len-1), endY=mapY(balances[len-1]); ctx.fillStyle=COLORS.line; ctx.beginPath(); ctx.arc(endX,endY,3,0,Math.PI*2); ctx.fill();
-  payoffMeta={balances,mapX,mapY,pad,w,h,len}; function mapX(i){return pad.l+(i/Math.max(1,len-1))*(w-pad.l-pad.r);} function mapY(v){const t=(v-0)/Math.max(1,(maxY-0)); return h-pad.b-t*(h-pad.t-pad.b);}
-}
-let perDebtMeta=null;
-function drawPerDebt(series){
-  const c=$('perDebtChart'); const {ctx,w,h}=setupCanvas(c); const pad={l:48,r:12,t:10,b:24}; const legend=$('perDebtLegend'); legend.innerHTML='';
-  if(!series||series.length===0||series.every(s=>s.series.length<=1)){ ctx.fillStyle=COLORS.text; ctx.fillText('Add debts to see per-debt payoff.',16,h/2); perDebtMeta=null; return; }
-  const len=Math.max(...series.map(s=>s.series.length)), maxY=Math.max(...series.flatMap(s=>s.series));
-  ctx.strokeStyle=COLORS.axis; ctx.beginPath(); ctx.moveTo(pad.l,h-pad.b); ctx.lineTo(w-pad.r,h-pad.b); ctx.moveTo(pad.l,h-pad.b); ctx.lineTo(pad.l,pad.t); ctx.stroke();
-  ctx.fillStyle=COLORS.text; [0,maxY/2,maxY].forEach(v=>{ const y=mapY(v); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); ctx.fillText(fmtMoney(v),6,y-2); });
-  [0,Math.floor((len-1)/2),len-1].filter((v,i,a)=>a.indexOf(v)===i).forEach(ix=>{ const x=mapX(ix); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,h-pad.b); ctx.stroke(); ctx.fillText(`${ix} mo`, x-12,h-6); });
-  const cols = series.map((_,i)=>`hsl(${Math.round((360*i)/Math.max(1,series.length))} 70% 65%)`);
-  series.forEach((s,idx)=>{ ctx.strokeStyle=cols[idx]; ctx.lineWidth=2; ctx.beginPath(); s.series.forEach((v,i)=>{ const x=mapX(i), y=mapY(v); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.stroke(); const endX=mapX(s.series.length-1), endY=mapY(s.series[s.series.length-1]); ctx.fillStyle=cols[idx]; ctx.beginPath(); ctx.arc(endX,endY,3,0,Math.PI*2); ctx.fill();
-    const item=document.createElement('div'); item.className='item'; const sw=document.createElement('span'); sw.className='swatch'; sw.style.background=cols[idx]; const txt=document.createElement('span'); txt.textContent=s.name; item.appendChild(sw); item.appendChild(txt); legend.appendChild(item); });
-  perDebtMeta={series,mapX,mapY,pad,w,h,len,cols}; function mapX(i){return pad.l+(i/Math.max(1,len-1))*(w-pad.l-pad.r);} function mapY(v){const t=(v-0)/Math.max(1,(maxY-0)); return h-pad.b-t*(h-pad.t-pad-b);}
-}
+    // ========= sheet engine =========
+    function openSheet(sel){ const s=$(sel); s.style.display='block'; }
+    function closeSheet(sel){ const s=$(sel); s.style.display='none'; }
 
-/*** Compute ***/
-function compute(){
-  const st=read();
-  $('title').textContent=titleFromName(st.ownerName);
-  const mToGoal=monthsBetween(new Date(), st.goalDate||new Date()); $('monthsToGoal').value=isFinite(mToGoal)?mToGoal:'';
-  const reqSave=Math.max(0, ((st.goalAmt||0)-(st.goalNow||0))/mToGoal); $('reqSave').value=reqSave?CURRENCY.format(reqSave).replace('$',''):'';
-  const nd=normalizeDebts(st.debts); $('totBal').textContent=fmtMoney(nd.totBal); $('totMin').textContent=fmtMoney(nd.totMin);
-  const extraPool=(st.income||0)-(st.fixed||0)-reqSave-nd.totMin; $('extraPool').textContent=fmtMoney(extraPool);
-  let target='—'; if(nd.arr.length){ const sorted=nd.arr.slice().sort((a,b)=> st.strategy==='avalanche' ? (b.apr-a.apr) : (a.balance-b.balance)); target=sorted[0]?.name||'—'; } $('targetDebt').textContent=target;
-  const flags=[]; if(extraPool<0) flags.push('⚠️ Negative cash flow—raise income, reduce expenses, or delay goal date.'); if(reqSave>0&&!st.goalDate) flags.push('ℹ️ Set a goal date to compute required monthly saving.'); if(nd.arr.some(d=>d.min<d.balance*d.r)) flags.push('⚠️ A minimum payment is below monthly interest on a debt (negative amortization).');
-  $('flags').innerHTML = flags.length ? `<div class="${extraPool<0?'danger':'muted'}">${flags.join('<br>')}</div>` : `<div class="ok">✅ Plan looks feasible based on current inputs.</div>`;
-  const sim=simulateFull(nd.arr, Math.max(0,extraPool), st.strategy);
-  drawCashFlow(st.income||0, st.fixed||0, reqSave, nd.totMin, extraPool); drawTotalPayoff(sim.totalSeries);
-  if(sim.months>0){ const done=new Date(); done.setMonth(done.getMonth()+sim.months); $('projDone').textContent=done.toLocaleDateString(); $('payoffNote').textContent=`Projected debt-free in ${sim.months} month(s), on ${done.toLocaleDateString()}.`; } else { $('projDone').textContent='—'; $('payoffNote').textContent='—'; }
-  drawPerDebt(sim.perDebtSeries);
-  save();
-}
-
-/*** Share / What-If & wiring ***/
-function encodeState(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
-function decodeState(str){ return JSON.parse(decodeURIComponent(escape(atob(str)))); }
-function currentShareURL(){ const snapshot=encodeState(read()); return location.href.split('#')[0] + '#data=' + snapshot; }
-function updateWhatIfLabel(){ const st=read(); const base=st.goalDate?new Date(st.goalDate):new Date(new Date().setMonth(new Date().getMonth()+12)); const shift=parseInt($('whatIfMonths').value||0,10); const newDate=new Date(base); newDate.setMonth(newDate.getMonth()+shift); const months=monthsBetween(new Date(), newDate); const need=Math.max(0,((st.goalAmt||0)-(st.goalNow||0))/months); const curNeed=parseFloat(($('reqSave').value||'0').replace(/[^0-9.]/g,''))||0; const delta=need-curNeed; $('whatIfLabel').textContent=`${newDate.toLocaleDateString()} → need ${fmtMoney(need)} / mo (${delta>=0?'+':''}${fmtMoney(delta)} vs current)`; return {newDate,need}; }
-
-$('addDebt').addEventListener('click', ()=>{ const tr=row(); $('debtsTbl').querySelector('tbody').appendChild(tr); compute(); });
-$('clearZeroes').addEventListener('click', ()=>{ document.querySelectorAll('#debtsTbl tbody tr').forEach(tr=>{ const bal=parseMoney(tr.querySelectorAll('input')[1].value)||0; if(bal<=0) tr.remove(); }); compute(); });
-$('saveBtn').addEventListener('click', save);
-$('resetBtn').addEventListener('click', ()=>{ localStorage.removeItem(K); location.reload(); });
-$('exportBtn').addEventListener('click', ()=>{ const data=new Blob([JSON.stringify(read(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(data); a.download='budget.json'; a.click(); });
-$('importFile').addEventListener('change', (e)=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ localStorage.setItem(K, r.result); load(); compute(); }catch{} }; r.readAsText(f); });
-$('shareBtn').addEventListener('click', async ()=>{ try{ const url=currentShareURL(); await navigator.clipboard.writeText(url); alert('Share link copied! Send this URL + same HTML file.'); }catch(e){ prompt('Copy this link:', currentShareURL()); } });
-['income','fixed','goalAmt','goalDate','goalNow','strategy','ownerName'].forEach(id=>{ const el=$(id); if(!el) return; if(['income','fixed','goalAmt','goalNow'].includes(id)) wireMoneyMask(el); el.addEventListener('input', compute); });
-$('whatIfMonths').addEventListener('input', updateWhatIfLabel);
-$('applyWhatIf').addEventListener('click', ()=>{ const {newDate}=updateWhatIfLabel(); $('goalDate').value=ymd(newDate); $('whatIfMonths').value=0; compute(); });
-$('resetWhatIf').addEventListener('click', ()=>{ $('whatIfMonths').value=0; updateWhatIfLabel(); });
-
-/*** Duplicate actions to sticky bar ***/
-$('saveBtn2').addEventListener('click', ()=>$('saveBtn').click());
-$('shareBtn2').addEventListener('click', ()=>$('shareBtn').click());
-$('exportBtn2').addEventListener('click', ()=>$('exportBtn').click());
-
-/*** Install banners (Android & iOS) + PWA status ***/
-let deferredPrompt;
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-async function setStatus(){
-  let cacheOK=false; try{ const res=await caches.match('./budget.html'); cacheOK=!!res; }catch(e){}
-  $('pwaStatus').textContent = `Status: ${isStandalone?'Installed ✅':'Not installed'} • ${cacheOK?'Offline ready ✅':'No offline yet'}`;
-}
-setStatus();
-
-window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault(); deferredPrompt=e;
-  if(!isStandalone){ $('installText').textContent='Install H3xt0 on this device?'; $('installBtn').style.display=''; $('installBanner').classList.add('show'); }
-});
-$('installBtn').addEventListener('click', async ()=>{
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt=null;
-  $('installBanner').classList.remove('show'); setStatus();
-});
-$('dismissBtn').addEventListener('click', ()=> $('installBanner').classList.remove('show'));
-
-if(isIOS && !isStandalone){
-  $('installText').textContent='Add to Home Screen: Share → “Add to Home Screen”';
-  $('installBtn').style.display='none';
-  $('installBanner').classList.add('show');
-}
-
-/*** Update available snackbar (SW waiting) ***/
-navigator.serviceWorker?.getRegistration().then((reg)=>{
-  if(!reg) return;
-  function showSnack(){
-    $('updateBar').classList.add('show');
-    $('refreshBtn').onclick = ()=>{ reg.waiting?.postMessage({type:'SKIP_WAITING'}); };
-  }
-  if(reg.waiting) showSnack();
-  reg.addEventListener('updatefound', ()=>{
-    const nw = reg.installing;
-    nw?.addEventListener('statechange', ()=>{
-      if(nw.state==='installed' && navigator.serviceWorker.controller){ showSnack(); }
-    });
-  });
-  setInterval(()=>reg.update().catch(()=>{}), 30*60*1000);
-});
-navigator.serviceWorker?.addEventListener('controllerchange', ()=>location.reload());
-
-/*** Pull-to-refresh (simple) ***/
-let ptrStartY=null, ptrArmed=false;
-window.addEventListener('touchstart', (e)=>{
-  if(document.scrollingElement.scrollTop===0){ ptrStartY = e.touches[0].clientY; ptrArmed=true; }
-});
-window.addEventListener('touchmove', (e)=>{
-  if(!ptrArmed) return;
-  const dy = e.touches[0].clientY - ptrStartY;
-  if(dy>60) $('ptr').classList.add('show'); else $('ptr').classList.remove('show');
-});
-window.addEventListener('touchend', ()=>{
-  if($('ptr').classList.contains('show')) location.reload();
-  $('ptr').classList.remove('show'); ptrArmed=false; ptrStartY=null;
-});
-
-/*** Boot ***/
-window.addEventListener('load', ()=>{
-  const h=location.hash||''; if(h.startsWith('#data=')){ try{ const data=decodeState(h.slice(6)); localStorage.setItem(K, JSON.stringify(data)); history.replaceState(null,'',location.pathname+location.search);}catch(e){} }
-  load();
-  if(document.querySelectorAll('#debtsTbl tbody tr').length===0){
-    const tb=$('debtsTbl').querySelector('tbody');
-    tb.appendChild(row({name:'Visa',balance:3500,apr:22.9,term:0,min:70}));
-    tb.appendChild(row({name:'Auto Loan',balance:12500,apr:6.5,term:48,min:0}));
-    tb.appendChild(row({name:'Student Loan',balance:18000,apr:4.9,term:120,min:0}));
-  }
-  compute();
-  window.addEventListener('resize', compute);
-});
-</script>
-  <style>
-.rotate-overlay{
-  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-  background:rgba(0,0,0,.8); color:#e6f0ff; z-index:99999; text-align:center; padding:20px
-}
-.rotate-overlay .card{
-  background:#0e141a; border:1px solid #1b2733; border-radius:12px; padding:18px; max-width:420px
-}
-@media (orientation:landscape){ .rotate-overlay{ display:flex; } }
-</style>
-<div class="rotate-overlay" id="rotateOverlay"><div class="card">
-  <h3>Best in Portrait</h3>
-  <p>For the cleanest layout and charts, please rotate your phone upright.</p>
-</div></div>
-<!-- H3xt0 • Guided Entry sheets -->
-<style>
-/* Full-screen sheet */
-.hx-sheet{position:fixed;inset:0;z-index:10000;display:none}
-.hx-mask{position:absolute;inset:0;background:rgba(0,0,0,.65)}
-.hx-card{position:absolute;left:50%;top:0;transform:translateX(-50%);width:min(720px,100vw);
-  height:100%;background:#0b0f14;color:#e6f0ff;border:1px solid #1b2733;border-top:none;
-  border-radius:14px 14px 0 0;display:flex;flex-direction:column}
-.hx-head{padding:14px 14px 8px;border-bottom:1px solid #162232;display:flex;justify-content:space-between;align-items:center}
-.hx-title{font-size:1.05rem;margin:0}
-.hx-step{font-size:.9rem;opacity:.8}
-.hx-body{padding:14px;flex:1;overflow:auto}
-.hx-foot{padding:12px;border-top:1px solid #162232;display:flex;gap:10px;justify-content:space-between}
-.hx-btn{padding:11px 14px;border-radius:10px;border:1px solid #2a3a4a;background:#111823;color:#dfe6ee}
-.hx-btn.primary{background:#1a2a45;border-color:#3b5ea8}
-.hx-field{display:flex;flex-direction:column;gap:8px;margin:6px 0}
-.hx-label{font-weight:600}
-.hx-help{font-size:.9rem;opacity:.9;line-height:1.45}
-.hx-input, .hx-select{padding:12px;border-radius:10px;border:1px solid #223041;background:#0e141a;color:#e6f0ff;font-size:16px}
-.hx-radio{display:flex;gap:8px;flex-wrap:wrap}
-.hx-chip input{display:none}
-.hx-chip label{display:inline-block;padding:8px 10px;border:1px solid #2a3a4a;border-radius:999px;background:#0e141a}
-.hx-chip input:checked + label{outline:2px solid #4a7dff}
-.hx-review{background:#0e141a;border:1px solid #1b2733;border-radius:12px;padding:12px}
-@media (min-width:821px){ .hx-card{border-radius:16px; top:6vh; height:88vh;} }
-</style>
-
-<!-- Income Guided Sheet -->
-<div class="hx-sheet" id="hxIncomeSheet" role="dialog" aria-modal="true" aria-label="Guided income">
-  <div class="hx-mask"></div>
-  <div class="hx-card">
-    <div class="hx-head">
-      <h3 class="hx-title">Add Income (Guided)</h3>
-      <div class="hx-step" id="hxIncStep">Step 1 of 4</div>
-    </div>
-    <div class="hx-body" id="hxIncBody"></div>
-    <div class="hx-foot">
-      <button class="hx-btn" id="hxIncBack">◀ Back</button>
-      <div style="display:flex;gap:8px">
-        <button class="hx-btn" id="hxIncCancel">Cancel</button>
-        <button class="hx-btn primary" id="hxIncNext">Next ▶</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Essentials Guided Sheet -->
-<div class="hx-sheet" id="hxEssSheet" role="dialog" aria-modal="true" aria-label="Guided essential">
-  <div class="hx-mask"></div>
-  <div class="hx-card">
-    <div class="hx-head">
-      <h3 class="hx-title">Add Essential (Guided)</h3>
-      <div class="hx-step" id="hxEssStep">Step 1 of 3</div>
-    </div>
-    <div class="hx-body" id="hxEssBody"></div>
-    <div class="hx-foot">
-      <button class="hx-btn" id="hxEssBack">◀ Back</button>
-      <div style="display:flex;gap:8px">
-        <button class="hx-btn" id="hxEssCancel">Cancel</button>
-        <button class="hx-btn primary" id="hxEssNext">Next ▶</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-(function(){
-  // Utilities
-  const $ = s => document.querySelector(s);
-  const money = n => new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"}).format(Number(n||0)||0);
-
-  // ===== Insert small "Guided" buttons next to your existing +Add buttons =====
-  function injectGuidedButtons(){
-    const incActions = document.querySelector('#incomeByPay .addon-actions');
-    if (incActions && !incActions.querySelector('#btnIncGuided')){
-      const b = document.createElement('button');
-      b.id='btnIncGuided'; b.className='addon-btn'; b.textContent='✨ Guided';
-      incActions.insertBefore(b, incActions.firstChild);
-      b.addEventListener('click', openIncomeSheet);
-    }
-    const essActions = document.querySelector('#essentialsItemized .addon-actions');
-    if (essActions && !essActions.querySelector('#btnEssGuided')){
-      const b = document.createElement('button');
-      b.id='btnEssGuided'; b.className='addon-btn'; b.textContent='✨ Guided';
-      essActions.insertBefore(b, essActions.firstChild);
-      b.addEventListener('click', openEssSheet);
-    }
-  }
-  injectGuidedButtons();
-
-  // Handy hooks to your existing quick-add functions from prior code
-  const incWrap = $('#incRows');
-  const essWrap = $('#essRows');
-  function addIncRowViaGuided(name, freq, amt){
-    // Create exactly like quick-add does
-    const row = document.createElement('div'); row.className='addon-row';
-    row.innerHTML = `
-      <input placeholder="Source (e.g., Employer)" value="${(name||'').replace(/"/g,'&quot;')}">
-      <select>
-        <option value="12"${freq==='12'?' selected':''}>Monthly (12)</option>
-        <option value="26"${freq==='26'?' selected':''}>Bi-weekly (26)</option>
-        <option value="24"${freq==='24'?' selected':''}>Twice-monthly (24)</option>
-      </select>
-      <input inputmode="decimal" placeholder="$ per paycheck" value="${Number(amt||0).toFixed(2)}">
-      <button class="addon-btn">Del</button>`;
-    const sel = row.children[1], amtInput = row.children[2], del = row.children[3];
-    amtInput.addEventListener("blur", ()=>{ if(amtInput.value) amtInput.value = parseFloat(amtInput.value.replace(/[^\d.]/g,'')).toFixed(2); recalcInc&&recalcInc();});
-    sel.addEventListener("change", ()=>recalcInc&&recalcInc());
-    del.addEventListener("click", ()=>{ row.remove(); recalcInc&&recalcInc(); });
-    incWrap.appendChild(row);
-    recalcInc&&recalcInc();
-  }
-  function addEssRowViaGuided(name, amt){
-    const row = document.createElement('div'); row.className='addon-row';
-    row.innerHTML = `
-      <input placeholder="Name (e.g., Rent)" value="${(name||'').replace(/"/g,'&quot;')}">
-      <input inputmode="decimal" placeholder="$ per month" value="${Number(amt||0).toFixed(2)}">
-      <span class="addon-mini nowrap col-span"></span>
-      <button class="addon-btn">Del</button>`;
-    const amtInput = row.children[1], del=row.children[3];
-    amtInput.addEventListener("blur", ()=>{ if(amtInput.value) amtInput.value = parseFloat(amtInput.value.replace(/[^\d.]/g,'')).toFixed(2); recalcEss&&recalcEss();});
-    del.addEventListener("click", ()=>{ row.remove(); recalcEss&&recalcEss();});
-    essWrap.appendChild(row);
-    recalcEss&&recalcEss();
-  }
-
-  // ===== Income Sheet logic =====
-  const incSheet = $('#hxIncomeSheet'), incBody = $('#hxIncBody'), incStep = $('#hxIncStep');
-  const incState = { i:0, name:'', freq:'26', amt:'' };
-  const incSteps = [
-    {
-      title:'Income Source',
-      render(){ return `
-        <div class="hx-field">
-          <div class="hx-label">What should we call this income?</div>
-          <input class="hx-input" id="incName" placeholder="Employer or side gig (e.g., Acme Co.)" value="${incState.name}">
-          <div class="hx-help">Use your employer or task name. This label helps identify entries later.</div>
-        </div>`; },
-      collect(){ incState.name = $('#incName').value.trim(); return incState.name.length>0; }
-    },
-    {
-      title:'Pay Frequency',
-      render(){ return `
-        <div class="hx-field">
-          <div class="hx-label">How often do you get paid?</div>
-          <div class="hx-radio">
-            <span class="hx-chip"><input type="radio" name="incFreq" id="f12" value="12"${incState.freq==='12'?' checked':''}><label for="f12">Monthly (12)</label></span>
-            <span class="hx-chip"><input type="radio" name="incFreq" id="f26" value="26"${incState.freq==='26'?' checked':''}><label for="f26">Bi-weekly (26)</label></span>
-            <span class="hx-chip"><input type="radio" name="incFreq" id="f24" value="24"${incState.freq==='24'?' checked':''}><label for="f24">Twice-monthly (24)</label></span>
-          </div>
-          <div class="hx-help">Bi-weekly means every 2 weeks (26 checks/year). Twice-monthly means two fixed dates each month (24 checks/year).</div>
-        </div>`; },
-      collect(){ incState.freq = (document.querySelector('input[name="incFreq"]:checked')?.value)||'26'; return true; }
-    },
-    {
-      title:'Amount per Paycheck (Net)',
-      render(){ return `
-        <div class="hx-field">
-          <div class="hx-label">How much hits your bank per paycheck?</div>
-          <input class="hx-input" id="incAmt" inputmode="decimal" placeholder="e.g., 1835.50" value="${incState.amt}">
-          <div class="hx-help"><strong>Net</strong> is after taxes/deductions (what you actually receive). <em>Gross</em> is before taxes—don’t use that number here.</div>
-        </div>`; },
-      collect(){ const v = Number(String($('#incAmt').value).replace(/[^\d.]/g,'')); if(!v||v<=0) return false; incState.amt=v.toFixed(2); return true; }
-    },
-    {
-      title:'Review & Save',
-      render(){ 
-        const monthly = (Number(incState.amt)||0) * (Number(incState.freq)/12);
-        return `
-          <div class="hx-review">
-            <div><strong>Source:</strong> ${incState.name}</div>
-            <div><strong>Frequency:</strong> ${incState.freq} per year</div>
-            <div><strong>Per paycheck:</strong> ${money(incState.amt)}</div>
-            <div><strong>Monthly equivalent:</strong> ${money(monthly)}</div>
-          </div>
-          <div class="hx-help" style="margin-top:8px">We’ll add this to your Income list and recalc totals immediately.</div>`; 
+    // ---------- Income guided ----------
+    const incSheet = '#incSheet';
+    const incState = {i:0,name:'',freq:'26',amt:''};
+    const incSteps = [
+      { title:'Source',
+        render:()=>`<div class="field"><label>Who pays you?</label>
+                    <input id="incName" placeholder="Employer or side gig (e.g., Acme Co.)" value="${incState.name}">
+                    <div class="help">Tip: use an easy label so you can edit later.</div></div>`,
+        collect:()=> (incState.name = $('#incName').value.trim()).length>0
       },
-      collect(){ return true; },
-      done(){ addIncRowViaGuided(incState.name, incState.freq, incState.amt); }
+      { title:'Pay frequency',
+        render:()=>`<div class="field"><label>How often are you paid?</label>
+          <div class="chipset">
+            <button type="button" class="chip" data-f="12">Monthly (12)</button>
+            <button type="button" class="chip" data-f="26">Bi-weekly (26)</button>
+            <button type="button" class="chip" data-f="24">Twice-monthly (24)</button>
+          </div>
+          <div class="help">Bi-weekly = every 2 weeks (26 checks). Twice-monthly = two fixed dates (24).</div>
+        </div>`,
+        bind:()=> $$('#incSheet .chip').forEach(b=> b.onclick=()=>{ incState.freq=b.dataset.f; $$('#incSheet .chip').forEach(x=>x.removeAttribute('aria-selected')); b.setAttribute('aria-selected','true'); }),
+        collect:()=> !!incState.freq
+      },
+      { title:'Net per paycheck',
+        render:()=>`<div class="field"><label>How much lands in your bank each paycheck?</label>
+                    <input id="incAmt" inputmode="decimal" placeholder="e.g., 1835.50" value="${incState.amt}">
+                    <div class="help"><strong>Net</strong> means after taxes/deductions.</div></div>`,
+        collect:()=> { const v=num($('#incAmt').value); if(v<=0) return false; incState.amt=v.toFixed(2); return true; }
+      },
+      { title:'Review & save',
+        render:()=>{ const m=num(incState.amt)*(Number(incState.freq)/12);
+          return `<div class="review">
+            <div><strong>Source:</strong> ${esc(incState.name)}</div>
+            <div><strong>Frequency:</strong> ${incState.freq}/yr</div>
+            <div><strong>Per paycheck:</strong> ${money(incState.amt)}</div>
+            <div><strong>Monthly eqv.:</strong> ${money(m)}</div>
+          </div>`; },
+        done:()=>{ incomes.push({name:incState.name,freq:incState.freq,amount:incState.amt}); recalc(); }
+      }
+    ];
+    function drawInc(){
+      $('#incStep').textContent = `Step ${incState.i+1} of ${incSteps.length}`;
+      $('#incBody').innerHTML = `<h3 style="margin:0 0 8px">${incSteps[incState.i].title}</h3>` + incSteps[incState.i].render();
+      incSteps[incState.i].bind?.();
+      $('#incNext').textContent = incState.i===incSteps.length-1 ? 'Save ▶' : 'Next ▶';
     }
-  ];
-  function renderIncStep(){
-    $('#hxIncNext').textContent = incState.i >= incSteps.length-1 ? 'Save ▶' : 'Next ▶';
-    incStep.textContent = `Step ${incState.i+1} of ${incSteps.length}`;
-    incBody.innerHTML = `<h3 style="margin:0 0 8px">${incSteps[incState.i].title}</h3>` + incSteps[incState.i].render();
-  }
-  function openIncomeSheet(){ incState.i=0; incState.name=''; incState.freq='26'; incState.amt=''; incSheet.style.display='block'; renderIncStep(); }
-  $('#hxIncCancel').addEventListener('click', ()=> incSheet.style.display='none');
-  $('#hxIncBack').addEventListener('click', ()=>{ if(incState.i>0){ incState.i--; renderIncStep(); }});
-  $('#hxIncNext').addEventListener('click', ()=>{
-    if(!incSteps[incState.i].collect()) return alert('Please complete this step.');
-    if(incState.i < incSteps.length-1){ incState.i++; renderIncStep(); }
-    else { incSteps[incState.i].done?.(); incSheet.style.display='none'; }
-  });
-  incSheet.querySelector('.hx-mask').addEventListener('click', ()=> incSheet.style.display='none');
-
-  // ===== Essentials Sheet logic =====
-  const essSheet = $('#hxEssSheet'), essBody = $('#hxEssBody'), essStep = $('#hxEssStep');
-  const essState = { i:0, name:'', amt:'' };
-  const essSteps = [
-    {
-      title:'Essential Name',
-      render(){ return `
-        <div class="hx-field">
-          <div class="hx-label">What is this essential expense?</div>
-          <input class="hx-input" id="essName" placeholder="e.g., Rent, Power, Internet" value="${essState.name}">
-          <div class="hx-help">Name it so you can find and update it later.</div>
-        </div>`; },
-      collect(){ essState.name = $('#essName').value.trim(); return essState.name.length>0; }
-    },
-    {
-      title:'Monthly Amount',
-      render(){ return `
-        <div class="hx-field">
-          <div class="hx-label">How much do you pay per month?</div>
-          <input class="hx-input" id="essAmt" inputmode="decimal" placeholder="e.g., 1200.00" value="${essState.amt}">
-          <div class="hx-help">If it varies seasonally, enter an average—you can edit any time.</div>
-        </div>`; },
-      collect(){ const v = Number(String($('#essAmt').value).replace(/[^\d.]/g,'')); if(!v||v<=0) return false; essState.amt=v.toFixed(2); return true; }
-    },
-    {
-      title:'Review & Save',
-      render(){ return `
-        <div class="hx-review">
-          <div><strong>Name:</strong> ${essState.name}</div>
-          <div><strong>Per month:</strong> ${money(essState.amt)}</div>
-        </div>`; },
-      collect(){ return true; },
-      done(){ addEssRowViaGuided(essState.name, essState.amt); }
+    function openIncomeSheet(){
+      Object.assign(incState,{i:0,name:'',freq:'26',amt:''});
+      openSheet(incSheet); drawInc();
+      $('#incBack').onclick = ()=>{ if(incState.i>0){incState.i--; drawInc();} };
+      $('#incNext').onclick = ()=>{ if(!incSteps[incState.i].collect()) return alert('Please complete this step.');
+        if(incState.i<incSteps.length-1){incState.i++; drawInc();}
+        else { incSteps[incState.i].done?.(); closeSheet(incSheet); } };
+      $(`${incSheet} .mask`).onclick = ()=> closeSheet(incSheet);
     }
-  ];
-  function renderEssStep(){
-    $('#hxEssNext').textContent = essState.i >= essSteps.length-1 ? 'Save ▶' : 'Next ▶';
-    essStep.textContent = `Step ${essState.i+1} of ${essSteps.length}`;
-    essBody.innerHTML = `<h3 style="margin:0 0 8px">${essSteps[essState.i].title}</h3>` + essSteps[essState.i].render();
-  }
-  function openEssSheet(){ essState.i=0; essState.name=''; essState.amt=''; essSheet.style.display='block'; renderEssStep(); }
-  $('#hxEssCancel').addEventListener('click', ()=> essSheet.style.display='none');
-  $('#hxEssBack').addEventListener('click', ()=>{ if(essState.i>0){ essState.i--; renderEssStep(); }});
-  $('#hxEssNext').addEventListener('click', ()=>{
-    if(!essSteps[essState.i].collect()) return alert('Please complete this step.');
-    if(essState.i < essSteps.length-1){ essState.i++; renderEssStep(); }
-    else { essSteps[essState.i].done?.(); essSheet.style.display='none'; }
-  });
-  essSheet.querySelector('.hx-mask').addEventListener('click', ()=> essSheet.style.display='none');
 
-})();
-</script>
+    // ---------- Essentials guided ----------
+    const essSheet = '#essSheet';
+    const essState = {i:0,name:'',amt:''};
+    const essSteps = [
+      { title:'Expense name',
+        render:()=>`<div class="field"><label>What is this essential expense?</label>
+                    <input id="essName" placeholder="e.g., Rent, Power, Internet" value="${essState.name}">
+                    <div class="help">Give it a clear name so it’s easy to update later.</div></div>`,
+        collect:()=> (essState.name = $('#essName').value.trim()).length>0
+      },
+      { title:'Monthly amount',
+        render:()=>`<div class="field"><label>How much per month?</label>
+                    <input id="essAmt" inputmode="decimal" placeholder="e.g., 1200.00" value="${essState.amt}">
+                    <div class="help">If it varies, enter an average. You can edit any time.</div></div>`,
+        collect:()=> { const v=num($('#essAmt').value); if(v<=0) return false; essState.amt=v.toFixed(2); return true; }
+      },
+      { title:'Review & save',
+        render:()=>`<div class="review"><div><strong>Name:</strong> ${esc(essState.name)}</div>
+                    <div><strong>Per month:</strong> ${money(essState.amt)}</div></div>`,
+        done:()=> { essentials.push({name:essState.name,amount:essState.amt}); recalc(); }
+      }
+    ];
+    function drawEss(){
+      $('#essStep').textContent = `Step ${essState.i+1} of ${essSteps.length}`;
+      $('#essBody').innerHTML = `<h3 style="margin:0 0 8px">${essSteps[essState.i].title}</h3>` + essSteps[essState.i].render();
+      $('#essNext').textContent = essState.i===essSteps.length-1 ? 'Save ▶' : 'Next ▶';
+    }
+    function openEssSheet(){
+      Object.assign(essState,{i:0,name:'',amt:''});
+      openSheet(essSheet); drawEss();
+      $('#essBack').onclick = ()=>{ if(essState.i>0){essState.i--; drawEss();} };
+      $('#essNext').onclick = ()=>{ if(!essSteps[essState.i].collect()) return alert('Please complete this step.');
+        if(essState.i<essSteps.length-1){essState.i++; drawEss();}
+        else { essSteps[essState.i].done?.(); closeSheet(essSheet); } };
+      $(`${essSheet} .mask`).onclick = ()=> closeSheet(essSheet);
+    }
 
+    // initial render
+    recalc();
+  </script>
 </body>
-  <style>
-/* Phone-first frame */
-.app-frame { max-width: 560px; margin: 0 auto; padding: 10px; }
-@media (max-width:360px){ .app-frame { max-width: 100%; padding: 8px; } }
-html,body{ background:#0b0f14; -webkit-text-size-adjust:100%; }
-</style>
-
-  <style>
-input, select, textarea, button { font-size:16px; }
-</style>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
