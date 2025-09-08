@@ -1,12 +1,12 @@
-// H3xt0 PWA cache (teal build)
-const CACHE_NAME = "h3xt0-pwa-v41";
+// H3xt0 PWA cache (teal build, v43)
+const CACHE_NAME = "h3xt0-pwa-v43";
 const ASSETS = [
   "./",
   "./budget.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+  "./icons/icon-192-v2.png",
+  "./icons/icon-512-v2.png",
   "./icons/app-h3-cube-contrast-Hwhite.svg"
 ];
 
