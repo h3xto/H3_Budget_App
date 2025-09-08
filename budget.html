@@ -11,42 +11,35 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <!-- iOS homescreen icon (v2 ensures icon refresh) -->
+  <link rel="apple-touch-icon" href="icons/icon-192-v2.png" />
 
   <style>
-    /* ========= Calm Teal visual system (matches your screenshot) ========= */
+    /* ========= Calm Teal visual system ========= */
     :root{
-      /* brand */
-      --brand:#0f9a9b;          /* teal base */
-      --brand-2:#16b5b7;        /* lighter teal for gradient */
-      --ink:#0a1b1c;            /* main text (very dark teal/black) */
-      --muted:#5c7a7b;          /* secondary */
-      /* surfaces */
-      --bg:#f6fbfb;             /* page bg (very light teal) */
-      --card:#ffffff;           /* cards */
-      --line:#d4ebeb;           /* borders */
-      /* controls */
+      --brand:#0f9a9b; --brand-2:#16b5b7;
+      --ink:#0a1b1c; --muted:#5c7a7b;
+      --bg:#f6fbfb; --card:#ffffff; --line:#d4ebeb;
       --focus:#0f9a9b;
-      --chip-bg:#e9f6f6;
-      --chip-line:#cdecec;
-      --btn:#e8f3f3;
-      --btn-line:#cfe6e6;
-      --btn-ink:#174344;
+      --btn:#e8f3f3; --btn-line:#cfe6e6; --btn-ink:#174344;
+      --chip-bg:#e9f6f6; --chip-line:#cdecec;
     }
-
     html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
       font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
     .container{max-width:720px;margin:0 auto;padding:14px}
 
-    /* top app bar (teal, like the mockup) */
+    /* top app bar */
     .topbar{position:sticky;top:0;z-index:20;
       background:linear-gradient(180deg,var(--brand),var(--brand-2));
       color:#fff;border-bottom:1px solid #0001}
     .topbar .inner{max-width:720px;margin:0 auto;padding:12px 14px;
-      display:flex;align-items:center;gap:10px}
+      display:flex;align-items:center;gap:10px;position:relative}
     .logo{height:22px}
     .brand{font-weight:800;letter-spacing:.2px}
-    .tag{opacity:.9}
+    /* centered tagline with trailing bullet */
+    .centerTag{position:absolute;left:50%;transform:translateX(-50%);
+      font-weight:600;opacity:.95;white-space:nowrap}
+    @media (max-width:480px){ .centerTag{font-size:14px} }
 
     /* cards */
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
@@ -59,31 +52,35 @@
     /* inputs */
     input,select,button{font:16px system-ui,-apple-system,Segoe UI,Roboto,Arial}
     input,select{
-      width:100%;height:46px;border-radius:12px;
+      width:100%;height:44px;border-radius:12px;
       border:1px solid #cfe6e6;background:#fff;color:var(--ink);
       padding:10px 12px; box-shadow:0 2px 0 #eef6f6 inset;
     }
     input::placeholder{color:#8faeae}
     input:focus,select:focus{outline:2px solid var(--focus);border-color:var(--focus)}
 
-    /* buttons (rounded like your mockup) */
-    .btn{height:46px;padding:10px 14px;border-radius:12px;border:1px solid var(--btn-line);
+    /* buttons */
+    .btn{height:44px;padding:10px 14px;border-radius:12px;border:1px solid var(--btn-line);
       background:var(--btn);color:var(--btn-ink);cursor:pointer}
     .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
     .btn.link{border:none;background:transparent;color:#fff;opacity:.95}
     .btn.link.dark{color:var(--brand)}
 
-    .totals{display:flex;justify-content:space-between;margin-top:10px}
-    .kpi{background:#edf7f7;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+    /* labels + values (plain text, not pills) */
+    .summary{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+    .summary-label{font-size:13px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;font-weight:700}
+    .summary-value{font-weight:700;color:var(--ink)}
 
-    /* compact list */
+    /* Add buttons (outlined, distinct) */
+    .btn-add{background:#fff;border:1.5px solid var(--brand);color:var(--brand);font-weight:600}
+    .btn-add:hover{background:#f3fbfb}
+
+    /* list */
     .list{width:100%;border-collapse:separate;border-spacing:0 8px}
     .list th{font-size:13px;text-align:left;color:var(--muted);font-weight:600}
     .list td{background:#fff;border:1px solid #e6f0f0;padding:10px;border-radius:12px}
-    .right{margin-left:auto}
-    .space{height:8px}
 
-    /* ======== Guided full-screen sheets (teal header like mockup) ======== */
+    /* guided sheets */
     .sheet{position:fixed;inset:0;z-index:1000;display:none}
     .mask{position:absolute;inset:0;background:rgba(0,0,0,.35)}
     .panel{position:absolute;left:50%;top:0;transform:translateX(-50%);
@@ -100,11 +97,23 @@
     .chip{border:1px solid var(--chip-line);background:var(--chip-bg);color:#265a5b;border-radius:999px;padding:10px 12px;cursor:pointer}
     .chip[aria-selected="true"]{outline:2px solid var(--brand)}
 
-    /* Help FAB (teal) */
+    /* prettier Guided Mode switch */
+    .switch{position:relative;width:64px;height:32px;display:inline-block}
+    .switch input{opacity:0;width:0;height:0}
+    .slider{position:absolute;cursor:pointer;inset:0;background:#b9e5e6;border-radius:999px;
+      transition:.2s;border:1px solid #0d7e7f20}
+    .slider:before{content:"";position:absolute;height:26px;width:26px;left:3px;top:2px;
+      background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:.2s}
+    .switch input:checked + .slider{background:#0d7e7f}
+    .switch input:checked + .slider:before{transform:translateX(32px)}
+
+    /* layout for name + toggle (make name a bit smaller) */
+    .nameBlock{flex:1.1}
+    .toggleBlock{flex:0 0 180px;text-align:center}
+
     .fab{position:fixed;right:16px;bottom:16px;z-index:900;border-radius:999px;border:1px solid #0d7e7f;
       background:#0d7e7f;color:#fff;padding:12px 14px;box-shadow:0 10px 22px rgba(0,0,0,.25)}
 
-    /* Portrait hint overlay for landscape */
     .rotate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:1500;color:#fff;text-align:center;padding:20px}
     @media (orientation:landscape){ .rotate{display:flex;} }
   </style>
@@ -116,8 +125,8 @@
     <div class="inner">
       <img class="logo" src="icons/app-h3-cube-contrast-Hwhite.svg" alt="H³">
       <span class="brand">H3xt0</span>
-      <span class="tag">• Private • Goal-Focused • Offline</span>
-      <button id="helpBtn" class="btn link right">Help</button>
+      <span class="centerTag">Private • Goal-Focused • Offline •</span>
+      <!-- no top Help (kept only the bottom FAB) -->
     </div>
   </div>
 
@@ -125,36 +134,39 @@
     <!-- Personalize + Guided toggle -->
     <div class="card">
       <div class="row">
-        <div class="grow">
-          <label class="muted">Display name</label>
+        <div class="nameBlock">
+          <label class="muted">Display <strong>Name</strong></label>
           <input id="displayName" placeholder="Your name (optional)">
         </div>
-        <div>
-          <label class="muted">Guided Mode</label>
-          <div class="row" title="Full-screen, step-by-step data entry">
-            <input type="checkbox" id="guidedToggle" checked style="width:22px;height:22px">
-            <span id="guidedState" class="muted">ON</span>
-          </div>
+        <div class="toggleBlock">
+          <label class="muted" style="display:block;margin-bottom:6px;">Guided Mode</label>
+          <label class="switch" title="Full-screen, step-by-step data entry">
+            <input type="checkbox" id="guidedToggle" checked>
+            <span class="slider"></span>
+          </label>
+          <div style="font-weight:700;margin-top:6px;" id="guidedState">ON</div>
         </div>
       </div>
     </div>
 
-    <!-- Income by pay schedule -->
+    <!-- Income -->
     <div class="card" id="cardIncome">
       <div class="row" style="justify-content:space-between;align-items:baseline">
         <h3>Income by Pay Schedule</h3>
         <button class="btn link dark" id="editIncome">Edit →</button>
       </div>
       <table class="list">
-        <thead><tr><th>Source</th><th>Freq</th><th>Per pay</th><th>Monthly</th></tr></thead>
+        <thead>
+          <tr><th>Source</th><th>Freq</th><th>Per Pay</th><th>Monthly</th></tr>
+        </thead>
         <tbody id="incRows"></tbody>
       </table>
-      <div class="totals">
-        <div class="kpi">Monthly income</div>
-        <div class="kpi" id="incMonthly">$0.00</div>
+      <div class="summary">
+        <span class="summary-label">Monthly Income</span>
+        <span class="summary-value" id="incMonthly">$0.00</span>
       </div>
-      <div class="space"></div>
-      <button id="addInc" class="btn">+ Add Income Source</button>
+      <div style="height:10px"></div>
+      <button id="addInc" class="btn btn-add">➕ Add income source</button>
     </div>
 
     <!-- Essentials -->
@@ -167,37 +179,37 @@
         <thead><tr><th>Name</th><th>Monthly</th></tr></thead>
         <tbody id="essRows"></tbody>
       </table>
-      <div class="totals">
-        <div class="kpi">Monthly essentials</div>
-        <div class="kpi" id="essMonthly">$0.00</div>
+      <div class="summary">
+        <span class="summary-label">Monthly Essentials</span>
+        <span class="summary-value" id="essMonthly">$0.00</span>
       </div>
-      <div class="space"></div>
-      <button id="addEss" class="btn">+ Add Expense</button>
+      <div style="height:10px"></div>
+      <button id="addEss" class="btn btn-add">➕ Add expense</button>
     </div>
 
     <!-- Summary -->
     <div class="card">
       <h3>Plan Summary</h3>
-      <div class="row" style="gap:12px;flex-wrap:wrap">
-        <div class="kpi grow">Net monthly (income − essentials)</div>
-        <div class="kpi" id="netMonthly">$0.00</div>
+      <div class="summary">
+        <span class="summary-label">Net Monthly (Income − Essentials)</span>
+        <span class="summary-value" id="netMonthly">$0.00</span>
       </div>
     </div>
 
     <div style="height:42px"></div>
   </div>
 
-  <!-- Help sheet -->
+  <!-- Help sheet (opened by FAB) -->
   <div class="sheet" id="helpSheet" aria-hidden="true">
     <div class="mask"></div>
     <div class="panel">
       <div class="head"><strong>Help</strong><button class="btn" data-close="#helpSheet">Close</button></div>
       <div class="body">
-        <p><strong>Welcome!</strong> H3xt0 keeps everything local (no accounts). Use <em>Guided Mode</em> for full-screen entry exactly like the screenshots.</p>
+        <p><strong>Welcome!</strong> Everything is saved locally. Use <em>Guided Mode</em> for full-screen, friendly entry.</p>
         <ul>
           <li><strong>Income by Pay:</strong> choose Monthly (12), Bi-weekly (26), or Twice-monthly (24). Enter <em>net</em> per paycheck.</li>
-          <li><strong>Essentials:</strong> itemize rent, power, internet, etc. Edit anytime.</li>
-          <li>The Summary shows what’s left each month for goals/debt.</li>
+          <li><strong>Essentials:</strong> itemize rent, power, internet, etc.</li>
+          <li>Totals show as plain text on the right. “Add …” buttons are outlined and separate.</li>
         </ul>
       </div>
       <div class="foot"><span></span><button class="btn primary" data-close="#helpSheet">Got it</button></div>
@@ -245,18 +257,15 @@
   <button class="fab" id="fabHelp">❓ Help</button>
 
   <script>
-    // ========= helpers =========
     const $ = s => document.querySelector(s);
     const $$ = s => [...document.querySelectorAll(s)];
     const money = v => new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'}).format(Number(v||0));
     const num = s => { const n = Number(String(s).replace(/[^\d.]/g,'')); return isFinite(n)?n:0; };
     const esc = s => String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
 
-    // ========= state =========
-    let incomes = [];    // {name, freq: '12'|'24'|'26', amount}
-    let essentials = []; // {name, amount}
+    let incomes = [], essentials = [];
 
-    // ========= load saved =========
+    // load saved
     try{
       const saved = JSON.parse(localStorage.getItem('h3xt0.data')||'{}');
       if(saved.name) $('#displayName').value = saved.name;
@@ -264,12 +273,11 @@
       essentials = Array.isArray(saved.essentials)?saved.essentials:[];
     }catch(_){}
 
-    // ========= top actions =========
-    $('#helpBtn').onclick = ()=> openSheet('#helpSheet');
+    // Help FAB only (top Help removed)
     $('#fabHelp').onclick  = ()=> openSheet('#helpSheet');
     $$('#helpSheet [data-close], #helpSheet .mask').forEach(b=> b.onclick=()=> closeSheet('#helpSheet'));
 
-    // guided toggle (default ON)
+    // Guided toggle
     const gKey='h3xt0.guided';
     const gOn = ()=> (localStorage.getItem(gKey)||'on')==='on';
     const gToggle = $('#guidedToggle'); const gState = $('#guidedState');
@@ -278,20 +286,16 @@
 
     // intercept +Add to open guided when ON
     function intercept(btnSel, openFn){
-      const b = $(btnSel);
-      if(!b) return;
-      b.addEventListener('click', (e)=>{
-        if(gOn()){ e.preventDefault(); e.stopImmediatePropagation(); openFn(); }
-      }, true);
+      const b = $(btnSel); if(!b) return;
+      b.addEventListener('click', (e)=>{ if(gOn()){ e.preventDefault(); e.stopImmediatePropagation(); openFn(); } }, true);
     }
     intercept('#addInc', openIncomeSheet);
     intercept('#editIncome', openIncomeSheet);
     intercept('#addEss', openEssSheet);
     intercept('#editEss', openEssSheet);
 
-    // ========= renderers =========
+    // render
     function recalc(){
-      // incomes
       const tbI = $('#incRows'); tbI.innerHTML='';
       let incMonth = 0;
       incomes.forEach(i=>{
@@ -303,7 +307,6 @@
       });
       $('#incMonthly').textContent = money(incMonth);
 
-      // essentials
       const tbE = $('#essRows'); tbE.innerHTML='';
       let essMonth = 0;
       essentials.forEach(e=>{
@@ -314,10 +317,7 @@
       });
       $('#essMonthly').textContent = money(essMonth);
 
-      // net
       $('#netMonthly').textContent = money(incMonth - essMonth);
-
-      // persist
       localStorage.setItem('h3xt0.data', JSON.stringify({incomes, essentials, name:$('#displayName').value||''}));
     }
 
@@ -326,18 +326,18 @@
       localStorage.setItem('h3xt0.data', JSON.stringify({incomes, essentials, name:e.target.value||''}));
     });
 
-    // ========= sheet engine =========
-    function openSheet(sel){ const s=$(sel); s.style.display='block'; }
-    function closeSheet(sel){ const s=$(sel); s.style.display='none'; }
+    // sheet engine
+    function openSheet(sel){ $(sel).style.display='block'; }
+    function closeSheet(sel){ $(sel).style.display='none'; }
 
-    // ---------- Income guided ----------
+    // Income guided
     const incSheet = '#incSheet';
     const incState = {i:0,name:'',freq:'26',amt:''};
     const incSteps = [
       { title:'Source',
         render:()=>`<div class="field"><label>Who pays you?</label>
                     <input id="incName" placeholder="Employer or side gig (e.g., Acme Co.)" value="${incState.name}">
-                    <div class="help">Tip: use an easy label so you can edit later.</div></div>`,
+                    <div class="help">Use a clear label so you can edit later.</div></div>`,
         collect:()=> (incState.name = $('#incName').value.trim()).length>0
       },
       { title:'Pay frequency',
@@ -347,7 +347,7 @@
             <button type="button" class="chip" data-f="26">Bi-weekly (26)</button>
             <button type="button" class="chip" data-f="24">Twice-monthly (24)</button>
           </div>
-          <div class="help">Bi-weekly = every 2 weeks (26 checks). Twice-monthly = two fixed dates (24).</div>
+          <div class="help">Bi-weekly = every 2 weeks (26). Twice-monthly = two fixed dates (24).</div>
         </div>`,
         bind:()=> $$('#incSheet .chip').forEach(b=> b.onclick=()=>{ incState.freq=b.dataset.f; $$('#incSheet .chip').forEach(x=>x.removeAttribute('aria-selected')); b.setAttribute('aria-selected','true'); }),
         collect:()=> !!incState.freq
@@ -385,14 +385,14 @@
       $(`${incSheet} .mask`).onclick = ()=> closeSheet(incSheet);
     }
 
-    // ---------- Essentials guided ----------
+    // Essentials guided
     const essSheet = '#essSheet';
     const essState = {i:0,name:'',amt:''};
     const essSteps = [
       { title:'Expense name',
         render:()=>`<div class="field"><label>What is this essential expense?</label>
                     <input id="essName" placeholder="e.g., Rent, Power, Internet" value="${essState.name}">
-                    <div class="help">Give it a clear name so it’s easy to update later.</div></div>`,
+                    <div class="help">Name it clearly so it’s easy to update later.</div></div>`,
         collect:()=> (essState.name = $('#essName').value.trim()).length>0
       },
       { title:'Monthly amount',
@@ -422,7 +422,7 @@
       $(`${essSheet} .mask`).onclick = ()=> closeSheet(essSheet);
     }
 
-    // initial render
+    // kick things off
     recalc();
   </script>
 </body>
