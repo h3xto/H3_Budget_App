@@ -8,37 +8,79 @@
   :root{
     --bg:#0b0f14; --card:#0f1620; --text:#e6edf3; --muted:#91a4b7; --link:#9fd2ff;
     --shadow:0 8px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
-    --radius:16px;
+    --radius:16px; --ring:#58a6ff;
   }
   html,body{background:var(--bg); color:var(--text); margin:0; font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial}
-  main{max-width:860px; margin:0 auto; padding:32px 16px}
-  .card{background:var(--card); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow)}
-  a{color:var(--link)}
-  h1{font-size:28px; line-height:1.2; margin:0 0 8px}
-  h2{font-size:18px; margin:24px 0 8px}
+  main{max-width:880px; margin:0 auto; padding:32px 16px}
+  .card{background:var(--card); border-radius:var(--radius); padding:28px; box-shadow:var(--shadow)}
+
+  /* header */
+  .head{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; margin-bottom:12px}
+  .title{font-size:28px; line-height:1.2; margin:0}
   .muted{color:var(--muted)}
-  .header{display:flex; gap:16px; align-items:center; margin-bottom:12px}
-  .logo{width:64px; height:64px; border-radius:14px; background:#0b0f14; display:block; box-shadow:0 6px 20px rgba(0,0,0,.45)}
   .tag{font-weight:600; color:#a9e8ff; letter-spacing:.2px}
-  .spc{height:8px}
+
+  /* logo (bigger, clickable, accessible) */
+  .logo-btn{
+    display:inline-block; border:0; background:transparent; padding:0; margin:0;
+    border-radius:18px; cursor:zoom-in; outline-offset:4px;
+    box-shadow:0 8px 28px rgba(0,0,0,.45);
+  }
+  .logo{width:92px; height:92px; border-radius:18px; display:block; background:#0b0f14}
+  .logo-btn:focus-visible{outline:2px solid var(--ring)}
+
+  /* sections */
+  h2{font-size:18px; margin:24px 0 8px}
+  a{color:var(--link)}
+
+  /* zoom dialog */
+  dialog{
+    border:0; padding:0; background:transparent;
+  }
+  dialog::backdrop{
+    background:rgba(0,0,0,.55);
+    animation:fade .18s ease-out;
+  }
+  .zoom-wrap{
+    display:grid; place-items:center; min-height:100svh; padding:24px;
+  }
+  .zoom-card{
+    background:#0b0f14; border-radius:22px; padding:18px;
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
+    animation:pop .18s ease-out;
+  }
+  .zoom-img{width:min(70svw, 480px); height:auto; display:block}
+  .close{
+    position:absolute; top:18px; right:18px;
+    background:#0b0f14; color:var(--text); border:1px solid #223246; border-radius:12px;
+    padding:6px 10px; cursor:pointer
+  }
+  .close:focus-visible{outline:2px solid var(--ring)}
+
+  @keyframes pop{from{transform:scale(.92); opacity:.6} to{transform:scale(1); opacity:1}}
+  @keyframes fade{from{opacity:0} to{opacity:1}}
+
+  @media (prefers-reduced-motion:reduce){
+    .zoom-card, dialog::backdrop{animation:none}
+  }
 </style>
 
 <main>
   <section class="card">
-    <div class="header">
-      <!-- SVG first, PNG fallback -->
-      <picture>
-        <source srcset="icons/app-h3-cube-contrast-Hwhite.svg" type="image/svg+xml">
-        <img class="logo" src="icons/icon-512-v2.png" alt="H3xt0 app icon" decoding="async">
-      </picture>
-      <div>
-        <h1>H3xt0 — Privacy Policy</h1>
-        <div class="muted">Last updated: <strong>9/10/2025</strong></div>
-        <div class="tag">Private • Goal-Focused • Offline</div>
-      </div>
-    </div>
+    <div class="head">
+      <!-- SVG icon with PNG fallback; click/tap to zoom -->
+      <button class="logo-btn" id="openZoom" aria-label="View H3xt0 icon larger">
+        <picture>
+          <!-- Change srcset below only if your SVG filename differs -->
+          <source srcset="icons/app-h3-cube-contrast-Hwhite.svg" type="image/svg+xml">
+          <img class="logo" src="icons/icon-512-v2.png" alt="H3xt0 app icon" decoding="async" loading="lazy">
+        </picture>
+      </button>
 
-    <div class="spc"></div>
+      <h1 class="title">H3xt0 — Privacy Policy</h1>
+      <div class="muted">Last updated: <strong>9/10/2025</strong></div>
+      <div class="tag">Private • Goal-Focused • Offline</div>
+    </div>
 
     <h2>What data does H3xt0 collect?</h2>
     <p><strong>None.</strong> H3xt0 runs entirely in your browser and stores your inputs locally on your device using local storage.</p>
@@ -53,4 +95,36 @@
     <p>Email: <a href="mailto:h3xt0budgetapp@gmail.com">h3xt0budgetapp@gmail.com</a></p>
   </section>
 </main>
+
+<!-- Zoom dialog -->
+<dialog id="zoom">
+  <div class="zoom-wrap">
+    <button class="close" id="closeZoom" aria-label="Close">Close</button>
+    <div class="zoom-card">
+      <picture>
+        <source srcset="icons/app-h3-cube-contrast-Hwhite.svg" type="image/svg+xml">
+        <img class="zoom-img" src="icons/icon-512-v2.png" alt="H3xt0 app icon (large)">
+      </picture>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const dlg = document.getElementById('zoom');
+  const open = document.getElementById('openZoom');
+  const closeBtn = document.getElementById('closeZoom');
+
+  open.addEventListener('click', () => {
+    if (typeof dlg.showModal === 'function') dlg.showModal();
+    else window.open('icons/app-h3-cube-contrast-Hwhite.svg', '_blank');
+  });
+
+  closeBtn.addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => {
+    // close when clicking outside the zoom card
+    const card = dlg.querySelector('.zoom-card');
+    if (!card.contains(e.target) && e.target !== document.getElementById('openZoom')) dlg.close();
+  });
+  document.addEventListener('keydown', (e)=> { if (e.key === 'Escape' && dlg.open) dlg.close(); });
+</script>
 </html>
