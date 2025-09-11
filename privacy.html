@@ -1,22 +1,53 @@
-﻿<!doctype html>
+<!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <title>H3xt0 — Privacy Policy</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
 <style>
-  body{font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#0b0f14;color:#e6edf3;margin:0}
-  main{max-width:820px;margin:0 auto;padding:28px 16px}
-  a{color:#9fd2ff} h1{margin:0 0 12px} h2{margin:24px 0 8px;font-size:18px} .muted{color:#91a4b7}
+  :root{
+    --bg:#0b0f14; --card:#0f1620; --text:#e6edf3; --muted:#91a4b7; --link:#9fd2ff;
+    --shadow:0 8px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+    --radius:16px;
+  }
+  html,body{background:var(--bg); color:var(--text); margin:0; font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+  main{max-width:860px; margin:0 auto; padding:32px 16px}
+  .card{background:var(--card); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow)}
+  a{color:var(--link)}
+  h1{font-size:28px; line-height:1.2; margin:0 0 8px}
+  h2{font-size:18px; margin:24px 0 8px}
+  .muted{color:var(--muted)}
+  .header{display:flex; gap:16px; align-items:center; margin-bottom:12px}
+  .logo{width:64px; height:64px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .tag{font-weight:600; color:#a9e8ff; letter-spacing:.2px}
+  .spc{height:8px}
 </style>
-<main>
-  <h1>H3xt0 — Privacy Policy</h1>
-  <p class="muted">Last updated: <script>document.write(new Date().toISOString().slice(0,10))</script></p>
-  <h2>What data does H3xt0 collect?</h2>
-  <p><strong>None.</strong> H3xt0 runs entirely in your browser and stores your inputs locally on your device using local storage.</p>
-  <h2>Sharing</h2>
-  <p>If you tap “Share Link,” a snapshot of your current plan is encoded into the URL. Only people with that link can view it.</p>
-  <h2>Cookies & Analytics</h2>
-  <p>No cookies, no analytics, no trackers, no ads.</p>
-  <h2>Contact</h2>
-  <p>Email: h3xt0budgetapp@gmail.com</p>
-</main>
 
+<main>
+  <section class="card">
+    <div class="header">
+      <!-- If you prefer the SVG, swap the src to: icons/app-h3-cube-contrast-Hwhite.svg -->
+      <img class="logo" src="icons/icon-512-v2.png" alt="H3xt0 app icon" decoding="async">
+      <div>
+        <h1>H3xt0 — Privacy Policy</h1>
+        <div class="muted">Last updated: <strong>9/10/2025</strong></div>
+        <div class="tag">Private • Goal-Focused • Offline</div>
+      </div>
+    </div>
+
+    <div class="spc"></div>
+
+    <h2>What data does H3xt0 collect?</h2>
+    <p><strong>None.</strong> H3xt0 runs entirely in your browser and stores your inputs locally on your device using local storage.</p>
+
+    <h2>Sharing</h2>
+    <p>If you tap <em>Share Link</em>, a snapshot of your current plan is encoded into the URL. Only people with that link can view it.</p>
+
+    <h2>Cookies &amp; Analytics</h2>
+    <p>No cookies, no analytics, no trackers, no ads.</p>
+
+    <h2>Contact</h2>
+    <p>Email: <a href="mailto:h3xt0budgetapp@gmail.com">h3xt0budgetapp@gmail.com</a></p>
+  </section>
+</main>
+</html>
