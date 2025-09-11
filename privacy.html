@@ -18,7 +18,7 @@
   h2{font-size:18px; margin:24px 0 8px}
   .muted{color:var(--muted)}
   .header{display:flex; gap:16px; align-items:center; margin-bottom:12px}
-  .logo{width:64px; height:64px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .logo{width:64px; height:64px; border-radius:14px; background:#0b0f14; display:block; box-shadow:0 6px 20px rgba(0,0,0,.45)}
   .tag{font-weight:600; color:#a9e8ff; letter-spacing:.2px}
   .spc{height:8px}
 </style>
@@ -26,8 +26,11 @@
 <main>
   <section class="card">
     <div class="header">
-      <!-- If you prefer the SVG, swap the src to: icons/app-h3-cube-contrast-Hwhite.svg -->
-      <img class="logo" src="icons/icon-512-v2.png" alt="H3xt0 app icon" decoding="async">
+      <!-- SVG first, PNG fallback -->
+      <picture>
+        <source srcset="icons/app-h3-cube-contrast-Hwhite.svg" type="image/svg+xml">
+        <img class="logo" src="icons/icon-512-v2.png" alt="H3xt0 app icon" decoding="async">
+      </picture>
       <div>
         <h1>H3xt0 — Privacy Policy</h1>
         <div class="muted">Last updated: <strong>9/10/2025</strong></div>
