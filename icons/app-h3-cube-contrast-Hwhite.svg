@@ -1,19 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="-64 -64 640 640">
   <defs>
-    <linearGradient id="grad" x1="0" x2="1">
-      <stop offset="0" stop-color="#7aa2ff"/><stop offset="1" stop-color="#b4c8ff"/>
-    </linearGradient>
-    <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-opacity=".38"/></filter>
+    <linearGradient id="grad" x1="0" x2="1"><stop offset="0" stop-color="#7aa2ff"/><stop offset="1" stop-color="#b4c8ff"/></linearGradient>
+    <filter id="glow"><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#7aa2ff" flood-opacity=".9"/></filter>
   </defs>
   <rect x="-64" y="-64" width="640" height="640" rx="96" fill="#0b0f14"/>
-  <g stroke="url(#grad)" stroke-width="20" fill="none" filter="url(#shadow)">
-    <path d="M256 52L448 140L256 228L64 140Z"/>
-    <path d="M64 140V360L256 448V228Z"/>
-    <path d="M448 140V360L256 448"/>
-    <path d="M64 360L256 272L448 360"/>
+  <g stroke="url(#grad)" stroke-width="20" fill="none">
+    <path d="M256 52L448 140L256 228L64 140Z"/><path d="M64 140V360L256 448V228Z"/><path d="M448 140V360L256 448"/><path d="M64 360L256 272L448 360"/>
   </g>
-  <text x="132" y="350" font-family="Segoe UI,system-ui,-apple-system,Arial" font-weight="900" font-size="200"
-        fill="#ffffff" stroke="#0b0f14" stroke-width="14" paint-order="stroke fill">H</text>
+  <text x="132" y="350" font-family="Segoe UI,system-ui,-apple-system,Arial" font-weight="800" font-size="200" fill="url(#grad)">H</text>
+  <!-- dark ³ with neon glow so it stands off the gradient -->
   <text x="268" y="245" font-family="Segoe UI,system-ui,-apple-system,Arial" font-weight="900" font-size="86"
-        fill="#7ef6ff" stroke="#0b0f14" stroke-width="10" paint-order="stroke fill">3</text>
+        fill="#0b0f14" stroke="#bcd7ff" stroke-width="8" paint-order="stroke fill" filter="url(#glow)">3</text>
 </svg>
