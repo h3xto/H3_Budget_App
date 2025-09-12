@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>H3xt0</title>
+  <title>H³ Budget Tool</title>
 
   <!-- PWA -->
   <meta name="theme-color" content="#0f9a9b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <!-- iOS homescreen icon (v2 ensures icon refresh) -->
+  <!-- iOS homescreen icon -->
   <link rel="apple-touch-icon" href="icons/icon-192-v2.png" />
 
   <style>
@@ -28,18 +28,23 @@
       font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
     .container{max-width:720px;margin:0 auto;padding:14px}
 
-    /* top app bar */
+    /* Top bar: logo + stacked title centered (name + tagline) */
     .topbar{position:sticky;top:0;z-index:20;
       background:linear-gradient(180deg,var(--brand),var(--brand-2));
       color:#fff;border-bottom:1px solid #0001}
     .topbar .inner{max-width:720px;margin:0 auto;padding:12px 14px;
-      display:flex;align-items:center;gap:10px;position:relative}
-    .logo{height:22px}
-    .brand{font-weight:800;letter-spacing:.2px}
-    /* centered tagline with trailing bullet */
-    .centerTag{position:absolute;left:50%;transform:translateX(-50%);
-      font-weight:600;opacity:.95;white-space:nowrap}
-    @media (max-width:480px){ .centerTag{font-size:14px} }
+      display:flex;align-items:center;gap:12px}
+    .logo{height:26px;flex:0 0 auto}
+    .title{display:flex;flex-direction:column;line-height:1.1;align-items:flex-start}
+    .appName{font-size:18px;font-weight:800;letter-spacing:.2px}
+    .tagline{font-weight:600;opacity:.95}
+    /* On narrow phones: center the title block under/next to the logo nicely */
+    @media (max-width:480px){
+      .topbar .inner{gap:10px}
+      .title{align-items:center}
+      .appName{font-size:17px;text-align:center}
+      .tagline{font-size:14px;text-align:center}
+    }
 
     /* cards */
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
@@ -124,9 +129,11 @@
   <div class="topbar">
     <div class="inner">
       <img class="logo" src="icons/app-h3-cube-contrast-Hwhite.svg" alt="H³">
-      <span class="brand">H3xt0</span>
-      <span class="centerTag">Private • Goal-Focused • Offline •</span>
-      <!-- no top Help (kept only the bottom FAB) -->
+      <div class="title">
+        <div class="appName">H³ Budget Tool</div>
+        <div class="tagline">Private • Goal-Focused • Offline</div>
+      </div>
+      <!-- (no top Help link; the FAB is the help entrypoint) -->
     </div>
   </div>
 
@@ -209,7 +216,7 @@
         <ul>
           <li><strong>Income by Pay:</strong> choose Monthly (12), Bi-weekly (26), or Twice-monthly (24). Enter <em>net</em> per paycheck.</li>
           <li><strong>Essentials:</strong> itemize rent, power, internet, etc.</li>
-          <li>Totals show as plain text on the right. “Add …” buttons are outlined and separate.</li>
+          <li>Totals show on the right. “Add …” buttons are outlined and separate.</li>
         </ul>
       </div>
       <div class="foot"><span></span><button class="btn primary" data-close="#helpSheet">Got it</button></div>
@@ -273,7 +280,7 @@
       essentials = Array.isArray(saved.essentials)?saved.essentials:[];
     }catch(_){}
 
-    // Help FAB only (top Help removed)
+    // Help FAB
     $('#fabHelp').onclick  = ()=> openSheet('#helpSheet');
     $$('#helpSheet [data-close], #helpSheet .mask').forEach(b=> b.onclick=()=> closeSheet('#helpSheet'));
 
@@ -326,7 +333,7 @@
       localStorage.setItem('h3xt0.data', JSON.stringify({incomes, essentials, name:e.target.value||''}));
     });
 
-    // sheet engine
+    // sheet helpers
     function openSheet(sel){ $(sel).style.display='block'; }
     function closeSheet(sel){ $(sel).style.display='none'; }
 
