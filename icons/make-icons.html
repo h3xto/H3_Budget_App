@@ -1,0 +1,68 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>H³ Icon Exporter</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body{font:15px system-ui;margin:24px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+  button{padding:10px 14px;border:1px solid #0aa3a3;background:#0aa3a3;color:#fff;border-radius:10px;cursor:pointer}
+  input,select{padding:8px 10px;border:1px solid #cfe6e6;border-radius:10px}
+  .muted{color:#5c7a7b}
+</style>
+<h1>H³ Icon Exporter</h1>
+<p class="muted">Generates <b>icon-192-v2.png</b> and <b>icon-512-v2.png</b> from your repo SVG.</p>
+
+<div class="row">
+  <label>SVG path:</label>
+  <input id="src" style="min-width:360px" value="../icons/app-h3-cube-contrast-Hwhite.svg">
+</div>
+<div class="row">
+  <label>Background:</label>
+  <select id="bg">
+    <option value="transparent">transparent</option>
+    <option value="#0b0f14">#0b0f14 (dark)</option>
+    <option value="#0f9a9b">#0f9a9b (teal)</option>
+    <option value="#ffffff">#ffffff (white)</option>
+  </select>
+</div>
+<div class="row">
+  <button id="go">Generate icons</button>
+  <span class="muted">Downloads will start automatically.</span>
+</div>
+
+<script>
+async function exportPNG(svgURL, size, bg) {
+  const svgText = await fetch(svgURL, {cache:'no-store'}).then(r=>r.text());
+  const svg = new Blob([svgText], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(svg);
+  const img = new Image();
+  img.decoding='async';
+  img.src = url;
+  await img.decode();
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  if(bg!=='transparent'){ ctx.fillStyle = bg; ctx.fillRect(0,0,size,size); }
+  const pad = size * 0.10;              // 10% safe area for maskable crops
+  const w = size - pad*2, h = size - pad*2;
+  const ratio = Math.min(w/img.width, h/img.height);
+  const dw = img.width * ratio, dh = img.height * ratio;
+  const dx = (size - dw)/2, dy = (size - dh)/2;
+  ctx.drawImage(img, dx, dy, dw, dh);
+  c.toBlob(b=>{
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = `icon-${size}-v2.png`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, 'image/png');
+  URL.revokeObjectURL(url);
+}
+document.getElementById('go').onclick = async ()=>{
+  const src = document.getElementById('src').value.trim();
+  const bg  = document.getElementById('bg').value;
+  await exportPNG(src, 192, bg);
+  await exportPNG(src, 512, bg);
+  alert('Done! Upload icon-192-v2.png and icon-512-v2.png to /icons/');
+};
+</script>
