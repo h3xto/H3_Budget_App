@@ -1,5 +1,5 @@
 // H3xt0 PWA cache (teal build, v43)
-const CACHE_NAME = 'h3xt0-pwa-v13';
+const CACHE_NAME = 'h3xt0-pwa-v15';
 const ASSETS = [
   "./",
   "./budget.html",
@@ -30,5 +30,6 @@ self.addEventListener("fetch", e=>{
     )
   );
 });
+
 
 
