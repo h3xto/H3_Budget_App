@@ -2,6 +2,7 @@
   "name": "H³ Budget Tool",
   "short_name": "H³ Budget",
   "start_url": "/H3_Budget_App/budget.html",
+  "scope": "/H3_Budget_App/",
   "display": "standalone",
   "background_color": "#0b0f14",
   "theme_color": "#0b0f14",
