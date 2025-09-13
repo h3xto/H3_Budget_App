@@ -1,9 +1,9 @@
 {
   "name": "H³ Budget Tool",
   "short_name": "H³ Budget",
-  "id": "/H3xt0/",
+  "id": "/H3_Budget_App/",
   "start_url": "./budget.html",
-  "scope": "/H3xt0/",
+  "scope": "/H3_Budget_App/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b0f14",
