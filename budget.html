@@ -11,9 +11,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <!-- NOTE: version bump forces Android to re-read manifest & icons -->
-  <link rel="manifest" href="manifest.webmanifest?v=17">
-<link rel="icon" href="icons/icon-192-v2.png" sizes="192x192">
-<link rel="apple-touch-icon" href="icons/icon-192-v2.png">
+  <link rel="manifest" href="manifest.webmanifest?v=19">
+  <link rel="icon" href="icons/icon-192-v2.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192-v2.png">
 
   <style>
     :root{
@@ -34,378 +34,350 @@
     .topbar .inner{max-width:720px;margin:0 auto;padding:12px 14px;
       display:flex;align-items:center;gap:12px}
     .logo{height:26px;flex:0 0 auto}
-    .title{display:flex;flex-direction:column;line-height:1.1;align-items:flex-start}
-    .appName{font-size:18px;font-weight:800;letter-spacing:.2px}
-    .tagline{font-weight:600;opacity:.95}
+    .titlebox{display:flex;flex-direction:column;gap:2px}
+    .appname{font-weight:700;letter-spacing:.2px}
+    .tagline{opacity:.9;font-size:12.5px}
+
+    .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px}
+    .pill{background:var(--chip-bg);border:1px solid var(--chip-line);
+      padding:6px 10px;border-radius:999px;font-size:12.5px}
+
+    .card{background:var(--card);border:1px solid var(--line);
+      border-radius:12px;padding:14px;margin:12px 0}
+    .sec-title{font-weight:700;margin-bottom:10px}
+    .row{display:grid;grid-template-columns:1fr 110px 120px 120px;
+      gap:8px;align-items:center}
+    .row.header{color:var(--muted);font-size:12px}
+    .row+.row{margin-top:8px}
+    .chipbtn{background:var(--btn);border:1px solid var(--btn-line);
+      color:var(--btn-ink);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .chipbtn:focus{outline:2px solid var(--focus)}
+
+    .monolabel{font-weight:700;color:var(--muted);margin:4px 0 8px}
+
+    input,select{width:100%;box-sizing:border-box;border:1px solid var(--line);
+      background:#fff;color:var(--ink);border-radius:10px;padding:10px;font-size:14px}
+    input:focus,select:focus{outline:2px solid var(--focus)}
+
+    .footbar{position:sticky;bottom:0;background:var(--card);
+      border-top:1px solid var(--line);padding:10px;display:flex;gap:8px;justify-content:space-between}
+
+    .help-fab{position:fixed;right:14px;bottom:88px;z-index:25;
+      background:var(--brand);color:#fff;border:none;border-radius:999px;
+      padding:12px 14px;box-shadow:0 6px 18px #0003}
+
+    /* Guided overlay */
+    .overlay{position:fixed;inset:0;background:#0008;display:none;z-index:30}
+    .overlay .panel{position:absolute;left:0;right:0;bottom:0;background:#fff;
+      color:#000;border-radius:18px 18px 0 0;padding:18px}
+    .overlay h3{margin:0 0 6px}
+    .overlay p{margin:0 0 12px;color:#333}
+    .overlay .actions{display:flex;gap:10px}
+    .overlay button{padding:10px 12px;border-radius:10px;border:1px solid #ddd;cursor:pointer}
+
     @media (max-width:480px){
-      .topbar .inner{gap:10px}
-      .title{align-items:center}
-      .appName{font-size:17px;text-align:center}
-      .tagline{font-size:14px;text-align:center}
+      .row{grid-template-columns:1fr 90px 100px 100px}
     }
-
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
-      padding:14px 12px 12px;margin:12px 0;box-shadow:0 10px 26px rgba(9,130,130,.08)}
-    h2,h3{margin:6px 0 10px}
-    .muted{color:var(--muted)}
-    .row{display:flex;gap:10px;align-items:center}
-    .grow{flex:1}
-
-    input,select,button{font:16px system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    input,select{
-      width:100%;height:44px;border-radius:12px;border:1px solid #cfe6e6;
-      background:#fff;color:var(--ink);padding:10px 12px; box-shadow:0 2px 0 #eef6f6 inset;
-    }
-    input::placeholder{color:#8faeae}
-    input:focus,select:focus{outline:2px solid var(--focus);border-color:var(--focus)}
-
-    .btn{height:44px;padding:10px 14px;border-radius:12px;border:1px solid var(--btn-line);
-      background:var(--btn);color:var(--btn-ink);cursor:pointer}
-    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
-    .btn.link{border:none;background:transparent;color:#fff;opacity:.95}
-    .btn.link.dark{color:var(--brand)}
-    .btn-add{background:#fff;border:1.5px solid var(--brand);color:var(--brand);font-weight:600}
-    .btn-add:hover{background:#f3fbfb}
-
-    .list{width:100%;border-collapse:separate;border-spacing:0 8px}
-    .list th{font-size:13px;text-align:left;color:var(--muted);font-weight:600}
-    .list td{background:#fff;border:1px solid #e6f0f0;padding:10px;border-radius:12px}
-
-    .summary{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
-    .summary-label{font-size:13px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;font-weight:700}
-    .summary-value{font-weight:700;color:var(--ink)}
-
-    .sheet{position:fixed;inset:0;z-index:1000;display:none}
-    .mask{position:absolute;inset:0;background:rgba(0,0,0,.35)}
-    .panel{position:absolute;left:50%;top:0;transform:translateX(-50%);width:min(720px,100vw);height:100%;
-      display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line)}
-    .head{padding:16px;background:linear-gradient(180deg,var(--brand),var(--brand-2));
-      color:#fff;display:flex;justify-content:space-between;align-items:center}
-    .body{padding:14px;flex:1;overflow:auto}
-    .foot{padding:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;background:#fff5}
-    .field{display:flex;flex-direction:column;gap:8px;margin:10px 0}
-    .help{color:var(--muted)}
-    .review{background:#edf7f7;border:1px solid var(--line);border-radius:12px;padding:12px}
-    .chipset{display:flex;gap:10px;flex-wrap:wrap}
-    .chip{border:1px solid var(--chip-line);background:var(--chip-bg);color:#265a5b;border-radius:999px;padding:10px 12px;cursor:pointer}
-    .chip[aria-selected="true"]{outline:2px solid var(--brand)}
-
-    .switch{position:relative;width:64px;height:32px;display:inline-block}
-    .switch input{opacity:0;width:0;height:0}
-    .slider{position:absolute;cursor:pointer;inset:0;background:#b9e5e6;border-radius:999px;transition:.2s;border:1px solid #0d7e7f20}
-    .slider:before{content:"";position:absolute;height:26px;width:26px;left:3px;top:2px;background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:.2s}
-    .switch input:checked + .slider{background:#0d7e7f}
-    .switch input:checked + .slider:before{transform:translateX(32px)}
-
-    .nameBlock{flex:1.1}
-    .toggleBlock{flex:0 0 180px;text-align:center}
-    .fab{position:fixed;right:16px;bottom:16px;z-index:900;border-radius:999px;border:1px solid #0d7e7f;
-      background:#0d7e7f;color:#fff;padding:12px 14px;box-shadow:0 10px 22px rgba(0,0,0,.25)}
-    .rotate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:1500;color:#fff;text-align:center;padding:20px}
-    @media (orientation:landscape){ .rotate{display:flex;} }
   </style>
 </head>
-
 <body>
-  <div class="topbar">
+
+  <!-- Top header -->
+  <header class="topbar">
     <div class="inner">
       <img class="logo" src="icons/app-h3-cube-contrast-Hwhite.svg" alt="H³">
-      <div class="title">
-        <div class="appName">H³ Budget Tool</div>
-        <div class="tagline">Private • Goal-Focused • Offline</div>
+      <div class="titlebox">
+        <div class="appname">H³ Budget Tool</div>
+        <div class="tagline">Private • Goal-Focused • Offline •</div>
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="container">
-    <div class="card">
+  <main class="container">
+
+    <!-- Personalize -->
+    <section class="card">
+      <div class="sec-title">Personalize</div>
       <div class="row">
-        <div class="nameBlock">
-          <label class="muted">Display <strong>Name</strong></label>
-          <input id="displayName" placeholder="Your name (optional)">
-        </div>
-        <div class="toggleBlock">
-          <label class="muted" style="display:block;margin-bottom:6px;">Guided Mode</label>
-          <label class="switch" title="Full-screen, step-by-step data entry">
-            <input type="checkbox" id="guidedToggle" checked>
-            <span class="slider"></span>
-          </label>
-          <div style="font-weight:700;margin-top:6px;" id="guidedState">ON</div>
+        <label>Display Name</label>
+        <input id="displayName" placeholder="Your name">
+        <div style="grid-column: span 2; display:flex;align-items:center;gap:10px">
+          <label for="guidedToggle" style="font-weight:700;color:var(--muted)">Guided Mode</label>
+          <select id="guidedToggle">
+            <option value="on">ON</option>
+            <option value="off">OFF</option>
+          </select>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="card" id="cardIncome">
-      <div class="row" style="justify-content:space-between;align-items:baseline">
-        <h3>Income by Pay Schedule</h3>
-        <button class="btn link dark" id="editIncome">Edit →</button>
+    <!-- Income -->
+    <section class="card" id="sec-income">
+      <div class="sec-title">Income</div>
+      <div class="monolabel">Monthly Income</div>
+      <div class="row header">
+        <div>Source</div><div>Freq</div><div>Per Pay</div><div>Monthly</div>
       </div>
-      <table class="list">
-        <thead><tr><th>Source</th><th>Freq</th><th>Per Pay</th><th>Monthly</th></tr></thead>
-        <tbody id="incRows"></tbody>
-      </table>
-      <div class="summary">
-        <span class="summary-label">Monthly Income</span>
-        <span class="summary-value" id="incMonthly">$0.00</span>
+      <div id="incomeRows"></div>
+      <div class="pillbar">
+        <button class="chipbtn" id="addIncome">+ Add income source</button>
+        <button class="chipbtn" id="editIncome">Edit</button>
       </div>
-      <div style="height:10px"></div>
-      <button id="addInc" class="btn btn-add">➕ Add income source</button>
-    </div>
+    </section>
 
-    <div class="card" id="cardEss">
-      <div class="row" style="justify-content:space-between;align-items:baseline">
-        <h3>Essentials (itemized)</h3>
-        <button class="btn link dark" id="editEss">Edit →</button>
+    <!-- Essentials -->
+    <section class="card" id="sec-essentials">
+      <div class="sec-title">Essentials</div>
+      <div class="monolabel">Monthly Essentials</div>
+      <div class="row header">
+        <div>Item</div><div>Freq</div><div>Per Pay</div><div>Monthly</div>
       </div>
-      <table class="list">
-        <thead><tr><th>Name</th><th>Monthly</th></tr></thead>
-        <tbody id="essRows"></tbody>
-      </table>
-      <div class="summary">
-        <span class="summary-label">Monthly Essentials</span>
-        <span class="summary-value" id="essMonthly">$0.00</span>
+      <div id="essRows"></div>
+      <div class="pillbar">
+        <button class="chipbtn" id="addEss">+ Add expense</button>
+        <button class="chipbtn" id="editEss">Edit</button>
       </div>
-      <div style="height:10px"></div>
-      <button id="addEss" class="btn btn-add">➕ Add expense</button>
-    </div>
+    </section>
 
-    <div class="card">
-      <h3>Plan Summary</h3>
-      <div class="summary">
-        <span class="summary-label">Net Monthly (Income − Essentials)</span>
-        <span class="summary-value" id="netMonthly">$0.00</span>
+    <!-- Debts -->
+    <section class="card" id="sec-debts">
+      <div class="sec-title">Debts</div>
+      <div class="row header">
+        <div>Name</div><div>APR %</div><div>Balance</div><div>Min Pay</div>
       </div>
-    </div>
+      <div id="debtRows"></div>
+      <div class="pillbar">
+        <button class="chipbtn" id="addDebt">+ Add debt</button>
+        <button class="chipbtn" id="editDebt">Edit</button>
+      </div>
+    </section>
 
-    <div style="height:42px"></div>
-  </div>
+    <!-- Goal -->
+    <section class="card" id="sec-goal">
+      <div class="sec-title">Goal</div>
+      <div class="row">
+        <label>What are you saving for?</label>
+        <input id="goalName" placeholder="e.g., Down payment">
+        <label>Target date</label>
+        <input id="goalDate" type="date">
+      </div>
+    </section>
 
-  <!-- Help -->
-  <div class="sheet" id="helpSheet" aria-hidden="true">
-    <div class="mask"></div>
+    <!-- Summary -->
+    <section class="card" id="sec-summary">
+      <div class="sec-title">Plan Summary</div>
+      <div id="summaryText">Enter income, essentials, debts, and a goal to see your plan.</div>
+    </section>
+
+  </main>
+
+  <!-- Sticky footer actions -->
+  <footer class="footbar">
+    <button class="chipbtn" id="saveBtn">Save</button>
+    <button class="chipbtn" id="shareBtn">Share</button>
+    <button class="chipbtn" id="exportBtn">Export JSON</button>
+  </footer>
+
+  <!-- Help FAB -->
+  <button class="help-fab" id="helpFab">?</button>
+
+  <!-- Guided overlay -->
+  <div class="overlay" id="guide">
     <div class="panel">
-      <div class="head"><strong>Help</strong><button class="btn" data-close="#helpSheet">Close</button></div>
-      <div class="body">
-        <p><strong>Welcome!</strong> Everything is saved locally. Use <em>Guided Mode</em> for full-screen, friendly entry.</p>
-        <ul>
-          <li><strong>Income by Pay:</strong> choose Monthly (12), Bi-weekly (26), or Twice-monthly (24). Enter <em>net</em> per paycheck.</li>
-          <li><strong>Essentials:</strong> itemize rent, power, internet, etc.</li>
-        </ul>
-      </div>
-      <div class="foot"><span></span><button class="btn primary" data-close="#helpSheet">Got it</button></div>
-    </div>
-  </div>
-
-  <!-- Income sheet -->
-  <div class="sheet" id="incSheet" aria-hidden="true">
-    <div class="mask"></div>
-    <div class="panel">
-      <div class="head"><strong>Income by Pay Schedule</strong><span id="incStep" class="muted">Step 1 of 4</span></div>
-      <div class="body" id="incBody"></div>
-      <div class="foot">
-        <button class="btn" id="incBack">◀ Back</button>
-        <div style="display:flex;gap:8px">
-          <button class="btn" data-close="#incSheet" id="incCancel">Cancel</button>
-          <button class="btn primary" id="incNext">Next ▶</button>
-        </div>
+      <h3 id="guideTitle">Welcome</h3>
+      <p id="guideBody">Guided Mode explains each field and takes you step-by-step.</p>
+      <div class="actions">
+        <button id="guideBack">Back</button>
+        <button id="guideNext" style="background:#0f9a9b;color:#fff;border-color:#0f9a9b">Next</button>
+        <button id="guideClose">Close</button>
       </div>
     </div>
   </div>
-
-  <!-- Essentials sheet -->
-  <div class="sheet" id="essSheet" aria-hidden="true">
-    <div class="mask"></div>
-    <div class="panel">
-      <div class="head"><strong>Essentials (itemized)</strong><span id="essStep" class="muted">Step 1 of 3</span></div>
-      <div class="body" id="essBody"></div>
-      <div class="foot">
-        <button class="btn" id="essBack">◀ Back</button>
-        <div style="display:flex;gap:8px">
-          <button class="btn" data-close="#essSheet" id="essCancel">Cancel</button>
-          <button class="btn primary" id="essNext">Next ▶</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="rotate"><div><h3>Best in Portrait</h3>Rotate your phone upright for the cleanest layout.</div></div>
-  <button class="fab" id="fabHelp">❓ Help</button>
 
   <script>
-    const $ = s => document.querySelector(s);
-    const $$ = s => [...document.querySelectorAll(s)];
-    const money = v => new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'}).format(Number(v||0));
-    const num = s => { const n = Number(String(s).replace(/[^\d.]/g,'')); return isFinite(n)?n:0; };
-    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
+  ;(()=>{
 
-    let incomes = [], essentials = [];
+    const $ = s=>document.querySelector(s);
+    const $$ = s=>document.querySelectorAll(s);
 
-    // load saved
-    try{
-      const saved = JSON.parse(localStorage.getItem('h3xt0.data')||'{}');
-      if(saved.name) $('#displayName').value = saved.name;
-      incomes = Array.isArray(saved.incomes)?saved.incomes:[];
-      essentials = Array.isArray(saved.essentials)?saved.essentials:[];
-    }catch(_){}
+    // --- State ---
+    let state = {
+      name:"",
+      guided:"on",
+      income:[],
+      essentials:[],
+      debts:[],
+      goal:{ name:"", date:"" }
+    };
 
-    // generic sheet open/close
-    function openSheet(sel){ const el=$(sel); el.style.display='block'; el.setAttribute('aria-hidden','false'); }
-    function closeSheet(sel){ const el=$(sel); el.style.display='none'; el.setAttribute('aria-hidden','true'); }
-    function wireSheetClose(sel){
-      // Close when clicking any [data-close="#sheet"] or its .mask
-      $$(sel+' [data-close="'+sel+'"]').forEach(b=> b.onclick=()=> closeSheet(sel));
-      $(sel+' .mask').onclick = ()=> closeSheet(sel);
-      // ESC key
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && $(sel).getAttribute('aria-hidden')==='false'){ closeSheet(sel); }});
+    // --- Load / Save ---
+    const KEY='h3xt0.v1';
+    function load(){
+      try{
+        const raw=localStorage.getItem(KEY);
+        if(raw){ state=JSON.parse(raw); }
+      }catch(e){}
+      $('#displayName').value = state.name||"";
+      $('#guidedToggle').value = state.guided||"on";
+      $('#goalName').value = state.goal?.name||"";
+      $('#goalDate').value = state.goal?.date||"";
+      renderAll();
     }
-    wireSheetClose('#helpSheet');
-    wireSheetClose('#incSheet');
-    wireSheetClose('#essSheet');
+    function save(){
+      state.name = $('#displayName').value.trim();
+      state.guided = $('#guidedToggle').value;
+      state.goal = { name:$('#goalName').value.trim(), date:$('#goalDate').value };
+      localStorage.setItem(KEY, JSON.stringify(state));
+      renderAll();
+    }
 
-    // Help FAB
-    $('#fabHelp').onclick  = ()=> openSheet('#helpSheet');
+    // --- Formatters ---
+    const fmtMoney = v => {
+      const n = +v||0;
+      return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+    };
 
-    // Guided toggle (we still always open the same sheets so buttons are never "dead")
-    const gKey='h3xt0.guided';
-    const gToggle = $('#guidedToggle'); const gState = $('#guidedState');
-    const gOn = ()=> (localStorage.getItem(gKey)||'on')==='on';
-    gToggle.checked = gOn(); gState.textContent = gOn()?'ON':'OFF';
-    gToggle.onchange = ()=>{ localStorage.setItem(gKey, gToggle.checked?'on':'off'); gState.textContent = gOn()?'ON':'OFF'; };
-
-    // render
-    function recalc(){
-      const tbI = $('#incRows'); tbI.innerHTML='';
-      let incMonth = 0;
-      incomes.forEach(i=>{
-        const m = num(i.amount)*(Number(i.freq)/12);
-        incMonth += m;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${esc(i.name||'—')}</td><td>${i.freq}</td><td>${money(i.amount)}</td><td>${money(m)}</td>`;
-        tbI.appendChild(tr);
+    // --- Rows renderers ---
+    function renderIncome(){
+      const wrap = $('#incomeRows'); wrap.innerHTML='';
+      (state.income||[]).forEach((r,i)=>{
+        const row = document.createElement('div'); row.className='row';
+        row.innerHTML = `
+          <input value="${r.src||''}" placeholder="Employer / source">
+          <select>
+            <option value="monthly"${r.freq==='monthly'?' selected':''}>Monthly</option>
+            <option value="biweekly"${r.freq==='biweekly'?' selected':''}>Bi-weekly</option>
+            <option value="semimonthly"${r.freq==='semimonthly'?' selected':''}>Semi-monthly</option>
+          </select>
+          <input value="${r.per||''}" inputmode="decimal" placeholder="$ per pay">
+          <input value="${r.mon||''}" inputmode="decimal" placeholder="$ monthly">
+        `;
+        wrap.appendChild(row);
       });
-      $('#incMonthly').textContent = money(incMonth);
-
-      const tbE = $('#essRows'); tbE.innerHTML='';
-      let essMonth = 0;
-      essentials.forEach(e=>{
-        essMonth += num(e.amount);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${esc(e.name||'—')}</td><td>${money(e.amount)}</td>`;
-        tbE.appendChild(tr);
+    }
+    function renderEss(){
+      const wrap = $('#essRows'); wrap.innerHTML='';
+      (state.essentials||[]).forEach((r,i)=>{
+        const row = document.createElement('div'); row.className='row';
+        row.innerHTML = `
+          <input value="${r.item||''}" placeholder="Bill / expense">
+          <select>
+            <option value="monthly"${r.freq==='monthly'?' selected':''}>Monthly</option>
+            <option value="biweekly"${r.freq==='biweekly'?' selected':''}>Bi-weekly</option>
+            <option value="semimonthly"${r.freq==='semimonthly'?' selected':''}>Semi-monthly</option>
+          </select>
+          <input value="${r.per||''}" inputmode="decimal" placeholder="$ per pay">
+          <input value="${r.mon||''}" inputmode="decimal" placeholder="$ monthly">
+        `;
+        wrap.appendChild(row);
       });
-      $('#essMonthly').textContent = money(essMonth);
-
-      $('#netMonthly').textContent = money(incMonth - essMonth);
-      localStorage.setItem('h3xt0.data', JSON.stringify({incomes, essentials, name:$('#displayName').value||''}));
+    }
+    function renderDebts(){
+      const wrap = $('#debtRows'); wrap.innerHTML='';
+      (state.debts||[]).forEach((r,i)=>{
+        const row = document.createElement('div'); row.className='row';
+        row.innerHTML = `
+          <input value="${r.name||''}" placeholder="Debt name">
+          <input value="${r.apr||''}" inputmode="decimal" placeholder="APR %">
+          <input value="${r.bal||''}" inputmode="decimal" placeholder="Balance">
+          <input value="${r.min||''}" inputmode="decimal" placeholder="Min pay">
+        `;
+        wrap.appendChild(row);
+      });
+    }
+    function renderSummary(){
+      const inc = (state.income||[]).reduce((s,r)=>s+(+r.mon||0),0);
+      const ess = (state.essentials||[]).reduce((s,r)=>s+(+r.mon||0),0);
+      const min = (state.debts||[]).reduce((s,r)=>s+(+r.min||0),0);
+      const left = inc - ess - min;
+      $('#summaryText').textContent =
+        `Monthly: Income ${fmtMoney(inc)} • Essentials ${fmtMoney(ess)} • Debt mins ${fmtMoney(min)} → Leftover ${fmtMoney(left)}.`;
+    }
+    function renderAll(){
+      $('.appname').textContent = 'H³ Budget Tool' + (state.name?` — ${state.name}`:'');
+      renderIncome(); renderEss(); renderDebts(); renderSummary();
     }
 
-    $('#displayName').addEventListener('input', e=>{
-      localStorage.setItem('h3xt0.data', JSON.stringify({incomes, essentials, name:e.target.value||''}));
-    });
+    // --- Buttons ---
+    $('#addIncome').onclick = ()=>{
+      (state.income = state.income||[]).push({src:'',freq:'monthly',per:'',mon:''});
+      save();
+    };
+    $('#editIncome').onclick = ()=> alert('Edit mode coming soon');
+    $('#addEss').onclick = ()=>{
+      (state.essentials = state.essentials||[]).push({item:'',freq:'monthly',per:'',mon:''});
+      save();
+    };
+    $('#editEss').onclick = ()=> alert('Edit mode coming soon');
+    $('#addDebt').onclick = ()=>{
+      (state.debts = state.debts||[]).push({name:'',apr:'',bal:'',min:''});
+      save();
+    };
+    $('#editDebt').onclick = ()=> alert('Edit mode coming soon');
 
-    // ==== Income guided ====
-    const incSheet = '#incSheet';
-    const incState = {i:0,name:'',freq:'26',amt:''};
-    const incSteps = [
-      { title:'Source',
-        render:()=>`<div class="field"><label>Who pays you?</label>
-                    <input id="incName" placeholder="Employer or side gig (e.g., Acme Co.)" value="${incState.name}">
-                    <div class="help">Use a clear label so you can edit later.</div></div>`,
-        collect:()=> (incState.name = $('#incName').value.trim()).length>0
-      },
-      { title:'Pay frequency',
-        render:()=>`<div class="field"><label>How often are you paid?</label>
-          <div class="chipset">
-            <button type="button" class="chip" data-f="12">Monthly (12)</button>
-            <button type="button" class="chip" data-f="26">Bi-weekly (26)</button>
-            <button type="button" class="chip" data-f="24">Twice-monthly (24)</button>
-          </div>
-          <div class="help">Bi-weekly = every 2 weeks (26). Twice-monthly = two fixed dates (24).</div>
-        </div>`,
-        bind:()=> $$('#incSheet .chip').forEach(b=> b.onclick=()=>{ incState.freq=b.dataset.f; $$('#incSheet .chip').forEach(x=>x.removeAttribute('aria-selected')); b.setAttribute('aria-selected','true'); }),
-        collect:()=> !!incState.freq
-      },
-      { title:'Net per paycheck',
-        render:()=>`<div class="field"><label>How much lands in your bank each paycheck?</label>
-                    <input id="incAmt" inputmode="decimal" placeholder="e.g., 1835.50" value="${incState.amt}">
-                    <div class="help"><strong>Net</strong> means after taxes/deductions.</div></div>`,
-        collect:()=> { const v=num($('#incAmt').value); if(v<=0) return false; incState.amt=v.toFixed(2); return true; }
-      },
-      { title:'Review & save',
-        render:()=>{ const m=num(incState.amt)*(Number(incState.freq)/12);
-          return `<div class="review">
-            <div><strong>Source:</strong> ${esc(incState.name)}</div>
-            <div><strong>Frequency:</strong> ${incState.freq}/yr</div>
-            <div><strong>Per paycheck:</strong> ${money(incState.amt)}</div>
-            <div><strong>Monthly eqv.:</strong> ${money(m)}</div>
-          </div>`; },
-        done:()=>{ incomes.push({name:incState.name,freq:incState.freq,amount:incState.amt}); recalc(); }
+    $('#saveBtn').onclick = save;
+    $('#exportBtn').onclick = ()=>{
+      save();
+      const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'h3-budget.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+    $('#shareBtn').onclick = ()=>{
+      save();
+      const enc = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
+      const url = location.origin + location.pathname + '#d=' + enc;
+      if(navigator.share){
+        navigator.share({title:'H³ Budget Tool', text:'My plan', url});
+      }else{
+        prompt('Copy this link', url);
       }
-    ];
-    function drawInc(){
-      $('#incStep').textContent = `Step ${incState.i+1} of ${incSteps.length}`;
-      $('#incBody').innerHTML = `<h3 style="margin:0 0 8px">${incSteps[incState.i].title}</h3>` + incSteps[incState.i].render();
-      incSteps[incState.i].bind?.();
-      $('#incNext').textContent = incState.i===incSteps.length-1 ? 'Save ▶' : 'Next ▶';
-    }
-    function openIncomeSheet(){
-      Object.assign(incState,{i:0,name:'',freq:'26',amt:''});
-      openSheet(incSheet); drawInc();
-      $('#incBack').onclick = ()=>{ if(incState.i>0){incState.i--; drawInc();} };
-      $('#incNext').onclick = ()=>{ if(!incSteps[incState.i].collect()) return alert('Please complete this step.');
-        if(incState.i<incSteps.length-1){incState.i++; drawInc();}
-        else { incSteps[incState.i].done?.(); closeSheet(incSheet); } };
-    }
+    };
 
-    // ==== Essentials guided ====
-    const essSheet = '#essSheet';
-    const essState = {i:0,name:'',amt:''};
-    const essSteps = [
-      { title:'Expense name',
-        render:()=>`<div class="field"><label>What is this essential expense?</label>
-                    <input id="essName" placeholder="e.g., Rent, Power, Internet" value="${essState.name}">
-                    <div class="help">Name it clearly so it’s easy to update later.</div></div>`,
-        collect:()=> (essState.name = $('#essName').value.trim()).length>0
-      },
-      { title:'Monthly amount',
-        render:()=>`<div class="field"><label>How much per month?</label>
-                    <input id="essAmt" inputmode="decimal" placeholder="e.g., 1200.00" value="${essState.amt}">
-                    <div class="help">If it varies, enter an average. You can edit any time.</div></div>`,
-        collect:()=> { const v=num($('#essAmt').value); if(v<=0) return false; essState.amt=v.toFixed(2); return true; }
-      },
-      { title:'Review & save',
-        render:()=>`<div class="review"><div><strong>Name:</strong> ${esc(essState.name)}</div>
-                    <div><strong>Per month:</strong> ${money(essState.amt)}</div></div>`,
-        done:()=> { essentials.push({name:essState.name,amount:essState.amt}); recalc(); }
+    // Guided mode overlay (simple stepper)
+    const steps = [
+      {t:'Income', b:'Add your income sources. Use Per Pay or Monthly — whichever is easiest.'},
+      {t:'Essentials', b:'Add your essential bills (rent, utilities, etc.).'},
+      {t:'Debts', b:'List debts with APR, balance, and minimum payment.'},
+      {t:'Goal', b:'Name your goal and choose a target date.'},
+      {t:'Summary', b:'Review the monthly picture and adjust as needed.'}
+    ];
+    let ix=0;
+    function showGuide(show){
+      $('#guide').style.display = show?'block':'none';
+      if(show){ ix=0; paintStep(); }
+    }
+    function paintStep(){
+      $('#guideTitle').textContent = steps[ix].t;
+      $('#guideBody').textContent  = steps[ix].b;
+    }
+    $('#guidedToggle').onchange = (e)=> {
+      state.guided = e.target.value; save();
+      if(state.guided==='on') showGuide(true); else showGuide(false);
+    };
+    $('#helpFab').onclick = ()=> showGuide(true);
+    $('#guideBack').onclick = ()=>{ ix=Math.max(0,ix-1); paintStep(); };
+    $('#guideNext').onclick = ()=>{ ix=Math.min(steps.length-1,ix+1); paintStep(); };
+    $('#guideClose').onclick = ()=> showGuide(false);
+
+    // Handle shared state via URL hash
+    (function tryImportFromHash(){
+      const m = location.hash.match(/#d=([^&]+)/);
+      if(m){
+        try{
+          const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+          const obj = JSON.parse(json);
+          if(obj && typeof obj==='object'){ state = Object.assign(state,obj); save(); location.hash=''; }
+        }catch(e){}
       }
-    ];
-    function drawEss(){
-      $('#essStep').textContent = `Step ${essState.i+1} of ${essSteps.length}`;
-      $('#essBody').innerHTML = `<h3 style="margin:0 0 8px">${essSteps[essState.i].title}</h3>` + essSteps[essState.i].render();
-      $('#essNext').textContent = essState.i===essSteps.length-1 ? 'Save ▶' : 'Next ▶';
-    }
-    function openEssSheet(){
-      Object.assign(essState,{i:0,name:'',amt:''});
-      openSheet(essSheet); drawEss();
-      $('#essBack').onclick = ()=>{ if(essState.i>0){essState.i--; drawEss();} };
-      $('#essNext').onclick = ()=>{ if(!essSteps[essState.i].collect()) return alert('Please complete this step.');
-        if(essState.i<essSteps.length-1){essState.i++; drawEss();}
-        else { essSteps[essState.i].done?.(); closeSheet(essSheet); } };
-    }
+    })();
 
-    // ALWAYS wire the buttons so they work in BOTH modes.
-    // (Guided toggle just changes the copy/feel; the data entry is via sheets either way.)
-    $('#addInc').onclick   = (e)=>{ e.preventDefault(); openIncomeSheet(); };
-    $('#editIncome').onclick= (e)=>{ e.preventDefault(); openIncomeSheet(); };
-    $('#addEss').onclick   = (e)=>{ e.preventDefault(); openEssSheet(); };
-    $('#editEss').onclick  = (e)=>{ e.preventDefault(); openEssSheet(); };
+    // Init
+    load();
 
-    // initial render
-    recalc();
+  })();
   </script>
 </body>
 </html>
-
-
-
-
