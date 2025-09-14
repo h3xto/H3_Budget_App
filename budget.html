@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
   <!-- IMPORTANT: absolute paths + version bump to force refresh -->
-  <link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=22">
+  <link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=23">
   <link rel="icon" type="image/png" sizes="192x192" href="/H3_Budget_App/icons/icon-192-v3.png">
   <link rel="icon" type="image/png" sizes="512x512" href="/H3_Budget_App/icons/icon-512-v3.png">
   <link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png">
@@ -381,10 +381,11 @@
 
     // Register service worker (bump query to force update)
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=22').catch(()=>{});
+      navigator.serviceWorker.register('sw.js?v=23').catch(()=>{});
     }
 
   })();
   </script>
 </body>
 </html>
+
