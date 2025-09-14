@@ -6,14 +6,16 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>H³ Budget Tool</title>
 
-  <!-- PWA -->
+  <!-- PWA / icons -->
   <meta name="theme-color" content="#0f9a9b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <!-- NOTE: version bump forces Android to re-read manifest & icons -->
-  <link rel="manifest" href="manifest.webmanifest?v=19">
-  <link rel="icon" href="icons/icon-192-v2.png" sizes="192x192">
-  <link rel="apple-touch-icon" href="icons/icon-192-v2.png">
+
+  <!-- IMPORTANT: absolute paths + version bump to force refresh -->
+  <link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=22">
+  <link rel="icon" type="image/png" sizes="192x192" href="/H3_Budget_App/icons/icon-192-v3.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/H3_Budget_App/icons/icon-512-v3.png">
+  <link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png">
 
   <style>
     :root{
@@ -32,11 +34,11 @@
       background:linear-gradient(180deg,var(--brand),var(--brand-2));
       color:#fff;border-bottom:1px solid #0001}
     .topbar .inner{max-width:720px;margin:0 auto;padding:12px 14px;
-      display:flex;align-items:center;gap:12px}
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
     .logo{height:26px;flex:0 0 auto}
-    .titlebox{display:flex;flex-direction:column;gap:2px}
+    .titlebox{display:flex;flex-direction:column;gap:2px;align-items:center}
     .appname{font-weight:700;letter-spacing:.2px}
-    .tagline{opacity:.9;font-size:12.5px}
+    .tagline{opacity:.95;font-size:12.5px}
 
     .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px}
     .pill{background:var(--chip-bg);border:1px solid var(--chip-line);
@@ -376,6 +378,11 @@
 
     // Init
     load();
+
+    // Register service worker (bump query to force update)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js?v=22').catch(()=>{});
+    }
 
   })();
   </script>
