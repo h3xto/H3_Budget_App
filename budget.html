@@ -1,168 +1,116 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <meta name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>H³ Budget Tool</title>
 
-<!-- PWA hooks (safe to keep) -->
-<link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=24">
-<link rel="icon" href="/H3_Budget_App/icons/icon-192-v3.png" sizes="192x192">
-<link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png">
+<!-- PWA hooks -->
+<link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=24" />
+<link rel="icon" href="/H3_Budget_App/icons/icon-192-v3.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png" />
 
 <style>
   :root{
-    --bg:#0b0f14;        /* dark background */
-    --card:#121821;      /* cards */
-    --ink:#e6edf3;       /* text */
-    --muted:#8ca0b4;
-    --line:#1e2835;
-    --accent:#17c3ff;    /* primary accent */
-    --accent-2:#42f59f;  /* secondary accent */
-    --danger:#ff5d5d;
-    --good:#12d27c;
-    --focus: 0 0 0 2px rgba(23,195,255,.35);
-    --radius:14px;
-    --pad:16px;
-    --shadow: 0 8px 26px rgba(0,0,0,.35);
+    --bg:#0b0f14; --card:#121821; --ink:#e6edf3; --muted:#8ca0b4; --line:#1e2835;
+    --accent:#17c3ff; --good:#12d27c; --danger:#ff5d5d; --focus:0 0 0 2px rgba(23,195,255,.35);
+    --radius:14px; --pad:16px; --shadow:0 8px 26px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;overflow-x:hidden}
   a{color:var(--accent);text-decoration:none}
-  .wrap{max-width:900px;margin:0 auto;padding:20px 14px 120px}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 14px 120px}
 
   /* Header */
-  .header{
-    display:flex;flex-direction:column;align-items:center;gap:6px;margin:8px 0 14px
-  }
-  .brand{display:flex;align-items:center;gap:8px}
-  .cube{
-    width:28px;height:28px;border:2px solid var(--ink);border-radius:6px;position:relative;transform:rotate(15deg)
-  }
-  .cube::after{
-    content:"³";position:absolute;right:-10px;top:-12px;font-weight:700;color:var(--ink)
-  }
-  .title{font-weight:800;letter-spacing:.2px}
-  .tagline{
-    color:var(--muted);font-size:13px;display:flex;align-items:center;gap:8px
-  }
+  .header{display:flex;flex-direction:column;align-items:center;gap:6px;margin:6px 0 12px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .cube{width:28px;height:28px;border:2px solid var(--ink);border-radius:6px;transform:rotate(15deg);position:relative}
+  .cube::after{content:"³";position:absolute;right:-10px;top:-12px;font-weight:800}
+  .title{font-weight:800}
+  .tagline{color:var(--muted);font-size:13px;display:flex;gap:8px}
   .tagline span::after{content:" • "}
   .tagline span:last-child::after{content:" •"}
-  .title-row{
-    display:flex;justify-content:space-between;gap:10px;width:100%;max-width:900px;align-items:center;
-  }
 
-  /* Top controls */
-  .topbar{
-    display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin:6px 0 14px
-  }
-  .pill{
-    background:linear-gradient(180deg,#151e29,#0f1620);border:1px solid var(--line);padding:10px 14px;border-radius:999px;
-    display:inline-flex;gap:10px;align-items:center;box-shadow:var(--shadow)
-  }
-  .switch{
-    position:relative;width:54px;height:30px;background:#0b1119;border:1px solid var(--line);border-radius:999px;cursor:pointer;
-  }
+  /* Controls */
+  .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:8px 0 14px}
+  .pill{background:linear-gradient(180deg,#151e29,#0f1620);border:1px solid var(--line);padding:10px 14px;border-radius:999px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow)}
+  .switch{position:relative;width:54px;height:30px;background:#0b1119;border:1px solid var(--line);border-radius:999px;cursor:pointer}
   .switch input{display:none}
-  .knob{
-    position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--ink);transition:.24s;
-  }
+  .knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--ink);transition:.22s}
   .switch input:checked + .knob{left:27px;background:var(--accent)}
-  .tip{color:var(--muted);font-size:12px}
 
-  /* Cards / sections */
-  .card{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);box-shadow:var(--shadow);margin:12px 0;
-  }
-  .card h2{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:10px}
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);box-shadow:var(--shadow);margin:12px 0}
+  .card h2{margin:0 0 6px;font-size:16px}
   .subtle{color:var(--muted);font-size:12px;margin:0 0 10px}
-  .row{display:grid;grid-template-columns:1fr auto auto auto 38px;gap:8px;align-items:center;margin:8px 0}
-  .row.debt{grid-template-columns:1fr 76px 92px 70px 38px}
   .hdr{color:var(--muted);font-size:11px;margin:6px 0 4px;letter-spacing:.35px;text-transform:uppercase}
 
-  input,select,button{
-    font:inherit;color:var(--ink);background:#0b1119;border:1px solid var(--line);border-radius:10px;padding:10px 10px;
-  }
+  /* Inputs */
+  input,select,button{font:inherit;color:var(--ink);background:#0b1119;border:1px solid var(--line);border-radius:10px;padding:10px}
   input:focus,select:focus,button:focus{outline:none;box-shadow:var(--focus)}
   input::placeholder{color:#5f7286}
-
-  .btn{background:#0f1620;border:1px solid var(--line);padding:10px 12px;border-radius:10px;cursor:pointer}
+  .btn{background:#0f1620;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
+  .btn.small{padding:8px 10px;font-size:14px}
   .btn.primary{background:linear-gradient(180deg,#0b5d73,#094a5b);border-color:#0b5d73}
   .btn.good{background:linear-gradient(180deg,#0b5b3a,#0a4a30);border-color:#0b5b3a}
   .btn.danger{background:linear-gradient(180deg,#7a2222,#5b1313);border-color:#7a2222}
-  .btn.small{padding:8px 10px;font-size:14px}
-  .icon-btn{width:38px;height:38px;display:inline-grid;place-items:center;border-radius:10px;background:#0f1620;border:1px solid var(--line);cursor:pointer}
+  .icon-btn{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#0f1620;border:1px solid var(--line);cursor:pointer}
 
-  /* Name input that expands on focus and compacts on blur */
-  .compact-name{
-    width:4ch;transition:width .2s ease;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .compact-name:focus{width:min(70vw,28ch)}
-  .wide-on-focus:focus{width:min(70vw,36ch)}
-
+  /* Responsive rows: flex-wrap so nothing overflows horizontally */
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+  .cell{flex:1 1 140px;min-width:120px}
+  .cell-name{flex:2 1 200px;min-width:150px}
+  .cell-tight{flex:0 0 38px}
   .money{text-align:right}
-  .unit{font-size:12px;color:var(--muted);margin-left:4px}
 
-  /* Guided Mode */
-  .guided-overlay{
-    position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;
-  }
+  /* Name “expands” on focus but never shrinks to unreadable */
+  .name{width:100%}
+
+  /* Guided Overlay */
+  .guided-overlay{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column}
   .guided-overlay.show{display:flex}
-  .guided-head{
-    padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between
-  }
+  .guided-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
   .guided-title{font-weight:700}
   .guided-body{flex:1;overflow:auto;padding:16px}
-  .guided-nav{
-    padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;background:linear-gradient(180deg,#101824,#0b1119)
-  }
-  .step-ind{font-size:12px;color:var(--muted)}
+  .guided-nav{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;background:linear-gradient(180deg,#101824,#0b1119)}
   .hidden{display:none !important}
 
-  /* Footer space for mobile */
+  /* Small helpers */
   .spacer{height:80px}
-  .bottom-bar{
-    position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
-    background:linear-gradient(180deg,#141c28,#0b1119);border:1px solid var(--line);border-radius:999px;padding:8px 10px;
-    display:flex;gap:8px;z-index:20;box-shadow:var(--shadow)
-  }
-
-  @media (min-width:900px){
-    .row{grid-template-columns:2fr auto auto auto 38px}
-    .row.debt{grid-template-columns:2fr 90px 120px 80px 38px}
-  }
+  .bottom-bar{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#141c28,#0b1119);border:1px solid var(--line);border-radius:999px;padding:8px 10px;display:flex;gap:8px;z-index:20;box-shadow:var(--shadow)}
+  .bar{height:10px;border-radius:999px;background:#0f1620;border:1px solid var(--line);overflow:hidden}
+  .bar > span{display:block;height:100%;background:linear-gradient(90deg,#17c3ff,#12d27c)}
+  .note{color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
-
   <div class="header">
-    <div class="brand">
-      <div class="cube" aria-hidden="true"></div>
-      <div class="title-row">
-        <div class="title">H³ Budget Tool</div>
-      </div>
-    </div>
-    <div class="tagline">
-      <span>Private</span><span>Goal-Focused</span><span>Offline</span>
-    </div>
+    <div class="brand"><div class="cube" aria-hidden="true"></div><div class="title">H³ Budget Tool</div></div>
+    <div class="tagline"><span>Private</span><span>Goal-Focused</span><span>Offline</span></div>
   </div>
 
   <div class="topbar">
     <div class="pill">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
         <span style="font-weight:600">Guided Mode</span>
-        <span class="switch">
-          <input type="checkbox" id="guidedToggle">
-          <span class="knob"></span>
-        </span>
+        <span class="switch"><input type="checkbox" id="guidedToggle"><span class="knob"></span></span>
       </label>
     </div>
     <div class="pill">
       <label style="display:flex;align-items:center;gap:10px">
         <span>Display Name</span>
-        <input id="displayName" class="wide-on-focus" placeholder="Your name" style="min-width:160px">
+        <input id="displayName" class="name" placeholder="Your name" style="min-width:160px">
+      </label>
+    </div>
+    <div class="pill">
+      <label style="display:flex;align-items:center;gap:10px">
+        <span>Payment cadence</span>
+        <select id="cadence">
+          <option value="monthly">Monthly</option>
+          <option value="biweekly">Bi-weekly</option>
+        </select>
       </label>
     </div>
   </div>
@@ -171,12 +119,18 @@
   <section class="card" id="sec-income">
     <h2>Income</h2>
     <p class="subtle">Add each paycheck or income source (net / take-home).</p>
-    <div class="hdr">Source</div>
-    <div class="row" style="grid-template-columns:2fr 140px 140px 1fr 38px">
-      <div class="hdr">Name</div><div class="hdr">Frequency</div><div class="hdr">Per Pay</div><div class="hdr" style="text-align:right">Monthly</div><div></div>
+
+    <div class="row" style="margin-top:0">
+      <div class="hdr cell-name">Name</div>
+      <div class="hdr cell">Frequency</div>
+      <div class="hdr cell">Per Pay</div>
+      <div class="hdr cell" style="text-align:right">Monthly</div>
+      <div class="hdr cell-tight"></div>
     </div>
+
     <div id="incomeList"></div>
     <button class="btn small good" id="addIncomeBtn">+ Add Income Source</button>
+
     <div style="margin-top:10px;text-align:right;color:var(--muted)">
       <strong style="color:var(--ink)">Monthly Income Total:</strong> <span id="incomeTotal">$0.00</span>
     </div>
@@ -186,11 +140,16 @@
   <section class="card" id="sec-essentials">
     <h2>Essentials</h2>
     <p class="subtle">Add recurring monthly essentials (rent, utilities, insurance, etc.).</p>
-    <div class="row" style="grid-template-columns:2fr 1fr 38px">
-      <div class="hdr">Name</div><div class="hdr" style="text-align:right">Monthly</div><div></div>
+
+    <div class="row" style="margin-top:0">
+      <div class="hdr cell-name">Name</div>
+      <div class="hdr cell" style="text-align:right">Monthly</div>
+      <div class="hdr cell-tight"></div>
     </div>
+
     <div id="essentialsList"></div>
     <button class="btn small good" id="addEssBtn">+ Add Expense</button>
+
     <div style="margin-top:10px;text-align:right;color:var(--muted)">
       <strong style="color:var(--ink)">Monthly Essentials Total:</strong> <span id="essTotal">$0.00</span>
     </div>
@@ -199,14 +158,16 @@
   <!-- Debts -->
   <section class="card" id="sec-debts">
     <h2>Debts</h2>
-    <p class="subtle">Add debts to plan avalanche paydown (higher APRs first by default).</p>
-    <div class="row debt">
-      <div class="hdr">Name</div>
-      <div class="hdr" style="text-align:right">APR %</div>
-      <div class="hdr" style="text-align:right">Balance</div>
-      <div class="hdr" style="text-align:right">Term (m)</div>
-      <div></div>
+    <p class="subtle">Add debts to get an **Avalanche** recommendation (highest APR first). If a debt has a term, we’ll estimate its minimum payment; if not, we assume 2% minimum.</p>
+
+    <div class="row" style="margin-top:0">
+      <div class="hdr cell-name">Name</div>
+      <div class="hdr cell" style="text-align:right">APR %</div>
+      <div class="hdr cell" style="text-align:right">Balance</div>
+      <div class="hdr cell" style="text-align:right">Term (months)</div>
+      <div class="hdr cell-tight"></div>
     </div>
+
     <div id="debtsList"></div>
     <button class="btn small good" id="addDebtBtn">+ Add Debt</button>
   </section>
@@ -214,26 +175,45 @@
   <!-- Goal -->
   <section class="card" id="sec-goal">
     <h2>Goal</h2>
-    <div class="row" style="grid-template-columns:2fr 1fr 1fr">
-      <div>
+    <div class="row">
+      <div class="cell-name">
         <div class="hdr">Goal Name</div>
-        <input id="goalName" class="wide-on-focus" placeholder="e.g., Car fund">
+        <input id="goalName" class="name" placeholder="e.g., Car fund">
       </div>
-      <div>
+      <div class="cell">
         <div class="hdr">Amount</div>
         <input id="goalAmt" class="money" placeholder="$0.00">
       </div>
-      <div>
+      <div class="cell">
         <div class="hdr">Target Date</div>
         <input id="goalDate" type="date">
       </div>
     </div>
+    <p class="note">Tip: you can still use Avalanche for debts while saving toward a goal — we’ll show the free cash after essentials to split between them.</p>
   </section>
 
   <!-- Summary -->
   <section class="card" id="sec-summary">
     <h2>Plan Summary</h2>
     <div id="summaryText" class="subtle">Fill in your details to see plan highlights here.</div>
+
+    <div class="row" style="align-items:center">
+      <div class="cell-name">
+        <div class="hdr">Debt-to-Income (DTI)</div>
+        <div class="bar"><span id="dtiBar" style="width:0%"></span></div>
+        <div class="note" id="dtiNote">—</div>
+      </div>
+      <div class="cell">
+        <div class="hdr">Goal progress</div>
+        <div class="bar"><span id="goalBar" style="width:0%"></span></div>
+        <div class="note" id="goalNote">—</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2 style="margin-bottom:6px">Debt Recommendation (Avalanche)</h2>
+      <div id="debtReco" class="subtle">Add debts to see recommendations.</div>
+    </div>
   </section>
 
   <div class="spacer"></div>
@@ -244,17 +224,16 @@
   </div>
 </div>
 
-<!-- Guided overlay -->
+<!-- Guided overlay (real sections moved here during steps) -->
 <div class="guided-overlay" id="guidedOverlay" aria-hidden="true">
   <div class="guided-head">
     <div>
       <div class="guided-title" id="guidedTitle">Guided Setup</div>
-      <div class="step-ind" id="stepInd">Step 1 of 5</div>
+      <div class="subtle" id="stepInd">Step 1 of 5</div>
     </div>
     <button class="btn small danger" id="exitGuidedBtn">Exit</button>
   </div>
   <div class="guided-body">
-    <!-- We’ll show the real sections here (not dummy text) by toggling visibility -->
     <section id="g-income"></section>
     <section id="g-essentials" class="hidden"></section>
     <section id="g-debts" class="hidden"></section>
@@ -262,8 +241,7 @@
     <section id="g-review" class="hidden">
       <div class="card">
         <h2>Review</h2>
-        <p class="subtle">Looks good? You can adjust anything later from the main screen.</p>
-        <div id="reviewText" style="white-space:pre-wrap"></div>
+        <div id="reviewText" style="white-space:pre-wrap" class="subtle"></div>
       </div>
     </section>
   </div>
@@ -277,405 +255,336 @@
 </div>
 
 <script>
-/* ============= STATE ============= */
-const $ = (q,ctx=document)=>ctx.querySelector(q);
-const $$ = (q,ctx=document)=>Array.from(ctx.querySelectorAll(q));
-
-const state = {
-  displayName: '',
-  incomes: [],       // {id, name, freq, per, monthly}
-  essentials: [],    // {id, name, monthly}
-  debts: [],         // {id, name, apr, balance, term}
-  goal: { name:'', amount:0, date:'' }
-};
+/* ---------- Helpers ---------- */
+const $=(q,ctx=document)=>ctx.querySelector(q);
+const $$=(q,ctx=document)=>Array.from(ctx.querySelectorAll(q));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const toNum = v => (typeof v==='number'?v:parseFloat(String(v||'').replace(/[^0-9.-]/g,''))||0);
+const fmt = n => (isNaN(n)?0:n).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
 
 const FREQS = [
-  {v:'monthly', label:'Monthly', mult:1},
-  {v:'semi-monthly', label:'Semi-Monthly (24/yr)', mult:24/12},
-  {v:'biweekly', label:'Bi-Weekly (26/yr)', mult:26/12},
-  {v:'weekly', label:'Weekly (52/yr)', mult:52/12},
+  {v:'monthly',label:'Monthly',mult:1},
+  {v:'semi-monthly',label:'Semi-Monthly (24/yr)',mult:24/12},
+  {v:'biweekly',label:'Bi-Weekly (26/yr)',mult:26/12},
+  {v:'weekly',label:'Weekly (52/yr)',mult:52/12},
 ];
+const monthlyFrom=(freq,per)=>{const f=FREQS.find(x=>x.v===freq)||FREQS[0];return toNum(per)*f.mult};
 
-/* ============= UTIL ============= */
-const uid = ()=>Math.random().toString(36).slice(2,9);
-const toNum = (s)=> {
-  if (typeof s === 'number') return s;
-  if (!s) return 0;
-  return parseFloat(String(s).replace(/[^0-9.-]/g,''))||0;
+/* ---------- State ---------- */
+const state = {
+  cadence:'monthly', // or 'biweekly'
+  displayName:'',
+  incomes:[],       // {id,name,freq,per,monthly}
+  essentials:[],    // {id,name,monthly}
+  debts:[],         // {id,name,apr,balance,term}
+  goal:{name:'',amount:0,date:''}
 };
-const fmtMoney = (n)=>
-  (isNaN(n)?0:n).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
-const monthlyFrom = (freq, per)=>{
-  const f = FREQS.find(x=>x.v===freq) || FREQS[0];
-  return toNum(per) * f.mult;
-};
-
-/* ============= STORAGE ============= */
-const load = ()=>{
-  try {
-    const raw = localStorage.getItem('h3x-budget');
-    if (!raw) return;
-    const j = JSON.parse(raw);
-    Object.assign(state, j);
-  } catch(e){}
-};
-const save = ()=>{
+function load(){
+  try{Object.assign(state, JSON.parse(localStorage.getItem('h3x-budget')||'{}'));}catch{}
+}
+function save(){
   localStorage.setItem('h3x-budget', JSON.stringify(state));
-};
-
-/* ============= RENDER ROW HELPERS ============= */
-function nameInput(value='', extraClasses='compact-name'){
-  const el = document.createElement('input');
-  el.placeholder = 'Name';
-  el.value = value || '';
-  el.className = extraClasses;
-  el.addEventListener('focus', ()=> {
-    el.dataset.prevWidth = el.style.width;
-    el.style.width = 'min(70vw, 28ch)';
-  });
-  el.addEventListener('blur', ()=> {
-    el.style.width = '4ch';
-  });
-  return el;
-}
-function moneyInput(value=''){
-  const el = document.createElement('input');
-  el.className = 'money';
-  el.placeholder = '$0.00';
-  el.inputMode = 'decimal';
-  el.autocomplete = 'off';
-  // show raw number while typing
-  el.addEventListener('focus', ()=>{
-    const val = toNum(el.value);
-    el.value = val ? String(val) : '';
-    el.select();
-  });
-  el.addEventListener('blur', ()=>{
-    const n = toNum(el.value);
-    el.value = n ? fmtMoney(n) : '$0.00';
-  });
-  el.value = value ? fmtMoney(toNum(value)) : '';
-  return el;
-}
-function freqSelect(value='monthly'){
-  const sel = document.createElement('select');
-  FREQS.forEach(f=>{
-    const o = document.createElement('option');
-    o.value=f.v; o.textContent = f.label;
-    if (f.v===value) o.selected=true;
-    sel.appendChild(o);
-  });
-  return sel;
-}
-function iconDel(onClick){
-  const b = document.createElement('button');
-  b.className = 'icon-btn';
-  b.title='Delete';
-  b.innerHTML = '🗑️';
-  b.addEventListener('click', onClick);
-  return b;
 }
 
-/* ============= RENDER SECTIONS ============= */
+/* ---------- Row factories ---------- */
+function makeName(val=''){
+  const el=document.createElement('input');
+  el.placeholder='Name'; el.className='name'; el.value=val||'';
+  return el;
+}
+function makeMoney(val=''){
+  const el=document.createElement('input');
+  el.className='money'; el.placeholder='$0.00'; el.inputMode='decimal'; el.autocomplete='off';
+  el.addEventListener('focus',()=>{ const n=toNum(el.value); el.value=n?String(n):''; el.select(); });
+  el.addEventListener('blur',()=>{ const n=toNum(el.value); el.value=n?fmt(n):'$0.00'; });
+  el.value = val ? fmt(toNum(val)) : '';
+  return el;
+}
+function makeFreq(sel='monthly'){
+  const s=document.createElement('select');
+  FREQS.forEach(f=>{const o=document.createElement('option');o.value=f.v;o.textContent=f.label; if(f.v===sel) o.selected=true; s.append(o);});
+  return s;
+}
+function makeDel(fn){ const b=document.createElement('button'); b.className='icon-btn'; b.title='Delete'; b.textContent='🗑️'; b.onclick=fn; return b;}
+
+/* ---------- Renderers ---------- */
 function renderIncome(){
-  const wrap = $('#incomeList');
-  wrap.innerHTML='';
+  const list=$('#incomeList'); list.innerHTML='';
   let total=0;
-  state.incomes.forEach(item=>{
-    const row = document.createElement('div');
-    row.className='row';
+  state.incomes.forEach(it=>{
+    const row=document.createElement('div'); row.className='row';
+    const c1=document.createElement('div'); c1.className='cell-name';
+    const c2=document.createElement('div'); c2.className='cell';
+    const c3=document.createElement('div'); c3.className='cell';
+    const c4=document.createElement('div'); c4.className='cell'; c4.style.textAlign='right';
+    const c5=document.createElement('div'); c5.className='cell-tight';
 
-    const nameEl = nameInput(item.name);
-    const sel = freqSelect(item.freq);
-    const perEl = moneyInput(item.per);
-    const monthlyEl = document.createElement('div');
-    monthlyEl.style.textAlign='right';
-    monthlyEl.style.paddingRight='6px';
-
-    const del = iconDel(()=>{
-      state.incomes = state.incomes.filter(x=>x.id!==item.id);
-      save(); renderIncome(); renderSummary();
-    });
+    const name=makeName(it.name);
+    const freq=makeFreq(it.freq);
+    const per=makeMoney(it.per);
+    const del=makeDel(()=>{ state.incomes=state.incomes.filter(x=>x.id!==it.id); save(); renderIncome(); renderSummary(); });
 
     function recalc(){
-      const m = monthlyFrom(sel.value, toNum(perEl.value));
-      monthlyEl.textContent = fmtMoney(m);
-      item.name = nameEl.value.trim();
-      item.freq = sel.value;
-      item.per = toNum(perEl.value);
-      item.monthly = m;
-      save();
-      renderSummary();
+      it.name=name.value.trim(); it.freq=freq.value; it.per=toNum(per.value);
+      it.monthly=monthlyFrom(it.freq,it.per);
+      c4.textContent=fmt(it.monthly); save(); renderSummary();
     }
+    name.oninput=recalc; freq.onchange=recalc; per.onblur=recalc; recalc();
 
-    nameEl.addEventListener('input', recalc);
-    sel.addEventListener('change', recalc);
-    perEl.addEventListener('blur', recalc);
-    perEl.addEventListener('input', ()=>{}); // keep raw while typing
+    c1.append(name); c2.append(freq); c3.append(per); c4.textContent=fmt(it.monthly); c5.append(del);
+    row.append(c1,c2,c3,c4,c5); list.append(row);
 
-    // initial
-    recalc();
-
-    row.append(nameEl, sel, perEl, monthlyEl, del);
-    wrap.appendChild(row);
-
-    total += item.monthly||0;
+    total += it.monthly||0;
   });
-  $('#incomeTotal').textContent = fmtMoney(total);
+  $('#incomeTotal').textContent=fmt(total);
 }
-
 function renderEssentials(){
-  const wrap = $('#essentialsList');
-  wrap.innerHTML='';
+  const list=$('#essentialsList'); list.innerHTML='';
   let total=0;
-  state.essentials.forEach(item=>{
-    const row = document.createElement('div');
-    row.className='row';
-    row.style.gridTemplateColumns='2fr 1fr 38px';
+  state.essentials.forEach(it=>{
+    const row=document.createElement('div'); row.className='row';
+    const c1=document.createElement('div'); c1.className='cell-name';
+    const c2=document.createElement('div'); c2.className='cell';
+    const c3=document.createElement('div'); c3.className='cell-tight';
 
-    const nameEl = nameInput(item.name);
-    const amtEl = moneyInput(item.monthly);
+    const name=makeName(it.name);
+    const amt=makeMoney(it.monthly);
+    const del=makeDel(()=>{ state.essentials=state.essentials.filter(x=>x.id!==it.id); save(); renderEssentials(); renderSummary(); });
 
-    const del = iconDel(()=>{
-      state.essentials = state.essentials.filter(x=>x.id!==item.id);
-      save(); renderEssentials(); renderSummary();
-    });
+    function recalc(){ it.name=name.value.trim(); it.monthly=toNum(amt.value); save(); renderSummary(); }
+    name.oninput=recalc; amt.onblur=recalc;
 
-    function recalc(){
-      item.name = nameEl.value.trim();
-      item.monthly = toNum(amtEl.value);
-      save(); renderSummary();
-    }
-    nameEl.addEventListener('input', recalc);
-    amtEl.addEventListener('blur', recalc);
-
-    row.append(nameEl, amtEl, del);
-    wrap.appendChild(row);
-    total += item.monthly||0;
+    c1.append(name); c2.append(amt); c3.append(del);
+    row.append(c1,c2,c3); list.append(row);
+    total += it.monthly||0;
   });
-  $('#essTotal').textContent = fmtMoney(total);
+  $('#essTotal').textContent=fmt(total);
 }
-
 function renderDebts(){
-  const wrap = $('#debtsList');
-  wrap.innerHTML='';
-  state.debts.forEach(item=>{
-    const row = document.createElement('div');
-    row.className='row debt';
+  const list=$('#debtsList'); list.innerHTML='';
+  state.debts.forEach(it=>{
+    const row=document.createElement('div'); row.className='row';
+    const c1=document.createElement('div'); c1.className='cell-name';
+    const c2=document.createElement('div'); c2.className='cell';
+    const c3=document.createElement('div'); c3.className='cell';
+    const c4=document.createElement('div'); c4.className='cell';
+    const c5=document.createElement('div'); c5.className='cell-tight';
 
-    const nameEl = nameInput(item.name);
-    const aprEl = document.createElement('input');
-    aprEl.inputMode='decimal'; aprEl.placeholder='0'; aprEl.style.textAlign='right';
-    aprEl.value = item.apr ?? '';
-    const balEl = moneyInput(item.balance);
-    const termEl = document.createElement('input');
-    termEl.inputMode='numeric'; termEl.placeholder='0'; termEl.style.textAlign='right';
-    termEl.value = item.term ?? '';
+    const name=makeName(it.name);
+    const apr=document.createElement('input'); apr.placeholder='0'; apr.inputMode='decimal'; apr.className='money'; apr.style.textAlign='right'; apr.value = it.apr ?? '';
+    const bal=makeMoney(it.balance);
+    const term=document.createElement('input'); term.placeholder='0'; term.inputMode='numeric'; term.style.textAlign='right'; term.value = it.term ?? '';
+    const del=makeDel(()=>{ state.debts=state.debts.filter(x=>x.id!==it.id); save(); renderDebts(); renderSummary(); });
 
-    const del = iconDel(()=>{
-      state.debts = state.debts.filter(x=>x.id!==item.id);
-      save(); renderDebts(); renderSummary();
-    });
+    function recalc(){ it.name=name.value.trim(); it.apr=toNum(apr.value); it.balance=toNum(bal.value); it.term=parseInt(term.value||'0',10)||0; save(); renderSummary(); }
+    name.oninput=recalc; apr.oninput=recalc; bal.onblur=recalc; term.oninput=recalc;
 
-    function recalc(){
-      item.name = nameEl.value.trim();
-      item.apr = toNum(aprEl.value);
-      item.balance = toNum(balEl.value);
-      item.term = parseInt(termEl.value||'0',10) || 0;
-      save(); renderSummary();
-    }
-    nameEl.addEventListener('input', recalc);
-    aprEl.addEventListener('input', recalc);
-    balEl.addEventListener('blur', recalc);
-    termEl.addEventListener('input', recalc);
-
-    row.append(nameEl, aprEl, balEl, termEl, del);
-    wrap.appendChild(row);
+    c1.append(name); c2.append(apr); c3.append(bal); c4.append(term); c5.append(del);
+    row.append(c1,c2,c3,c4,c5); list.append(row);
   });
 }
 
-/* ============= SUMMARY (simple) ============= */
+/* ---------- Derived calcs & summary ---------- */
+function estimateMinPayment(debt){
+  const r = debt.apr ? (debt.apr/100)/12 : 0;
+  const B = Math.max(0,toNum(debt.balance));
+  const n = parseInt(debt.term||0,10);
+  if (B<=0) return 0;
+  if (n>0 && r>0){
+    const p = r*Math.pow(1+r,n) / (Math.pow(1+r,n)-1) * B;
+    return isFinite(p)?p:0;
+  }
+  // credit-card style fallback: 2% of balance (typical), min $25
+  return Math.max(25, B*0.02);
+}
+
+function buildAvalanche(){
+  const inc = state.incomes.reduce((a,b)=>a+(b.monthly||0),0);
+  const ess = state.essentials.reduce((a,b)=>a+(b.monthly||0),0);
+  const free = Math.max(0, inc - ess);
+
+  if (!state.debts.length) return {text:'No debts added.', dti:null};
+
+  // compute mins
+  const items = state.debts.map(d=>({
+    ...d,
+    min: estimateMinPayment(d),
+  }));
+
+  const minTotal = items.reduce((a,b)=>a+b.min,0);
+  let extra = Math.max(0, free - minTotal);
+
+  // sort by APR desc, tie-breaker by balance desc
+  items.sort((a,b)=> (b.apr||0)-(a.apr||0) || (b.balance||0)-(a.balance||0));
+
+  // allocate extra to top debt
+  const cadence = state.cadence; // monthly or biweekly
+  const payLabel = cadence==='biweekly' ? 'per pay (26/yr)' : 'per month';
+
+  const lines = [];
+  lines.push(`Free cash after essentials: ${fmt(free)} per month.`);
+  lines.push(`Estimated minimums: ${fmt(minTotal)} per month.`);
+  lines.push(`Cadence: ${cadence==='biweekly'?'Bi-weekly (26/yr)':'Monthly'}.`);
+
+  if (free<=0){
+    lines.push('No free cash to allocate yet. Consider trimming essentials or adding income.');
+  } else {
+    items.forEach((d,i)=>{
+      const extraForThis = (i===0) ? extra : 0;
+      const monthlyPay = d.min + extraForThis;
+      const perPay = cadence==='biweekly' ? monthlyPay*(12/26) : monthlyPay;
+
+      lines.push(`• ${d.name||'Debt'} — APR ${d.apr||0}% — Pay ${fmt(perPay)} ${payLabel}${extraForThis>0?' (includes extra)':''}`);
+    });
+    if (items.length>1) lines.push('When the top debt is paid off, roll its payment to the next (debt avalanche).');
+  }
+
+  // DTI (essentials + estimated mins) / income
+  const dti = inc ? ((ess + minTotal)/inc) : null;
+
+  return {text:lines.join('\n'), dti};
+}
+
+function updateGoalBars(){
+  const g=state.goal;
+  const have = 0; // not tracking savings balance yet
+  const need = toNum(g.amount);
+  const pct = need? Math.max(0, Math.min(100, (have/need)*100 )) : 0;
+  $('#goalBar').style.width = pct+'%';
+  $('#goalNote').textContent = need? `${fmt(have)} of ${fmt(need)} (${pct.toFixed(0)}%)` : '—';
+}
+
 function renderSummary(){
   const inc = state.incomes.reduce((a,b)=>a+(b.monthly||0),0);
   const ess = state.essentials.reduce((a,b)=>a+(b.monthly||0),0);
   const free = inc - ess;
 
-  let line1 = `${state.displayName?state.displayName+"'s ":""}Plan: ${fmtMoney(inc)} income – ${fmtMoney(ess)} essentials = ${fmtMoney(free)} free cash.`;
-  const goal = state.goal;
-  if (goal.amount && goal.date){
-    const monthsLeft = Math.max(1, Math.ceil((new Date(goal.date)-new Date())/(1000*60*60*24*30)));
-    const perMonth = toNum(goal.amount)/monthsLeft;
-    line1 += ` Goal “${goal.name||'Goal'}” needs ~${fmtMoney(perMonth)}/mo for ${monthsLeft} mo.`;
+  const g = state.goal;
+  let line = `${state.displayName?state.displayName+"'s ":""}Plan: ${fmt(inc)} income – ${fmt(ess)} essentials = ${fmt(free)} free cash.`;
+  if (g.amount && g.date){
+    const monthsLeft = Math.max(1, Math.ceil((new Date(g.date)-new Date())/(1000*60*60*24*30)));
+    const perMonth = toNum(g.amount)/monthsLeft;
+    line += ` Goal “${g.name||'Goal'}” ≈ ${fmt(perMonth)}/mo for ${monthsLeft} mo.`;
   }
-  $('#summaryText').textContent = line1;
+  $('#summaryText').textContent=line;
+
+  const {text,recoDTI} = { text:'', recoDTI:null }; // for future split
+  const r = buildAvalanche();
+  $('#debtReco').textContent = r.text;
+
+  // DTI bar
+  const dti = r.dti;
+  if (dti==null){ $('#dtiBar').style.width='0%'; $('#dtiNote').textContent='—'; }
+  else{
+    const pct = Math.max(0, Math.min(100, dti*100));
+    $('#dtiBar').style.width = pct+'%';
+    $('#dtiNote').textContent = `${pct.toFixed(0)}% of income (essentials + min debt)`;
+  }
+
+  updateGoalBars();
 
   // Guided review text
   $('#reviewText').textContent =
-`Income: ${fmtMoney(inc)}
-Essentials: ${fmtMoney(ess)}
-Free cash: ${fmtMoney(free)}
-Goal: ${goal.name||'-'}  Amount: ${fmtMoney(toNum(goal.amount))}  Date: ${goal.date||'-'}`;
+`Income total: ${fmt(inc)}
+Essentials total: ${fmt(ess)}
+Free cash: ${fmt(free)}
+
+${r.text}`;
 }
 
-/* ============= GUIDED MODE ============= */
+/* ---------- Guided mode ---------- */
 const steps = [
-  { id:'g-income',      title:'Income',      section:'#sec-income' },
-  { id:'g-essentials',  title:'Essentials',  section:'#sec-essentials' },
-  { id:'g-debts',       title:'Debts',       section:'#sec-debts' },
-  { id:'g-goal',        title:'Goal',        section:'#sec-goal' },
-  { id:'g-review',      title:'Review',      section:null }
+  {id:'g-income', title:'Income',      section:'#sec-income'},
+  {id:'g-essentials', title:'Essentials', section:'#sec-essentials'},
+  {id:'g-debts', title:'Debts',       section:'#sec-debts'},
+  {id:'g-goal', title:'Goal',         section:'#sec-goal'},
+  {id:'g-review', title:'Review',     section:null},
 ];
-let stepIdx = 0;
+let stepIdx=0;
 
+function mount(sectionSel, targetSel){
+  const sec=$(sectionSel); const tgt=$(targetSel);
+  if (sec && tgt && sec.parentElement!==tgt) tgt.appendChild(sec);
+}
 function enterGuided(){
-  // Hide main sections
-  ['#sec-income','#sec-essentials','#sec-debts','#sec-goal','#sec-summary'].forEach(sel=>{
-    $(sel).classList.add('hidden');
-  });
-  // Mount the actual sections into guided containers (not clones, so edits persist)
-  $('#g-income').append( $('#sec-income') );
-  $('#g-essentials').append( $('#sec-essentials') );
-  $('#g-debts').append( $('#sec-debts') );
-  $('#g-goal').append( $('#sec-goal') );
+  // hide summary only; we want the real sections inside the overlay
+  $('#sec-summary').classList.add('hidden');
+
+  // mount real sections inside guided containers
+  mount('#sec-income','#g-income');
+  mount('#sec-essentials','#g-essentials');
+  mount('#sec-debts','#g-debts');
+  mount('#sec-goal','#g-goal');
+
   $('#guidedOverlay').classList.add('show');
-  stepIdx = 0;
-  showStep();
+  stepIdx=0; showStep();
 }
 function exitGuided(){
-  // Move sections back into the main flow (before summary)
-  const root = $('.wrap');
-  const summary = $('#sec-summary');
-  root.insertBefore($('#sec-income'), summary);
-  root.insertBefore($('#sec-essentials'), summary);
-  root.insertBefore($('#sec-debts'), summary);
-  root.insertBefore($('#sec-goal'), summary);
-
-  // Unhide main
-  ['#sec-income','#sec-essentials','#sec-debts','#sec-goal','#sec-summary'].forEach(sel=>{
-    $(sel).classList.remove('hidden');
+  // move sections back above summary
+  const root=$('.wrap'); const summary=$('#sec-summary');
+  ['#sec-income','#sec-essentials','#sec-debts','#sec-goal'].forEach(sel=>{
+    const el=$(sel); if (el && el.parentElement!==root) root.insertBefore(el, summary);
   });
-  // Hide overlay
+  $('#sec-summary').classList.remove('hidden');
   $('#guidedOverlay').classList.remove('show');
 }
 function showStep(){
-  // toggle containers
-  steps.forEach((s,i)=>{
-    const el = $('#'+s.id);
-    if (!el) return;
-    if (i===stepIdx) el.classList.remove('hidden'); else el.classList.add('hidden');
-  });
+  steps.forEach((s,i)=>{ const el=$('#'+s.id); if(el) el.classList.toggle('hidden', i!==stepIdx); });
   $('#guidedTitle').textContent = steps[stepIdx].title;
   $('#stepInd').textContent = `Step ${stepIdx+1} of ${steps.length}`;
-  // buttons
   $('#backStepBtn').disabled = (stepIdx===0);
-  $('#nextStepBtn').textContent = (stepIdx===steps.length-1) ? 'Finish' : 'Next';
+  $('#nextStepBtn').textContent = (stepIdx===steps.length-1)?'Finish':'Next';
 }
 
-/* ============= EVENTS & INIT ============= */
-function addIncome(){
-  state.incomes.push({id:uid(), name:'', freq:'monthly', per:0, monthly:0});
-  save(); renderIncome();
-}
-function addEssential(){
-  state.essentials.push({id:uid(), name:'', monthly:0});
-  save(); renderEssentials();
-}
-function addDebt(){
-  state.debts.push({id:uid(), name:'', apr:0, balance:0, term:0});
-  save(); renderDebts();
-}
+/* ---------- Add row handlers ---------- */
+function addIncome(){ state.incomes.push({id:uid(),name:'',freq:'monthly',per:0,monthly:0}); save(); renderIncome(); }
+function addEssential(){ state.essentials.push({id:uid(),name:'',monthly:0}); save(); renderEssentials(); }
+function addDebt(){ state.debts.push({id:uid(),name:'',apr:0,balance:0,term:0}); save(); renderDebts(); }
 
+/* ---------- Bind UI ---------- */
 function bind(){
-  // top controls
-  $('#displayName').value = state.displayName||'';
-  $('#displayName').addEventListener('input', ()=>{
-    state.displayName = $('#displayName').value.trim();
-    save(); renderSummary();
-  });
+  $('#displayName').value=state.displayName||''; $('#displayName').oninput=()=>{state.displayName=$('#displayName').value.trim(); save(); renderSummary();};
+  $('#cadence').value=state.cadence||'monthly'; $('#cadence').onchange=()=>{state.cadence=$('#cadence').value; save(); renderSummary();};
 
-  // add buttons
-  $('#addIncomeBtn').addEventListener('click', addIncome);
-  $('#addEssBtn').addEventListener('click', addEssential);
-  $('#addDebtBtn').addEventListener('click', addDebt);
+  $('#addIncomeBtn').onclick=addIncome; $('#addEssBtn').onclick=addEssential; $('#addDebtBtn').onclick=addDebt;
 
-  // goal fields
-  $('#goalName').value = state.goal.name||'';
-  $('#goalAmt').value = state.goal.amount?fmtMoney(state.goal.amount):'';
-  $('#goalDate').value = state.goal.date||'';
-  $('#goalName').addEventListener('input', ()=>{ state.goal.name=$('#goalName').value.trim(); save(); renderSummary(); });
-  $('#goalAmt').addEventListener('focus', ()=>{
-    const v = toNum($('#goalAmt').value); $('#goalAmt').value = v ? String(v) : '';
-  });
-  $('#goalAmt').addEventListener('blur', ()=>{
-    state.goal.amount = toNum($('#goalAmt').value); $('#goalAmt').value = fmtMoney(state.goal.amount); save(); renderSummary();
-  });
-  $('#goalDate').addEventListener('change', ()=>{ state.goal.date=$('#goalDate').value; save(); renderSummary(); });
+  $('#goalName').value=state.goal.name||''; $('#goalName').oninput=()=>{state.goal.name=$('#goalName').value.trim(); save(); renderSummary();};
+  $('#goalAmt').value=state.goal.amount?fmt(state.goal.amount):''; $('#goalAmt').onfocus=()=>{$('#goalAmt').value=toNum($('#goalAmt').value)||''}; $('#goalAmt').onblur=()=>{state.goal.amount=toNum($('#goalAmt').value); $('#goalAmt').value=fmt(state.goal.amount); save(); renderSummary();};
+  $('#goalDate').value=state.goal.date||''; $('#goalDate').onchange=()=>{state.goal.date=$('#goalDate').value; save(); renderSummary();};
 
-  // save / share / export
-  $('#saveBtn').addEventListener('click', ()=>{ save(); alert('Saved on this device ✅'); });
-  $('#exportBtn').addEventListener('click', ()=>{
-    const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'h3-budget-plan.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-  $('#shareBtn').addEventListener('click', ()=>{
-    const data = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
-    const url = location.origin + '/H3_Budget_App/budget.html#s=' + data;
-    if (navigator.share){
-      navigator.share({title:'H³ Budget Plan', url});
-    } else {
-      navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard');
-    }
-  });
+  $('#saveBtn').onclick=()=>{save(); alert('Saved on this device ✅')};
+  $('#exportBtn').onclick=()=>{
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='h3-budget-plan.json'; a.click(); URL.revokeObjectURL(a.href);
+  };
+  $('#shareBtn').onclick=()=>{
+    const data=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
+    const url=location.origin + '/H3_Budget_App/budget.html#s='+data;
+    if(navigator.share){navigator.share({title:'H³ Budget Plan',url});}
+    else{navigator.clipboard.writeText(url); alert('Link copied to clipboard');}
+  };
 
-  // guided
-  $('#guidedToggle').addEventListener('change', (e)=>{
-    if (e.target.checked) enterGuided(); else exitGuided();
-  });
-  $('#exitGuidedBtn').addEventListener('click', ()=>{
-    $('#guidedToggle').checked=false; exitGuided();
-  });
-  $('#cancelStepBtn').addEventListener('click', ()=>{
-    $('#guidedToggle').checked=false; exitGuided();
-  });
-  $('#backStepBtn').addEventListener('click', ()=>{
-    if (stepIdx>0){ stepIdx--; showStep(); }
-  });
-  $('#nextStepBtn').addEventListener('click', ()=>{
-    if (stepIdx<steps.length-1){ stepIdx++; showStep(); }
-    else { // finish
-      $('#guidedToggle').checked=false; exitGuided();
-    }
-  });
+  $('#guidedToggle').onchange=(e)=>{ e.target.checked?enterGuided():exitGuided(); };
+  $('#exitGuidedBtn').onclick=()=>{ $('#guidedToggle').checked=false; exitGuided(); };
+  $('#cancelStepBtn').onclick=()=>{ $('#guidedToggle').checked=false; exitGuided(); };
+  $('#backStepBtn').onclick=()=>{ if(stepIdx>0){stepIdx--; showStep();} };
+  $('#nextStepBtn').onclick=()=>{ if(stepIdx<steps.length-1){stepIdx++; showStep();} else { $('#guidedToggle').checked=false; exitGuided(); } };
 }
 
-/* ============= LOAD FROM HASH (share) ============= */
-function tryImportFromHash(){
-  if (location.hash.startsWith('#s=')){
-    try{
-      const b64 = decodeURIComponent(location.hash.slice(3));
-      const json = JSON.parse(decodeURIComponent(escape(atob(b64))));
-      Object.assign(state,json);
-      save();
-      location.hash='';
-    }catch(e){}
+/* ---------- Import from hash (shared link) ---------- */
+function importFromHash(){
+  if(location.hash.startsWith('#s=')){
+    try{ const b64=decodeURIComponent(location.hash.slice(3)); const j=JSON.parse(decodeURIComponent(escape(atob(b64)))); Object.assign(state,j); save(); location.hash=''; }
+    catch{}
   }
 }
 
-/* ============= BOOT ============= */
+/* ---------- Boot ---------- */
 load();
-tryImportFromHash();
+importFromHash();
 bind();
-renderIncome();
-renderEssentials();
-renderDebts();
-renderSummary();
+renderIncome(); renderEssentials(); renderDebts(); renderSummary();
 
-/* ============= Service Worker (optional) ============= */
 if ('serviceWorker' in navigator){
   navigator.serviceWorker.register('/H3_Budget_App/sw.js?ver=24').catch(()=>{});
 }
