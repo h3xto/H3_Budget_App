@@ -1,593 +1,700 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>H³ Budget Tool</title>
+  <meta charset="utf-8">
+  <title>H³ Budget Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f14">
 
-<!-- PWA hooks -->
-<link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=24" />
-<link rel="icon" href="/H3_Budget_App/icons/icon-192-v3.png" sizes="192x192" />
-<link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png" />
+  <!-- App icons (v3) and manifest (bump the query any time you want to “break” stale caches) -->
+  <link rel="icon" sizes="192x192" href="/H3_Budget_App/icons/icon-192-v3.png">
+  <link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png">
+  <link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=25">
 
-<style>
-  :root{
-    --bg:#0b0f14; --card:#121821; --ink:#e6edf3; --muted:#8ca0b4; --line:#1e2835;
-    --accent:#17c3ff; --good:#12d27c; --danger:#ff5d5d; --focus:0 0 0 2px rgba(23,195,255,.35);
-    --radius:14px; --pad:16px; --shadow:0 8px 26px rgba(0,0,0,.35);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;overflow-x:hidden}
-  a{color:var(--accent);text-decoration:none}
-  .wrap{max-width:960px;margin:0 auto;padding:20px 14px 120px}
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#131a22; --muted:#9bb1c3; --text:#e6edf3;
+      --line:#1e2731; --accent:#1694a8; --accent-2:#1aa37a; --danger:#bb4b4b;
+      --chip:#0f2831; --chipText:#bfe9ff;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+      --input:#0f141a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    }
+    a{color:#9fd2ff; text-decoration:none}
+    .wrap{max-width:860px;margin:0 auto;padding:22px 14px 120px}
 
-  /* Header */
-  .header{display:flex;flex-direction:column;align-items:center;gap:6px;margin:6px 0 12px}
-  .brand{display:flex;align-items:center;gap:10px}
-  .cube{width:28px;height:28px;border:2px solid var(--ink);border-radius:6px;transform:rotate(15deg);position:relative}
-  .cube::after{content:"³";position:absolute;right:-10px;top:-12px;font-weight:800}
-  .title{font-weight:800}
-  .tagline{color:var(--muted);font-size:13px;display:flex;gap:8px}
-  .tagline span::after{content:" • "}
-  .tagline span:last-child::after{content:" •"}
+    /* header */
+    .top{
+      display:flex;gap:12px;align-items:center;margin-bottom:8px;
+    }
+    .logo{
+      width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+      background:#0c1117;border:1px solid #22303c;box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .logo img{width:80%;height:80%;object-fit:contain}
+    .title h1{margin:0;font-size:20px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .chip{
+      background:var(--chip); color:var(--chipText); border:1px solid #184857;
+      padding:4px 8px; border-radius:999px; font-size:12px;
+    }
 
-  /* Controls */
-  .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:8px 0 14px}
-  .pill{background:linear-gradient(180deg,#151e29,#0f1620);border:1px solid var(--line);padding:10px 14px;border-radius:999px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow)}
-  .switch{position:relative;width:54px;height:30px;background:#0b1119;border:1px solid var(--line);border-radius:999px;cursor:pointer}
-  .switch input{display:none}
-  .knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--ink);transition:.22s}
-  .switch input:checked + .knob{left:27px;background:var(--accent)}
+    /* cards */
+    .card{
+      background:var(--panel); border:1px solid var(--line);
+      border-radius:var(--radius); padding:14px; margin:14px 0;
+      box-shadow:var(--shadow);
+    }
+    .card h2{margin:0 0 8px;font-size:18px}
+    .muted{color:var(--muted)}
 
-  /* Cards */
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);box-shadow:var(--shadow);margin:12px 0}
-  .card h2{margin:0 0 6px;font-size:16px}
-  .subtle{color:var(--muted);font-size:12px;margin:0 0 10px}
-  .hdr{color:var(--muted);font-size:11px;margin:6px 0 4px;letter-spacing:.35px;text-transform:uppercase}
+    /* controls */
+    .row{display:flex; gap:10px; align-items:center; margin:8px 0; flex-wrap:wrap}
+    .row > *{flex:1 1 160px; min-width:0} /* <-- prevents spill on narrow phones */
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select,button,textarea{
+      font:16px/1.3 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text)
+    }
+    .input, select{
+      width:100%; appearance:none; background:var(--input); border:1px solid var(--line);
+      padding:10px 12px; border-radius:10px; outline:none;
+    }
+    .input[type=number]{-moz-appearance:textfield}
+    .input::-webkit-outer-spin-button,.input::-webkit-inner-spin-button{appearance:none;margin:0}
+    .btn{
+      background:#0e2d36;border:1px solid #0f4453;color:#bfe9ff;
+      padding:10px 14px;border-radius:12px;cursor:pointer
+    }
+    .btn:hover{filter:brightness(1.08)}
+    .btn-green{background:#113227;border-color:#1b5f45;color:#bfffe9}
+    .btn-danger{background:#2f1515;border-color:#5e2a2a;color:#ffd6d6}
+    .trash{width:40px;flex:0 0 40px;display:grid;place-items:center}
+    .trash button{width:40px;height:42px;border-radius:10px}
 
-  /* Inputs */
-  input,select,button{font:inherit;color:var(--ink);background:#0b1119;border:1px solid var(--line);border-radius:10px;padding:10px}
-  input:focus,select:focus,button:focus{outline:none;box-shadow:var(--focus)}
-  input::placeholder{color:#5f7286}
-  .btn{background:#0f1620;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
-  .btn.small{padding:8px 10px;font-size:14px}
-  .btn.primary{background:linear-gradient(180deg,#0b5d73,#094a5b);border-color:#0b5d73}
-  .btn.good{background:linear-gradient(180deg,#0b5b3a,#0a4a30);border-color:#0b5b3a}
-  .btn.danger{background:linear-gradient(180deg,#7a2222,#5b1313);border-color:#7a2222}
-  .icon-btn{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#0f1620;border:1px solid var(--line);cursor:pointer}
+    .tot{display:flex;justify-content:flex-end;padding-top:6px;color:#cfe8ff}
 
-  /* Responsive rows: flex-wrap so nothing overflows horizontally */
-  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
-  .cell{flex:1 1 140px;min-width:120px}
-  .cell-name{flex:2 1 200px;min-width:150px}
-  .cell-tight{flex:0 0 38px}
-  .money{text-align:right}
+    /* footer bar */
+    .footer{
+      position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(11,15,20,0) 0%, rgba(11,15,20,.85) 14%, rgba(11,15,20,.95) 56%, rgba(11,15,20,.98) 100%);
+      padding:16px 10px 22px;border-top:1px solid var(--line);
+      display:flex;gap:10px;justify-content:center;backdrop-filter:blur(4px)
+    }
 
-  /* Name “expands” on focus but never shrinks to unreadable */
-  .name{width:100%}
+    .grid2{display:grid;grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:640px){ .grid2{grid-template-columns:1fr} }
 
-  /* Guided Overlay */
-  .guided-overlay{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column}
-  .guided-overlay.show{display:flex}
-  .guided-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
-  .guided-title{font-weight:700}
-  .guided-body{flex:1;overflow:auto;padding:16px}
-  .guided-nav{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;background:linear-gradient(180deg,#101824,#0b1119)}
-  .hidden{display:none !important}
+    /* guided */
+    .guidedBar{
+      display:flex;align-items:center;gap:10px;
+      padding:8px 12px;border:1px solid var(--line);border-radius:999px;width:max-content;background:var(--panel);
+      box-shadow:var(--shadow)
+    }
+    .switch{position:relative;width:46px;height:26px;background:#17313a;border-radius:999px;border:1px solid #325466;cursor:pointer}
+    .switch input{display:none}
+    .dot{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#bfe9ff;transition:left .2s}
+    .switch input:checked + .dot{left:24px}
 
-  /* Small helpers */
-  .spacer{height:80px}
-  .bottom-bar{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#141c28,#0b1119);border:1px solid var(--line);border-radius:999px;padding:8px 10px;display:flex;gap:8px;z-index:20;box-shadow:var(--shadow)}
-  .bar{height:10px;border-radius:999px;background:#0f1620;border:1px solid var(--line);overflow:hidden}
-  .bar > span{display:block;height:100%;background:linear-gradient(90deg,#17c3ff,#12d27c)}
-  .note{color:var(--muted);font-size:12px}
-</style>
+    .modal{
+      position:fixed;inset:0;background:rgba(0,0,0,.65);
+      display:none;align-items:center;justify-content:center;padding:18px;z-index:20
+    }
+    .modal.open{display:flex}
+    .sheet{
+      width:min(840px, 100%);max-height:86vh;overflow:auto;background:var(--panel);border:1px solid var(--line);
+      border-radius:18px;padding:16px;box-shadow:var(--shadow)
+    }
+    .sheet h3{margin:6px 0 2px}
+    .sheet .row{margin:10px 0}
+    .sheet .actions{display:flex;gap:10px;justify-content:space-between;margin-top:8px}
+    .pill{padding:.45rem .8rem;border-radius:999px;background:#0e2333;border:1px solid #21455a;color:#bfe9ff;font-size:12px}
+
+    /* plan summary widgets */
+    .widget{background:#0f141a;border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}
+    .kpi{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
+    .bar{height:10px;background:#162028;border:1px solid #20303e;border-radius:999px;overflow:hidden}
+    .bar > span{display:block;height:100%;background:linear-gradient(90deg,#1aa37a,#1595a7)}
+    .hint{font-size:12px;color:var(--muted)}
+
+    /* prices in tip jar */
+    .tipBtns{display:flex;gap:10px;flex-wrap:wrap}
+    .tipBtns .btn{min-width:120px; display:flex; align-items:center; justify-content:center}
+  </style>
 </head>
 <body>
-<div class="wrap" id="app">
-  <div class="header">
-    <div class="brand"><div class="cube" aria-hidden="true"></div><div class="title">H³ Budget Tool</div></div>
-    <div class="tagline"><span>Private</span><span>Goal-Focused</span><span>Offline</span></div>
-  </div>
+  <div class="wrap">
 
-  <div class="topbar">
-    <div class="pill">
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-        <span style="font-weight:600">Guided Mode</span>
-        <span class="switch"><input type="checkbox" id="guidedToggle"><span class="knob"></span></span>
-      </label>
-    </div>
-    <div class="pill">
-      <label style="display:flex;align-items:center;gap:10px">
-        <span>Display Name</span>
-        <input id="displayName" class="name" placeholder="Your name" style="min-width:160px">
-      </label>
-    </div>
-    <div class="pill">
-      <label style="display:flex;align-items:center;gap:10px">
-        <span>Payment cadence</span>
-        <select id="cadence">
-          <option value="monthly">Monthly</option>
-          <option value="biweekly">Bi-weekly</option>
-        </select>
-      </label>
-    </div>
-  </div>
-
-  <!-- Income -->
-  <section class="card" id="sec-income">
-    <h2>Income</h2>
-    <p class="subtle">Add each paycheck or income source (net / take-home).</p>
-
-    <div class="row" style="margin-top:0">
-      <div class="hdr cell-name">Name</div>
-      <div class="hdr cell">Frequency</div>
-      <div class="hdr cell">Per Pay</div>
-      <div class="hdr cell" style="text-align:right">Monthly</div>
-      <div class="hdr cell-tight"></div>
-    </div>
-
-    <div id="incomeList"></div>
-    <button class="btn small good" id="addIncomeBtn">+ Add Income Source</button>
-
-    <div style="margin-top:10px;text-align:right;color:var(--muted)">
-      <strong style="color:var(--ink)">Monthly Income Total:</strong> <span id="incomeTotal">$0.00</span>
-    </div>
-  </section>
-
-  <!-- Essentials -->
-  <section class="card" id="sec-essentials">
-    <h2>Essentials</h2>
-    <p class="subtle">Add recurring monthly essentials (rent, utilities, insurance, etc.).</p>
-
-    <div class="row" style="margin-top:0">
-      <div class="hdr cell-name">Name</div>
-      <div class="hdr cell" style="text-align:right">Monthly</div>
-      <div class="hdr cell-tight"></div>
-    </div>
-
-    <div id="essentialsList"></div>
-    <button class="btn small good" id="addEssBtn">+ Add Expense</button>
-
-    <div style="margin-top:10px;text-align:right;color:var(--muted)">
-      <strong style="color:var(--ink)">Monthly Essentials Total:</strong> <span id="essTotal">$0.00</span>
-    </div>
-  </section>
-
-  <!-- Debts -->
-  <section class="card" id="sec-debts">
-    <h2>Debts</h2>
-    <p class="subtle">Add debts to get an **Avalanche** recommendation (highest APR first). If a debt has a term, we’ll estimate its minimum payment; if not, we assume 2% minimum.</p>
-
-    <div class="row" style="margin-top:0">
-      <div class="hdr cell-name">Name</div>
-      <div class="hdr cell" style="text-align:right">APR %</div>
-      <div class="hdr cell" style="text-align:right">Balance</div>
-      <div class="hdr cell" style="text-align:right">Term (months)</div>
-      <div class="hdr cell-tight"></div>
-    </div>
-
-    <div id="debtsList"></div>
-    <button class="btn small good" id="addDebtBtn">+ Add Debt</button>
-  </section>
-
-  <!-- Goal -->
-  <section class="card" id="sec-goal">
-    <h2>Goal</h2>
-    <div class="row">
-      <div class="cell-name">
-        <div class="hdr">Goal Name</div>
-        <input id="goalName" class="name" placeholder="e.g., Car fund">
+    <div class="top">
+      <div class="logo"><img alt="H³" src="/H3_Budget_App/icons/icon-192-v3.png"></div>
+      <div class="title">
+        <h1>H³ Budget Tool</h1>
+        <div class="chips">
+          <span class="chip">Private</span>
+          <span class="chip">Goal-Focused</span>
+          <span class="chip">Offline</span>
+        </div>
       </div>
-      <div class="cell">
-        <div class="hdr">Amount</div>
-        <input id="goalAmt" class="money" placeholder="$0.00">
-      </div>
-      <div class="cell">
-        <div class="hdr">Target Date</div>
-        <input id="goalDate" type="date">
+      <div style="margin-left:auto"></div>
+      <div class="guidedBar">
+        <strong>Guided Mode</strong>
+        <label class="switch" title="Toggle Guided Mode">
+          <input id="guidedToggle" type="checkbox">
+          <span class="dot"></span>
+        </label>
       </div>
     </div>
-    <p class="note">Tip: you can still use Avalanche for debts while saving toward a goal — we’ll show the free cash after essentials to split between them.</p>
-  </section>
 
-  <!-- Summary -->
-  <section class="card" id="sec-summary">
-    <h2>Plan Summary</h2>
-    <div id="summaryText" class="subtle">Fill in your details to see plan highlights here.</div>
+    <!-- Display name + cadence -->
+    <div class="card">
+      <div class="grid2">
+        <div>
+          <label>Display Name</label>
+          <input id="displayName" class="input" placeholder="Your name (optional)">
+        </div>
+        <div>
+          <label>Payment cadence</label>
+          <select id="cadence" class="input">
+            <option value="monthly">Monthly</option>
+            <option value="biweekly">Bi-Weekly (26/yr)</option>
+            <option value="weekly">Weekly (52/yr)</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
-    <div class="row" style="align-items:center">
-      <div class="cell-name">
-        <div class="hdr">Debt-to-Income (DTI)</div>
+    <!-- Income -->
+    <div class="card" id="cardIncome">
+      <h2>Income</h2>
+      <p class="muted">Add each paycheck or income source (net / take-home).</p>
+      <div id="incomeList"></div>
+      <button class="btn btn-green" id="btnAddIncome">+ Add Income Source</button>
+      <div class="tot"><strong>Monthly Income Total:</strong>&nbsp;<span id="totIncome">$0.00</span></div>
+    </div>
+
+    <!-- Essentials -->
+    <div class="card" id="cardEss">
+      <h2>Essentials</h2>
+      <p class="muted">Add recurring monthly essentials (rent, utilities, insurance, etc.).</p>
+      <div id="essList"></div>
+      <button class="btn btn-green" id="btnAddEss">+ Add Expense</button>
+      <div class="tot"><strong>Monthly Essentials Total:</strong>&nbsp;<span id="totEss">$0.00</span></div>
+    </div>
+
+    <!-- Debts -->
+    <div class="card" id="cardDebt">
+      <h2>Debts</h2>
+      <p class="muted">Add debts to get an <strong>“Avalanche”</strong> recommendation (highest APR first). If a debt has a term, we’ll estimate its minimum payment; if not, we assume <strong>2%</strong> minimum.</p>
+      <div id="debtList"></div>
+      <button class="btn btn-green" id="btnAddDebt">+ Add Debt</button>
+    </div>
+
+    <!-- Goal -->
+    <div class="card" id="cardGoal">
+      <h2>Goal</h2>
+      <div class="row">
+        <div>
+          <label>Goal name</label>
+          <input id="goalName" class="input" placeholder="e.g., Car fund">
+        </div>
+        <div>
+          <label>Amount</label>
+          <input id="goalAmt" class="input" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div>
+          <label>Target date</label>
+          <input id="goalDate" class="input" type="date">
+        </div>
+      </div>
+      <p class="hint">Tip: you can still use Avalanche for debts while saving toward a goal — we’ll show the free cash after essentials so you can split between them.</p>
+    </div>
+
+    <!-- Summary -->
+    <div class="card" id="cardSummary">
+      <h2>Plan Summary</h2>
+      <div class="widget">
+        <div class="kpi"><span id="planLine">Plan: $0.00 income − $0.00 essentials = $0.00 free cash.</span></div>
+      </div>
+      <div class="widget">
+        <div class="kpi"><strong>DEBT-TO-INCOME (DTI)</strong><span id="dtiPct">0%</span></div>
         <div class="bar"><span id="dtiBar" style="width:0%"></span></div>
-        <div class="note" id="dtiNote">—</div>
       </div>
-      <div class="cell">
-        <div class="hdr">Goal progress</div>
+      <div class="widget">
+        <div class="kpi"><strong>GOAL PROGRESS</strong><span id="goalPct">0%</span></div>
         <div class="bar"><span id="goalBar" style="width:0%"></span></div>
-        <div class="note" id="goalNote">—</div>
+        <div class="hint" id="goalHint">$0.00 of $0.00 (0%)</div>
+      </div>
+      <div class="widget">
+        <h3>Debt Recommendation (Avalanche)</h3>
+        <div id="debtReco" class="muted">Add debts to see the recommendation.</div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:12px">
-      <h2 style="margin-bottom:6px">Debt Recommendation (Avalanche)</h2>
-      <div id="debtReco" class="subtle">Add debts to see recommendations.</div>
-    </div>
-  </section>
-
-  <div class="spacer"></div>
-  <div class="bottom-bar">
-    <button class="btn small" id="saveBtn">Save</button>
-    <button class="btn small" id="shareBtn">Share</button>
-    <button class="btn small" id="exportBtn">Export JSON</button>
-  </div>
-</div>
-
-<!-- Guided overlay (real sections moved here during steps) -->
-<div class="guided-overlay" id="guidedOverlay" aria-hidden="true">
-  <div class="guided-head">
-    <div>
-      <div class="guided-title" id="guidedTitle">Guided Setup</div>
-      <div class="subtle" id="stepInd">Step 1 of 5</div>
-    </div>
-    <button class="btn small danger" id="exitGuidedBtn">Exit</button>
-  </div>
-  <div class="guided-body">
-    <section id="g-income"></section>
-    <section id="g-essentials" class="hidden"></section>
-    <section id="g-debts" class="hidden"></section>
-    <section id="g-goal" class="hidden"></section>
-    <section id="g-review" class="hidden">
-      <div class="card">
-        <h2>Review</h2>
-        <div id="reviewText" style="white-space:pre-wrap" class="subtle"></div>
+    <!-- Tip Jar -->
+    <div class="card" id="cardTips" style="display:none">
+      <h2>Tip Jar</h2>
+      <p class="muted">If H³ helped you, you can leave a one-time tip. Thank you! 🙏</p>
+      <div class="tipBtns" id="tipBtns">
+        <button class="btn" data-sku="tip_small">Small Tip</button>
+        <button class="btn" data-sku="tip_medium">Medium Tip</button>
+        <button class="btn" data-sku="tip_large">Large Tip</button>
       </div>
-    </section>
-  </div>
-  <div class="guided-nav">
-    <button class="btn small" id="backStepBtn">Back</button>
-    <div style="display:flex;gap:8px">
-      <button class="btn small" id="cancelStepBtn">Cancel</button>
-      <button class="btn small primary" id="nextStepBtn">Next</button>
+      <div class="hint" id="tipMsg"></div>
+    </div>
+
+    <!-- footer -->
+    <div class="footer">
+      <button class="btn" id="btnSave">Save</button>
+      <button class="btn" id="btnShare">Share</button>
+      <button class="btn" id="btnExport">Export JSON</button>
     </div>
   </div>
-</div>
+
+  <!-- Guided modal -->
+  <div class="modal" id="guided">
+    <div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="pill" id="stepBadge">Step 1 of 5</div>
+        <button class="btn btn-danger" id="btnExitGuide">Exit</button>
+      </div>
+      <h3 id="stepTitle" style="margin-top:6px">Income</h3>
+      <div id="stepBody"></div>
+      <div class="actions">
+        <div><button class="btn" id="btnBack">Back</button></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn" id="btnCancel">Cancel</button>
+          <button class="btn" id="btnNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* ---------- Helpers ---------- */
-const $=(q,ctx=document)=>ctx.querySelector(q);
-const $$=(q,ctx=document)=>Array.from(ctx.querySelectorAll(q));
-const uid=()=>Math.random().toString(36).slice(2,9);
-const toNum = v => (typeof v==='number'?v:parseFloat(String(v||'').replace(/[^0-9.-]/g,''))||0);
-const fmt = n => (isNaN(n)?0:n).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+/* =========================
+   Utils
+========================= */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const fmt = n => (isFinite(n)? n:0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+const val = el => parseFloat(el.value.replace(/,/g,'')) || 0;
+const clampPct = x => Math.max(0, Math.min(100, x));
 
-const FREQS = [
-  {v:'monthly',label:'Monthly',mult:1},
-  {v:'semi-monthly',label:'Semi-Monthly (24/yr)',mult:24/12},
-  {v:'biweekly',label:'Bi-Weekly (26/yr)',mult:26/12},
-  {v:'weekly',label:'Weekly (52/yr)',mult:52/12},
-];
-const monthlyFrom=(freq,per)=>{const f=FREQS.find(x=>x.v===freq)||FREQS[0];return toNum(per)*f.mult};
-
-/* ---------- State ---------- */
-const state = {
-  cadence:'monthly', // or 'biweekly'
-  displayName:'',
-  incomes:[],       // {id,name,freq,per,monthly}
-  essentials:[],    // {id,name,monthly}
-  debts:[],         // {id,name,apr,balance,term}
-  goal:{name:'',amount:0,date:''}
+/* =========================
+   State
+========================= */
+let state = {
+  name:'',
+  cadence:'monthly', // monthly | biweekly | weekly
+  income:[], // {name:'', freq:'monthly|biweekly|weekly', perPay:0}
+  essentials:[], // {name:'', monthly:0}
+  debts:[], // {name:'', apr:0, balance:0, term:0}
+  goal:{name:'', amount:0, date:''}
 };
-function load(){
-  try{Object.assign(state, JSON.parse(localStorage.getItem('h3x-budget')||'{}'));}catch{}
-}
-function save(){
-  localStorage.setItem('h3x-budget', JSON.stringify(state));
-}
+const TIP_SKUS = ['tip_small','tip_medium','tip_large'];
 
-/* ---------- Row factories ---------- */
-function makeName(val=''){
-  const el=document.createElement('input');
-  el.placeholder='Name'; el.className='name'; el.value=val||'';
-  return el;
-}
-function makeMoney(val=''){
-  const el=document.createElement('input');
-  el.className='money'; el.placeholder='$0.00'; el.inputMode='decimal'; el.autocomplete='off';
-  el.addEventListener('focus',()=>{ const n=toNum(el.value); el.value=n?String(n):''; el.select(); });
-  el.addEventListener('blur',()=>{ const n=toNum(el.value); el.value=n?fmt(n):'$0.00'; });
-  el.value = val ? fmt(toNum(val)) : '';
-  return el;
-}
-function makeFreq(sel='monthly'){
-  const s=document.createElement('select');
-  FREQS.forEach(f=>{const o=document.createElement('option');o.value=f.v;o.textContent=f.label; if(f.v===sel) o.selected=true; s.append(o);});
-  return s;
-}
-function makeDel(fn){ const b=document.createElement('button'); b.className='icon-btn'; b.title='Delete'; b.textContent='🗑️'; b.onclick=fn; return b;}
+/* =========================
+   Storage
+========================= */
+const save = () => localStorage.setItem('h3.plan', JSON.stringify(state));
+const load = () => {
+  const s = localStorage.getItem('h3.plan'); if(!s) return;
+  try{ state = JSON.parse(s); }catch{}
+};
 
-/* ---------- Renderers ---------- */
-function renderIncome(){
-  const list=$('#incomeList'); list.innerHTML='';
-  let total=0;
-  state.incomes.forEach(it=>{
-    const row=document.createElement('div'); row.className='row';
-    const c1=document.createElement('div'); c1.className='cell-name';
-    const c2=document.createElement('div'); c2.className='cell';
-    const c3=document.createElement('div'); c3.className='cell';
-    const c4=document.createElement('div'); c4.className='cell'; c4.style.textAlign='right';
-    const c5=document.createElement('div'); c5.className='cell-tight';
-
-    const name=makeName(it.name);
-    const freq=makeFreq(it.freq);
-    const per=makeMoney(it.per);
-    const del=makeDel(()=>{ state.incomes=state.incomes.filter(x=>x.id!==it.id); save(); renderIncome(); renderSummary(); });
-
-    function recalc(){
-      it.name=name.value.trim(); it.freq=freq.value; it.per=toNum(per.value);
-      it.monthly=monthlyFrom(it.freq,it.per);
-      c4.textContent=fmt(it.monthly); save(); renderSummary();
-    }
-    name.oninput=recalc; freq.onchange=recalc; per.onblur=recalc; recalc();
-
-    c1.append(name); c2.append(freq); c3.append(per); c4.textContent=fmt(it.monthly); c5.append(del);
-    row.append(c1,c2,c3,c4,c5); list.append(row);
-
-    total += it.monthly||0;
-  });
-  $('#incomeTotal').textContent=fmt(total);
-}
-function renderEssentials(){
-  const list=$('#essentialsList'); list.innerHTML='';
-  let total=0;
-  state.essentials.forEach(it=>{
-    const row=document.createElement('div'); row.className='row';
-    const c1=document.createElement('div'); c1.className='cell-name';
-    const c2=document.createElement('div'); c2.className='cell';
-    const c3=document.createElement('div'); c3.className='cell-tight';
-
-    const name=makeName(it.name);
-    const amt=makeMoney(it.monthly);
-    const del=makeDel(()=>{ state.essentials=state.essentials.filter(x=>x.id!==it.id); save(); renderEssentials(); renderSummary(); });
-
-    function recalc(){ it.name=name.value.trim(); it.monthly=toNum(amt.value); save(); renderSummary(); }
-    name.oninput=recalc; amt.onblur=recalc;
-
-    c1.append(name); c2.append(amt); c3.append(del);
-    row.append(c1,c2,c3); list.append(row);
-    total += it.monthly||0;
-  });
-  $('#essTotal').textContent=fmt(total);
-}
-function renderDebts(){
-  const list=$('#debtsList'); list.innerHTML='';
-  state.debts.forEach(it=>{
-    const row=document.createElement('div'); row.className='row';
-    const c1=document.createElement('div'); c1.className='cell-name';
-    const c2=document.createElement('div'); c2.className='cell';
-    const c3=document.createElement('div'); c3.className='cell';
-    const c4=document.createElement('div'); c4.className='cell';
-    const c5=document.createElement('div'); c5.className='cell-tight';
-
-    const name=makeName(it.name);
-    const apr=document.createElement('input'); apr.placeholder='0'; apr.inputMode='decimal'; apr.className='money'; apr.style.textAlign='right'; apr.value = it.apr ?? '';
-    const bal=makeMoney(it.balance);
-    const term=document.createElement('input'); term.placeholder='0'; term.inputMode='numeric'; term.style.textAlign='right'; term.value = it.term ?? '';
-    const del=makeDel(()=>{ state.debts=state.debts.filter(x=>x.id!==it.id); save(); renderDebts(); renderSummary(); });
-
-    function recalc(){ it.name=name.value.trim(); it.apr=toNum(apr.value); it.balance=toNum(bal.value); it.term=parseInt(term.value||'0',10)||0; save(); renderSummary(); }
-    name.oninput=recalc; apr.oninput=recalc; bal.onblur=recalc; term.oninput=recalc;
-
-    c1.append(name); c2.append(apr); c3.append(bal); c4.append(term); c5.append(del);
-    row.append(c1,c2,c3,c4,c5); list.append(row);
-  });
+/* =========================
+   Builders (rows)
+========================= */
+function addIncomeRow(data={name:'',freq:'monthly',perPay:0}){
+  const wrap = document.createElement('div'); wrap.className='row'; wrap.innerHTML = `
+    <div><label>Name</label><input class="input i-name" placeholder="Source" value="${data.name||''}"></div>
+    <div>
+      <label>Frequency</label>
+      <select class="input i-freq">
+        <option value="monthly"${data.freq==='monthly'?' selected':''}>Monthly</option>
+        <option value="biweekly"${data.freq==='biweekly'?' selected':''}>Bi-Weekly (26/yr)</option>
+        <option value="weekly"${data.freq==='weekly'?' selected':''}>Weekly (52/yr)</option>
+      </select>
+    </div>
+    <div><label>Per Pay</label><input class="input i-pay" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${+data.perPay||''}"></div>
+    <div class="trash"><button class="btn btn-danger i-del" title="Remove">🗑️</button></div>`;
+  $('#incomeList').appendChild(wrap);
+  wrap.querySelectorAll('input,select').forEach(el=> el.addEventListener('input',syncFromDOM));
+  wrap.querySelector('.i-del').addEventListener('click', ()=>{ wrap.remove(); syncFromDOM(); });
 }
 
-/* ---------- Derived calcs & summary ---------- */
-function estimateMinPayment(debt){
-  const r = debt.apr ? (debt.apr/100)/12 : 0;
-  const B = Math.max(0,toNum(debt.balance));
-  const n = parseInt(debt.term||0,10);
-  if (B<=0) return 0;
-  if (n>0 && r>0){
-    const p = r*Math.pow(1+r,n) / (Math.pow(1+r,n)-1) * B;
-    return isFinite(p)?p:0;
-  }
-  // credit-card style fallback: 2% of balance (typical), min $25
-  return Math.max(25, B*0.02);
+function addEssRow(data={name:'',monthly:0}){
+  const wrap = document.createElement('div'); wrap.className='row'; wrap.innerHTML = `
+    <div><label>Name</label><input class="input e-name" placeholder="Expense" value="${data.name||''}"></div>
+    <div><label>Monthly</label><input class="input e-val" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${+data.monthly||''}"></div>
+    <div class="trash"><button class="btn btn-danger e-del" title="Remove">🗑️</button></div>`;
+  $('#essList').appendChild(wrap);
+  wrap.querySelectorAll('input').forEach(el=> el.addEventListener('input',syncFromDOM));
+  wrap.querySelector('.e-del').addEventListener('click', ()=>{ wrap.remove(); syncFromDOM(); });
 }
 
-function buildAvalanche(){
-  const inc = state.incomes.reduce((a,b)=>a+(b.monthly||0),0);
-  const ess = state.essentials.reduce((a,b)=>a+(b.monthly||0),0);
-  const free = Math.max(0, inc - ess);
+function addDebtRow(data={name:'',apr:0,balance:0,term:0}){
+  const wrap = document.createElement('div'); wrap.className='row'; wrap.innerHTML = `
+    <div style="flex:2 1 200px"><label>Name</label><input class="input d-name" placeholder="Debt" value="${data.name||''}"></div>
+    <div><label>APR %</label><input class="input d-apr" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${+data.apr||''}"></div>
+    <div><label>Balance</label><input class="input d-bal" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${+data.balance||''}"></div>
+    <div><label>Term (months)</label><input class="input d-term" type="number" inputmode="numeric" step="1" placeholder="0" value="${+data.term||''}"></div>
+    <div class="trash"><button class="btn btn-danger d-del" title="Remove">🗑️</button></div>`;
+  $('#debtList').appendChild(wrap);
+  wrap.querySelectorAll('input').forEach(el=> el.addEventListener('input',syncFromDOM));
+  wrap.querySelector('.d-del').addEventListener('click', ()=>{ wrap.remove(); syncFromDOM(); });
+}
 
-  if (!state.debts.length) return {text:'No debts added.', dti:null};
+/* =========================
+   Sync DOM -> State
+========================= */
+function syncFromDOM(){
+  state.name = $('#displayName').value.trim();
+  state.cadence = $('#cadence').value;
 
-  // compute mins
-  const items = state.debts.map(d=>({
-    ...d,
-    min: estimateMinPayment(d),
+  state.income = $$('#incomeList .row').map(row => ({
+    name: row.querySelector('.i-name').value.trim(),
+    freq: row.querySelector('.i-freq').value,
+    perPay: parseFloat(row.querySelector('.i-pay').value)||0
   }));
 
-  const minTotal = items.reduce((a,b)=>a+b.min,0);
-  let extra = Math.max(0, free - minTotal);
+  state.essentials = $$('#essList .row').map(row => ({
+    name: row.querySelector('.e-name').value.trim(),
+    monthly: parseFloat(row.querySelector('.e-val').value)||0
+  }));
 
-  // sort by APR desc, tie-breaker by balance desc
-  items.sort((a,b)=> (b.apr||0)-(a.apr||0) || (b.balance||0)-(a.balance||0));
+  state.debts = $$('#debtList .row').map(row => ({
+    name: row.querySelector('.d-name').value.trim(),
+    apr: parseFloat(row.querySelector('.d-apr').value)||0,
+    balance: parseFloat(row.querySelector('.d-bal').value)||0,
+    term: parseInt(row.querySelector('.d-term').value)||0
+  }));
 
-  // allocate extra to top debt
-  const cadence = state.cadence; // monthly or biweekly
-  const payLabel = cadence==='biweekly' ? 'per pay (26/yr)' : 'per month';
+  state.goal = {
+    name: $('#goalName').value.trim(),
+    amount: val($('#goalAmt')),
+    date: $('#goalDate').value || ''
+  };
 
-  const lines = [];
-  lines.push(`Free cash after essentials: ${fmt(free)} per month.`);
-  lines.push(`Estimated minimums: ${fmt(minTotal)} per month.`);
-  lines.push(`Cadence: ${cadence==='biweekly'?'Bi-weekly (26/yr)':'Monthly'}.`);
+  calculate();
+  save();
+}
 
-  if (free<=0){
-    lines.push('No free cash to allocate yet. Consider trimming essentials or adding income.');
-  } else {
-    items.forEach((d,i)=>{
-      const extraForThis = (i===0) ? extra : 0;
-      const monthlyPay = d.min + extraForThis;
-      const perPay = cadence==='biweekly' ? monthlyPay*(12/26) : monthlyPay;
+/* =========================
+   Calculations
+========================= */
+function perYear(freq){
+  switch(freq){
+    case 'weekly': return 52;
+    case 'biweekly': return 26;
+    default: return 12;
+  }
+}
+function monthlyFromPerPay(freq, perPay){
+  const py = perYear(freq);
+  return perPay * (py/12);
+}
+function amortizedPayment(balance, aprPct, months){
+  if (!months || months<=0) return 0;
+  const r = (aprPct/100)/12;
+  if (r===0) return balance/months;
+  return balance * r / (1 - Math.pow(1+r, -months));
+}
 
-      lines.push(`• ${d.name||'Debt'} — APR ${d.apr||0}% — Pay ${fmt(perPay)} ${payLabel}${extraForThis>0?' (includes extra)':''}`);
-    });
-    if (items.length>1) lines.push('When the top debt is paid off, roll its payment to the next (debt avalanche).');
+function calculate(){
+  // totals
+  const incMonthly = state.income.reduce((s,x)=> s + monthlyFromPerPay(x.freq, x.perPay), 0);
+  const essMonthly = state.essentials.reduce((s,x)=> s + x.monthly, 0);
+
+  // DTI
+  const dti = incMonthly? (essMonthly / incMonthly)*100 : 0;
+
+  // goal math
+  let goalPct = 0, goalStr = `$0.00 of $0.00 (0%)`;
+  if (state.goal.amount>0){
+    const saved = 0; // we don’t track historical saving yet
+    goalPct = clampPct((saved/state.goal.amount)*100);
+    goalStr = `${fmt(saved)} of ${fmt(state.goal.amount)} (${goalPct.toFixed(0)}%)`;
   }
 
-  // DTI (essentials + estimated mins) / income
-  const dti = inc ? ((ess + minTotal)/inc) : null;
+  // free cash
+  const free = Math.max(0, incMonthly - essMonthly);
 
-  return {text:lines.join('\n'), dti};
-}
-
-function updateGoalBars(){
-  const g=state.goal;
-  const have = 0; // not tracking savings balance yet
-  const need = toNum(g.amount);
-  const pct = need? Math.max(0, Math.min(100, (have/need)*100 )) : 0;
-  $('#goalBar').style.width = pct+'%';
-  $('#goalNote').textContent = need? `${fmt(have)} of ${fmt(need)} (${pct.toFixed(0)}%)` : '—';
-}
-
-function renderSummary(){
-  const inc = state.incomes.reduce((a,b)=>a+(b.monthly||0),0);
-  const ess = state.essentials.reduce((a,b)=>a+(b.monthly||0),0);
-  const free = inc - ess;
-
-  const g = state.goal;
-  let line = `${state.displayName?state.displayName+"'s ":""}Plan: ${fmt(inc)} income – ${fmt(ess)} essentials = ${fmt(free)} free cash.`;
-  if (g.amount && g.date){
-    const monthsLeft = Math.max(1, Math.ceil((new Date(g.date)-new Date())/(1000*60*60*24*30)));
-    const perMonth = toNum(g.amount)/monthsLeft;
-    line += ` Goal “${g.name||'Goal'}” ≈ ${fmt(perMonth)}/mo for ${monthsLeft} mo.`;
-  }
-  $('#summaryText').textContent=line;
-
-  const {text,recoDTI} = { text:'', recoDTI:null }; // for future split
-  const r = buildAvalanche();
-  $('#debtReco').textContent = r.text;
-
-  // DTI bar
-  const dti = r.dti;
-  if (dti==null){ $('#dtiBar').style.width='0%'; $('#dtiNote').textContent='—'; }
-  else{
-    const pct = Math.max(0, Math.min(100, dti*100));
-    $('#dtiBar').style.width = pct+'%';
-    $('#dtiNote').textContent = `${pct.toFixed(0)}% of income (essentials + min debt)`;
-  }
-
-  updateGoalBars();
-
-  // Guided review text
-  $('#reviewText').textContent =
-`Income total: ${fmt(inc)}
-Essentials total: ${fmt(ess)}
-Free cash: ${fmt(free)}
-
-${r.text}`;
-}
-
-/* ---------- Guided mode ---------- */
-const steps = [
-  {id:'g-income', title:'Income',      section:'#sec-income'},
-  {id:'g-essentials', title:'Essentials', section:'#sec-essentials'},
-  {id:'g-debts', title:'Debts',       section:'#sec-debts'},
-  {id:'g-goal', title:'Goal',         section:'#sec-goal'},
-  {id:'g-review', title:'Review',     section:null},
-];
-let stepIdx=0;
-
-function mount(sectionSel, targetSel){
-  const sec=$(sectionSel); const tgt=$(targetSel);
-  if (sec && tgt && sec.parentElement!==tgt) tgt.appendChild(sec);
-}
-function enterGuided(){
-  // hide summary only; we want the real sections inside the overlay
-  $('#sec-summary').classList.add('hidden');
-
-  // mount real sections inside guided containers
-  mount('#sec-income','#g-income');
-  mount('#sec-essentials','#g-essentials');
-  mount('#sec-debts','#g-debts');
-  mount('#sec-goal','#g-goal');
-
-  $('#guidedOverlay').classList.add('show');
-  stepIdx=0; showStep();
-}
-function exitGuided(){
-  // move sections back above summary
-  const root=$('.wrap'); const summary=$('#sec-summary');
-  ['#sec-income','#sec-essentials','#sec-debts','#sec-goal'].forEach(sel=>{
-    const el=$(sel); if (el && el.parentElement!==root) root.insertBefore(el, summary);
+  // debt min estimate + avalanche order
+  const debts = state.debts.map(d=>{
+    const min = d.term>0 ? amortizedPayment(d.balance, d.apr, d.term)
+                         : Math.max(25, d.balance*0.02); // 2% or $25 min
+    return {...d, min};
   });
-  $('#sec-summary').classList.remove('hidden');
-  $('#guidedOverlay').classList.remove('show');
-}
-function showStep(){
-  steps.forEach((s,i)=>{ const el=$('#'+s.id); if(el) el.classList.toggle('hidden', i!==stepIdx); });
-  $('#guidedTitle').textContent = steps[stepIdx].title;
-  $('#stepInd').textContent = `Step ${stepIdx+1} of ${steps.length}`;
-  $('#backStepBtn').disabled = (stepIdx===0);
-  $('#nextStepBtn').textContent = (stepIdx===steps.length-1)?'Finish':'Next';
-}
+  const sorted = debts.slice().sort((a,b)=> (b.apr||0) - (a.apr||0));
+  let reco = 'Add debts to see the recommendation.';
+  if (sorted.length){
+    const first = sorted[0];
+    const cadenceLabel = ({monthly:'Monthly', biweekly:'Bi-Weekly', weekly:'Weekly'})[state.cadence];
+    const perMonth = free;
+    const perPayExtra = state.cadence==='monthly' ? perMonth :
+                        state.cadence==='biweekly' ? perMonth/2 :
+                        perMonth/4;
+    reco = `Free cash after essentials: <strong>${fmt(free)}</strong> per month. 
+            Estimated minimums: <strong>${fmt(debts.reduce((s,x)=>s+x.min,0))}</strong> per month. 
+            Cadence: <strong>${cadenceLabel}</strong>. 
+            <br><br>Pay <strong>${fmt(perMonth)}</strong> / mo (≈ ${fmt(perPayExtra)} per pay) toward <strong>${first.name||'highest-APR debt'}</strong> first (avalanche).`;
+  }
 
-/* ---------- Add row handlers ---------- */
-function addIncome(){ state.incomes.push({id:uid(),name:'',freq:'monthly',per:0,monthly:0}); save(); renderIncome(); }
-function addEssential(){ state.essentials.push({id:uid(),name:'',monthly:0}); save(); renderEssentials(); }
-function addDebt(){ state.debts.push({id:uid(),name:'',apr:0,balance:0,term:0}); save(); renderDebts(); }
-
-/* ---------- Bind UI ---------- */
-function bind(){
-  $('#displayName').value=state.displayName||''; $('#displayName').oninput=()=>{state.displayName=$('#displayName').value.trim(); save(); renderSummary();};
-  $('#cadence').value=state.cadence||'monthly'; $('#cadence').onchange=()=>{state.cadence=$('#cadence').value; save(); renderSummary();};
-
-  $('#addIncomeBtn').onclick=addIncome; $('#addEssBtn').onclick=addEssential; $('#addDebtBtn').onclick=addDebt;
-
-  $('#goalName').value=state.goal.name||''; $('#goalName').oninput=()=>{state.goal.name=$('#goalName').value.trim(); save(); renderSummary();};
-  $('#goalAmt').value=state.goal.amount?fmt(state.goal.amount):''; $('#goalAmt').onfocus=()=>{$('#goalAmt').value=toNum($('#goalAmt').value)||''}; $('#goalAmt').onblur=()=>{state.goal.amount=toNum($('#goalAmt').value); $('#goalAmt').value=fmt(state.goal.amount); save(); renderSummary();};
-  $('#goalDate').value=state.goal.date||''; $('#goalDate').onchange=()=>{state.goal.date=$('#goalDate').value; save(); renderSummary();};
-
-  $('#saveBtn').onclick=()=>{save(); alert('Saved on this device ✅')};
-  $('#exportBtn').onclick=()=>{
-    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='h3-budget-plan.json'; a.click(); URL.revokeObjectURL(a.href);
-  };
-  $('#shareBtn').onclick=()=>{
-    const data=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
-    const url=location.origin + '/H3_Budget_App/budget.html#s='+data;
-    if(navigator.share){navigator.share({title:'H³ Budget Plan',url});}
-    else{navigator.clipboard.writeText(url); alert('Link copied to clipboard');}
-  };
-
-  $('#guidedToggle').onchange=(e)=>{ e.target.checked?enterGuided():exitGuided(); };
-  $('#exitGuidedBtn').onclick=()=>{ $('#guidedToggle').checked=false; exitGuided(); };
-  $('#cancelStepBtn').onclick=()=>{ $('#guidedToggle').checked=false; exitGuided(); };
-  $('#backStepBtn').onclick=()=>{ if(stepIdx>0){stepIdx--; showStep();} };
-  $('#nextStepBtn').onclick=()=>{ if(stepIdx<steps.length-1){stepIdx++; showStep();} else { $('#guidedToggle').checked=false; exitGuided(); } };
+  // Write UI
+  $('#totIncome').textContent = fmt(incMonthly);
+  $('#totEss').textContent    = fmt(essMonthly);
+  $('#planLine').textContent  = `${state.name ? state.name+"'s " : ''}Plan: ${fmt(incMonthly)} income − ${fmt(essMonthly)} essentials = ${fmt(free)} free cash.`;
+  $('#dtiPct').textContent    = `${clampPct(dti).toFixed(0)}%`;
+  $('#dtiBar').style.width    = `${clampPct(dti)}%`;
+  $('#goalPct').textContent   = `${goalPct.toFixed(0)}%`;
+  $('#goalBar').style.width   = `${goalPct}%`;
+  $('#goalHint').textContent  = goalStr;
+  $('#debtReco').innerHTML    = reco;
 }
 
-/* ---------- Import from hash (shared link) ---------- */
-function importFromHash(){
-  if(location.hash.startsWith('#s=')){
-    try{ const b64=decodeURIComponent(location.hash.slice(3)); const j=JSON.parse(decodeURIComponent(escape(atob(b64)))); Object.assign(state,j); save(); location.hash=''; }
-    catch{}
+/* =========================
+   Guided Mode
+========================= */
+const steps = [
+  { id:'income',  title:'Income',      build:buildIncomeStep },
+  { id:'ess',     title:'Essentials',  build:buildEssStep },
+  { id:'debt',    title:'Debts',       build:buildDebtStep },
+  { id:'goal',    title:'Goal',        build:buildGoalStep },
+  { id:'review',  title:'Review',      build:buildReviewStep },
+];
+let stepIdx = 0;
+
+function openGuided(){ stepIdx=0; renderStep(); $('#guided').classList.add('open'); }
+function closeGuided(){ $('#guided').classList.remove('open'); }
+function renderStep(){
+  const st=steps[stepIdx];
+  $('#stepBadge').textContent = `Step ${stepIdx+1} of ${steps.length}`;
+  $('#stepTitle').textContent = st.title;
+  const c = $('#stepBody'); c.innerHTML='';
+  st.build(c);
+  $('#btnBack').disabled = (stepIdx===0);
+  $('#btnNext').textContent = (stepIdx===steps.length-1)? 'Done' : 'Next';
+}
+
+function buildIncomeStep(c){
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `<p class="muted">Add each paycheck (net). Use frequency + per-pay amount.</p>`;
+  c.appendChild(wrap);
+  // mirror the same rows UI but inside modal
+  const list = document.createElement('div'); c.appendChild(list);
+  state.income.forEach(x=> list.appendChild(makeIncomeRowInline(x)));
+  const add = document.createElement('button'); add.className='btn btn-green'; add.textContent='+ Add Income Source';
+  add.onclick = ()=>{ list.appendChild(makeIncomeRowInline({name:'',freq:'monthly',perPay:0})); };
+  c.appendChild(add);
+}
+function makeIncomeRowInline(data){
+  const row = document.createElement('div'); row.className='row'; row.innerHTML=`
+    <div><label>Name</label><input class="input gi-name" value="${data.name||''}" placeholder="Source"></div>
+    <div>
+      <label>Frequency</label>
+      <select class="input gi-freq">
+        <option value="monthly"${data.freq==='monthly'?' selected':''}>Monthly</option>
+        <option value="biweekly"${data.freq==='biweekly'?' selected':''}>Bi-Weekly (26/yr)</option>
+        <option value="weekly"${data.freq==='weekly'?' selected':''}>Weekly (52/yr)</option>
+      </select>
+    </div>
+    <div><label>Per Pay</label><input class="input gi-pay" type="number" inputmode="decimal" placeholder="0.00" step="0.01" value="${+data.perPay||''}"></div>
+    <div class="trash"><button class="btn btn-danger gi-del">🗑️</button></div>`;
+  row.querySelector('.gi-del').onclick = ()=> row.remove();
+  return row;
+}
+function buildEssStep(c){
+  const list = document.createElement('div'); c.appendChild(list);
+  state.essentials.forEach(x=> list.appendChild(makeEssRowInline(x)));
+  const add = document.createElement('button'); add.className='btn btn-green'; add.textContent='+ Add Expense';
+  add.onclick = ()=>{ list.appendChild(makeEssRowInline({name:'',monthly:0})); };
+  c.appendChild(add);
+}
+function makeEssRowInline(d){
+  const row=document.createElement('div'); row.className='row'; row.innerHTML=`
+    <div><label>Name</label><input class="input ge-name" value="${d.name||''}" placeholder="Expense"></div>
+    <div><label>Monthly</label><input class="input ge-val" type="number" inputmode="decimal" placeholder="0.00" step="0.01" value="${+d.monthly||''}"></div>
+    <div class="trash"><button class="btn btn-danger ge-del">🗑️</button></div>`;
+  row.querySelector('.ge-del').onclick = ()=> row.remove(); return row;
+}
+function buildDebtStep(c){
+  const p = document.createElement('p'); p.className='muted';
+  p.innerHTML = `Add debts to get an <strong>Avalanche</strong> recommendation (highest APR first). If a debt has a term, we’ll estimate its minimum; otherwise assume 2%.`;
+  c.appendChild(p);
+  const list = document.createElement('div'); c.appendChild(list);
+  state.debts.forEach(x=> list.appendChild(makeDebtRowInline(x)));
+  const add = document.createElement('button'); add.className='btn btn-green'; add.textContent='+ Add Debt';
+  add.onclick = ()=>{ list.appendChild(makeDebtRowInline({name:'',apr:0,balance:0,term:0})); };
+  c.appendChild(add);
+}
+function makeDebtRowInline(d){
+  const row=document.createElement('div'); row.className='row'; row.innerHTML=`
+    <div style="flex:2 1 200px"><label>Name</label><input class="input gd-name" value="${d.name||''}"></div>
+    <div><label>APR %</label><input class="input gd-apr" type="number" inputmode="decimal" step="0.01" value="${+d.apr||''}"></div>
+    <div><label>Balance</label><input class="input gd-bal" type="number" inputmode="decimal" step="0.01" value="${+d.balance||''}"></div>
+    <div><label>Term (months)</label><input class="input gd-term" type="number" inputmode="numeric" step="1" value="${+d.term||''}"></div>
+    <div class="trash"><button class="btn btn-danger gd-del">🗑️</button></div>`;
+  row.querySelector('.gd-del').onclick = ()=> row.remove(); return row;
+}
+function buildGoalStep(c){
+  const row=document.createElement('div'); row.className='row'; row.innerHTML=`
+    <div><label>Goal name</label><input id="gName" class="input" value="${state.goal.name||''}" placeholder="e.g., Emergency fund"></div>
+    <div><label>Amount</label><input id="gAmt" class="input" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="${+state.goal.amount||''}"></div>
+    <div><label>Target date</label><input id="gDate" class="input" type="date" value="${state.goal.date||''}"></div>`;
+  c.appendChild(row);
+}
+function buildReviewStep(c){
+  calculate();
+  c.innerHTML = `
+    <div class="widget"><div class="kpi"><span>${$('#planLine').textContent}</span></div></div>
+    <div class="widget"><div class="kpi"><strong>DEBT-TO-INCOME</strong><span>${$('#dtiPct').textContent}</span></div><div class="bar"><span style="width:${$('#dtiBar').style.width}"></span></div></div>
+    <div class="widget"><div class="kpi"><strong>GOAL</strong><span>${$('#goalPct').textContent}</span></div><div class="bar"><span style="width:${$('#goalBar').style.width}"></span></div><div class="hint">${$('#goalHint').textContent}</div></div>
+    <div class="widget"><h3>Debt Recommendation</h3><div>${$('#debtReco').innerHTML}</div></div>`;
+}
+
+$('#guidedToggle').addEventListener('change', (e)=>{
+  if (e.target.checked) openGuided(); else closeGuided();
+});
+$('#btnExitGuide').onclick = ()=>{ $('#guidedToggle').checked=false; closeGuided(); };
+$('#btnCancel').onclick   = ()=>{ $('#guidedToggle').checked=false; closeGuided(); };
+$('#btnBack').onclick     = ()=>{ if(stepIdx>0){ stepIdx--; renderStep(); } };
+$('#btnNext').onclick     = ()=>{
+  // pull data from modal step into state
+  const st = steps[stepIdx].id;
+  if (st==='income'){
+    state.income = Array.from($('#stepBody').querySelectorAll('.row')).map(r=>({
+      name: r.querySelector('.gi-name').value.trim(),
+      freq: r.querySelector('.gi-freq').value,
+      perPay: parseFloat(r.querySelector('.gi-pay').value)||0
+    }));
+  } else if (st==='ess'){
+    state.essentials = Array.from($('#stepBody').querySelectorAll('.row')).map(r=>({
+      name: r.querySelector('.ge-name').value.trim(),
+      monthly: parseFloat(r.querySelector('.ge-val').value)||0
+    }));
+  } else if (st==='debt'){
+    state.debts = Array.from($('#stepBody').querySelectorAll('.row')).map(r=>({
+      name: r.querySelector('.gd-name').value.trim(),
+      apr: parseFloat(r.querySelector('.gd-apr').value)||0,
+      balance: parseFloat(r.querySelector('.gd-bal').value)||0,
+      term: parseInt(r.querySelector('.gd-term').value)||0
+    }));
+  } else if (st==='goal'){
+    state.goal = {
+      name: $('#gName').value.trim(),
+      amount: parseFloat($('#gAmt').value)||0,
+      date: $('#gDate').value || ''
+    };
+  }
+  // rebuild base lists to keep in sync
+  rebuildListsFromState();
+  syncFromDOM();
+
+  if (stepIdx<steps.length-1){ stepIdx++; renderStep(); }
+  else { $('#guidedToggle').checked=false; closeGuided(); }
+};
+
+/* =========================
+   Tip Jar (Digital Goods API → Play Billing)
+========================= */
+async function initTips(){
+  try{
+    const dgs = await (navigator.getDigitalGoodsService && navigator.getDigitalGoodsService('https://play.google.com/billing'));
+    if(!dgs) return; // not in TWA / unsupported
+    const details = await dgs.getDetails({ itemIds: TIP_SKUS });
+    const byId = new Map(details.map(d => [d.itemId, d]));
+    // label buttons with Play prices
+    $$('#tipBtns .btn').forEach(btn=>{
+      const sku=btn.dataset.sku; const d=byId.get(sku);
+      if(d){ btn.textContent = `${btn.textContent} — ${d.price.value} ${d.price.currency}`; }
+      btn.onclick = async ()=>{
+        $('#tipMsg').textContent = 'Opening Play purchase…';
+        try{
+          const resp = await dgs.purchase({ itemId: sku });
+          // consume so it’s buyable again
+          if (resp?.purchaseToken) {
+            await dgs.consume({purchaseToken: resp.purchaseToken});
+          }
+          $('#tipMsg').textContent = 'Thanks so much for the tip! 💚';
+        }catch(e){
+          $('#tipMsg').textContent = 'Purchase canceled or failed.';
+        }
+      };
+    });
+    $('#cardTips').style.display='';
+  }catch(e){
+    // silently hide Tip Jar if not supported
   }
 }
 
-/* ---------- Boot ---------- */
-load();
-importFromHash();
-bind();
-renderIncome(); renderEssentials(); renderDebts(); renderSummary();
+/* =========================
+   Share / Export
+========================= */
+$('#btnSave').onclick = ()=>{ save(); alert('Saved locally.'); };
+$('#btnExport').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='h3-plan.json'; a.click();
+  URL.revokeObjectURL(url);
+};
+$('#btnShare').onclick = ()=>{
+  const data = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  const url = `${location.origin}${location.pathname}?p=${data}`;
+  navigator.share ? navigator.share({title:'H³ Budget Plan', url}) : prompt('Copy link:', url);
+};
 
-if ('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/H3_Budget_App/sw.js?ver=24').catch(()=>{});
+/* =========================
+   Bootstrap
+========================= */
+function rebuildListsFromState(){
+  // clear and fill lists
+  $('#incomeList').innerHTML='';
+  $('#essList').innerHTML='';
+  $('#debtList').innerHTML='';
+  state.income.forEach(addIncomeRow);
+  state.essentials.forEach(addEssRow);
+  state.debts.forEach(addDebtRow);
+  // some default rows if empty
+  if (!state.income.length) addIncomeRow();
+  if (!state.essentials.length) addEssRow();
+  if (!state.debts.length) addDebtRow();
 }
+function hydrateHeader(){
+  $('#displayName').value = state.name||'';
+  $('#cadence').value = state.cadence||'monthly';
+  $('#goalName').value = state.goal?.name||'';
+  $('#goalAmt').value = state.goal?.amount||'';
+  $('#goalDate').value = state.goal?.date||'';
+}
+
+$('#btnAddIncome').onclick = ()=> addIncomeRow();
+$('#btnAddEss').onclick    = ()=> addEssRow();
+$('#btnAddDebt').onclick   = ()=> addDebtRow();
+
+(function init(){
+  // decode share link
+  const q = new URLSearchParams(location.search).get('p');
+  if (q) { try{ state = JSON.parse(decodeURIComponent(escape(atob(q)))); }catch{} }
+  else { load(); }
+
+  hydrateHeader();
+  rebuildListsFromState();
+  calculate();
+
+  // live bindings for header + goal
+  $('#displayName').addEventListener('input', syncFromDOM);
+  $('#cadence').addEventListener('change', syncFromDOM);
+  $('#goalName').addEventListener('input', syncFromDOM);
+  $('#goalAmt').addEventListener('input', syncFromDOM);
+  $('#goalDate').addEventListener('change', syncFromDOM);
+
+  initTips();
+})();
 </script>
 </body>
 </html>
