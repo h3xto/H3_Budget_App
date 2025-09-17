@@ -16,10 +16,11 @@
     --radius:16px;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;overflow-x:hidden}
   a{color:#9fd2ff;text-decoration:none}
+  img,svg{max-width:100%;height:auto}
 
-  .wrap{max-width:900px;margin:0 auto;padding:22px 14px 120px}
+  .wrap{max-width:900px;width:100%;margin:0 auto;padding:22px 14px 120px}
 
   /* header */
   .topbar{display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:8px}
@@ -33,12 +34,10 @@
   .card h2{margin:0 0 8px;font-size:22px}
   .sub{color:var(--muted);font-size:14px;margin:0 0 14px}
 
-  /* rows & inputs */
-  .row{display:grid;grid-template-columns:1fr 150px 56px;gap:12px;align-items:center;margin:10px 0}
-  .row.two{grid-template-columns:1fr 150px 56px}
-  .row.debt{grid-template-columns:1fr 110px 1fr 120px 56px}
-  .row.compact{grid-template-columns:1fr 1fr;gap:12px}
-  .row .trash{width:44px;height:44px;border-radius:12px;border:1px solid var(--ring);display:grid;place-items:center;color:#cbd5e1;background:#0f1a24;cursor:pointer}
+  /* rows & inputs (mobile-first) */
+  .row{display:grid;grid-template-columns:1fr;gap:12px;align-items:center;margin:10px 0}
+  .row.two{grid-template-columns:1fr}
+  .row .trash{width:44px;height:44px;border-radius:12px;border:1px solid var(--ring);display:grid;place-items:center;color:#cbd5e1;background:#0f1a24;cursor:pointer;justify-self:end}
   .trash:hover{background:#13202e}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 18px;background:var(--accent);color:#032925;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
   .btn:active{transform:translateY(1px)}
@@ -46,6 +45,20 @@
   .btn.danger{background:#8b2e2e;color:#fff}
   input,select{width:100%;min-width:0;height:44px;border-radius:12px;border:1px solid var(--ring);background:#0f1a24;color:var(--ink);padding:0 12px;font-size:16px}
   input.money{text-align:right;max-width:100%}
+
+  /* debt row: name full width, then fields stack on phones */
+  .row.debt{grid-template-columns:1fr}
+  .row.debt .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  .row.debt .grid2 .inline-last{display:grid;grid-template-columns:1fr 44px;gap:10px}
+
+  /* grow to compact 4-col layout at >= 480px */
+  @media (min-width:480px){
+    .row{grid-template-columns:1fr 150px 56px}
+    .row.two{grid-template-columns:1fr 150px 56px}
+    .row.debt{grid-template-columns:1fr}
+    .row.debt .grid2{grid-template-columns:110px minmax(0,1fr) 120px 44px}
+    .row .trash{justify-self:auto}
+  }
 
   /* totals line (inside card, right aligned) */
   .totals{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:6px}
@@ -73,15 +86,8 @@
   .step{display:none}
   .step.show{display:block}
 
-  /* fix weird RTL underlines/reordering on some OEM keyboards */
+  /* neutralize weird RTL underlines/ordering */
   .neutral{unicode-bidi:plaintext;direction:ltr}
-
-  /* responsive tweaks */
-  @media (max-width:640px){
-    .row{grid-template-columns:1fr 120px 44px}
-    .row.debt{grid-template-columns:1fr;gap:10px}
-    .row.debt .grid2{display:grid;grid-template-columns:110px 1fr 120px 44px;gap:10px}
-  }
 </style>
 
 <div class="wrap" id="app">
@@ -105,7 +111,7 @@
 
   <!-- Display + cadence -->
   <div class="card">
-    <div class="row compact">
+    <div class="row">
       <label>Display Name
         <input id="name" placeholder="Your name">
       </label>
@@ -173,7 +179,7 @@
   <div class="card" id="goalCard">
     <h2>Goal</h2>
     <p class="sub">You can still use Avalanche for debts while saving toward a goal — we show free cash after essentials so you can split it.</p>
-    <div class="row compact">
+    <div class="row">
       <label>Goal Name
         <input id="goalName" placeholder="e.g., Car fund">
       </label>
@@ -269,7 +275,7 @@
 
       <section class="step" id="s4">
         <h2>Goal</h2>
-        <div class="row compact">
+        <div class="row">
           <label>Goal Name <input id="wizGoalName" placeholder="e.g., Car fund"></label>
           <label>Amount <input id="wizGoalAmount" class="money" inputmode="decimal" placeholder="$0.00"></label>
           <label>Target date <input id="wizGoalDate" type="date"></label>
@@ -357,22 +363,29 @@ function debtRow(i){
   r.innerHTML=`
     <input placeholder="Name" value="${d.name}">
     <div class="grid2">
-      <input inputmode="decimal" placeholder="APR %" value="${d.apr||''}">
-      <input class="money" inputmode="decimal" placeholder="$0.00" value="${fmt.format(d.balance)}">
-      <input inputmode="numeric" placeholder="Term (mo)" value="${d.term||''}">
-      <div class="trash" title="Remove">🗑</div>
+      <input class="apr" inputmode="decimal" placeholder="APR %" value="${d.apr||''}">
+      <input class="money bal" inputmode="decimal" placeholder="Balance" value="${fmt.format(d.balance)}">
+      <div class="inline-last">
+        <input class="term" inputmode="numeric" placeholder="Term (mo)" value="${d.term||''}">
+        <div class="trash" title="Remove">🗑</div>
+      </div>
     </div>`;
-  const [name, apr, bal, term] = [r.children[0], ...r.querySelector('.grid2').querySelectorAll('input')];
-  name.oninput=()=>{ d.name=name.value; save(); };
-  apr.oninput =()=>{ d.apr=toNum(apr.value); save(); calc(); };
+  const name = r.querySelector('input[placeholder="Name"]');
+  const apr  = r.querySelector('.apr');
+  const bal  = r.querySelector('.bal');
+  const term = r.querySelector('.term');
+
+  name.oninput =()=>{ d.name=name.value; save(); };
+  apr.oninput  =()=>{ d.apr=toNum(apr.value); save(); calc(); };
   moneyifyInput(bal);
-  bal.onblur  =()=>{ d.balance=toNum(bal.value); save(); calc(); };
-  term.oninput=()=>{ d.term=toNum(term.value); save(); calc(); };
+  bal.onblur   =()=>{ d.balance=toNum(bal.value); save(); calc(); };
+  term.oninput =()=>{ d.term=toNum(term.value); save(); calc(); };
+
   r.querySelector('.trash').onclick=()=>{ state.debts.splice(i,1); render(); };
   return r;
 }
 
-/* append rows to a container (fresh DOM, bound to state) */
+/* build list into container (fresh DOM) */
 function buildList(container, kind){
   const el=$(container); el.innerHTML='';
   const arr=state[kind];
@@ -456,9 +469,9 @@ function calc(){
 }
 
 /* ---------- save / load / share ---------- */
-const save = ()=> localStorage.setItem('h3.budget.v1', JSON.stringify(state));
+const save = ()=> localStorage.setItem(LSKEY, JSON.stringify(state));
 function load(){
-  try{ const x=JSON.parse(localStorage.getItem('h3.budget.v1')||'null'); if (x && typeof x==='object') state=Object.assign(state,x); }catch{}
+  try{ const x=JSON.parse(localStorage.getItem(LSKEY)||'null'); if (x && typeof x==='object') state=Object.assign(state,x); }catch{}
 }
 
 /* ---------- render ---------- */
