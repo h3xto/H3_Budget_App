@@ -1,393 +1,684 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>H³ Budget Tool</title>
+<meta charset="utf-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>H³ Budget Tool</title>
 
-  <!-- PWA / icons -->
-  <meta name="theme-color" content="#0f9a9b" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<!-- PWA hooks (safe to keep) -->
+<link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=24">
+<link rel="icon" href="/H3_Budget_App/icons/icon-192-v3.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png">
 
-  <!-- IMPORTANT: absolute paths + version bump to force refresh -->
-  <link rel="manifest" href="/H3_Budget_App/manifest.webmanifest?v=24">
-  <link rel="icon" type="image/png" sizes="192x192" href="/H3_Budget_App/icons/icon-192-v3.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/H3_Budget_App/icons/icon-512-v3.png">
-  <link rel="apple-touch-icon" href="/H3_Budget_App/icons/icon-192-v3.png">
+<style>
+  :root{
+    --bg:#0b0f14;        /* dark background */
+    --card:#121821;      /* cards */
+    --ink:#e6edf3;       /* text */
+    --muted:#8ca0b4;
+    --line:#1e2835;
+    --accent:#17c3ff;    /* primary accent */
+    --accent-2:#42f59f;  /* secondary accent */
+    --danger:#ff5d5d;
+    --good:#12d27c;
+    --focus: 0 0 0 2px rgba(23,195,255,.35);
+    --radius:14px;
+    --pad:16px;
+    --shadow: 0 8px 26px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:900px;margin:0 auto;padding:20px 14px 120px}
 
-  <style>
-    :root{
-      --brand:#0f9a9b; --brand-2:#16b5b7;
-      --ink:#0a1b1c; --muted:#5c7a7b;
-      --bg:#f6fbfb; --card:#ffffff; --line:#d4ebeb;
-      --focus:#0f9a9b;
-      --btn:#e8f3f3; --btn-line:#cfe6e6; --btn-ink:#174344;
-      --chip-bg:#e9f6f6; --chip-line:#cdecec;
-    }
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-      font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    .container{max-width:720px;margin:0 auto;padding:14px}
+  /* Header */
+  .header{
+    display:flex;flex-direction:column;align-items:center;gap:6px;margin:8px 0 14px
+  }
+  .brand{display:flex;align-items:center;gap:8px}
+  .cube{
+    width:28px;height:28px;border:2px solid var(--ink);border-radius:6px;position:relative;transform:rotate(15deg)
+  }
+  .cube::after{
+    content:"³";position:absolute;right:-10px;top:-12px;font-weight:700;color:var(--ink)
+  }
+  .title{font-weight:800;letter-spacing:.2px}
+  .tagline{
+    color:var(--muted);font-size:13px;display:flex;align-items:center;gap:8px
+  }
+  .tagline span::after{content:" • "}
+  .tagline span:last-child::after{content:" •"}
+  .title-row{
+    display:flex;justify-content:space-between;gap:10px;width:100%;max-width:900px;align-items:center;
+  }
 
-    .topbar{position:sticky;top:0;z-index:20;
-      background:linear-gradient(180deg,var(--brand),var(--brand-2));
-      color:#fff;border-bottom:1px solid #0001}
-    .topbar .inner{max-width:720px;margin:0 auto;padding:12px 14px;
-      display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
-    .logo{height:26px;flex:0 0 auto}
-    .titlebox{display:flex;flex-direction:column;gap:2px;align-items:center}
-    .appname{font-weight:700;letter-spacing:.2px}
-    .tagline{opacity:.95;font-size:12.5px}
+  /* Top controls */
+  .topbar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin:6px 0 14px
+  }
+  .pill{
+    background:linear-gradient(180deg,#151e29,#0f1620);border:1px solid var(--line);padding:10px 14px;border-radius:999px;
+    display:inline-flex;gap:10px;align-items:center;box-shadow:var(--shadow)
+  }
+  .switch{
+    position:relative;width:54px;height:30px;background:#0b1119;border:1px solid var(--line);border-radius:999px;cursor:pointer;
+  }
+  .switch input{display:none}
+  .knob{
+    position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--ink);transition:.24s;
+  }
+  .switch input:checked + .knob{left:27px;background:var(--accent)}
+  .tip{color:var(--muted);font-size:12px}
 
-    .pillbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px}
-    .pill{background:var(--chip-bg);border:1px solid var(--chip-line);
-      padding:6px 10px;border-radius:999px;font-size:12.5px}
+  /* Cards / sections */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:var(--pad);box-shadow:var(--shadow);margin:12px 0;
+  }
+  .card h2{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:10px}
+  .subtle{color:var(--muted);font-size:12px;margin:0 0 10px}
+  .row{display:grid;grid-template-columns:1fr auto auto auto 38px;gap:8px;align-items:center;margin:8px 0}
+  .row.debt{grid-template-columns:1fr 76px 92px 70px 38px}
+  .hdr{color:var(--muted);font-size:11px;margin:6px 0 4px;letter-spacing:.35px;text-transform:uppercase}
 
-    .card{background:var(--card);border:1px solid var(--line);
-      border-radius:12px;padding:14px;margin:12px 0}
-    .sec-title{font-weight:700;margin-bottom:10px}
-    .row{display:grid;grid-template-columns:1fr 110px 120px 120px;
-      gap:8px;align-items:center}
-    .row.header{color:var(--muted);font-size:12px}
-    .row+.row{margin-top:8px}
-    .chipbtn{background:var(--btn);border:1px solid var(--btn-line);
-      color:var(--btn-ink);padding:8px 12px;border-radius:10px;cursor:pointer}
-    .chipbtn:focus{outline:2px solid var(--focus)}
+  input,select,button{
+    font:inherit;color:var(--ink);background:#0b1119;border:1px solid var(--line);border-radius:10px;padding:10px 10px;
+  }
+  input:focus,select:focus,button:focus{outline:none;box-shadow:var(--focus)}
+  input::placeholder{color:#5f7286}
 
-    .monolabel{font-weight:700;color:var(--muted);margin:4px 0 8px}
+  .btn{background:#0f1620;border:1px solid var(--line);padding:10px 12px;border-radius:10px;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#0b5d73,#094a5b);border-color:#0b5d73}
+  .btn.good{background:linear-gradient(180deg,#0b5b3a,#0a4a30);border-color:#0b5b3a}
+  .btn.danger{background:linear-gradient(180deg,#7a2222,#5b1313);border-color:#7a2222}
+  .btn.small{padding:8px 10px;font-size:14px}
+  .icon-btn{width:38px;height:38px;display:inline-grid;place-items:center;border-radius:10px;background:#0f1620;border:1px solid var(--line);cursor:pointer}
 
-    input,select{width:100%;box-sizing:border-box;border:1px solid var(--line);
-      background:#fff;color:var(--ink);border-radius:10px;padding:10px;font-size:14px}
-    input:focus,select:focus{outline:2px solid var(--focus)}
+  /* Name input that expands on focus and compacts on blur */
+  .compact-name{
+    width:4ch;transition:width .2s ease;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .compact-name:focus{width:min(70vw,28ch)}
+  .wide-on-focus:focus{width:min(70vw,36ch)}
 
-    .footbar{position:sticky;bottom:0;background:var(--card);
-      border-top:1px solid var(--line);padding:10px;display:flex;gap:8px;justify-content:space-between}
+  .money{text-align:right}
+  .unit{font-size:12px;color:var(--muted);margin-left:4px}
 
-    .help-fab{position:fixed;right:14px;bottom:88px;z-index:25;
-      background:var(--brand);color:#fff;border:none;border-radius:999px;
-      padding:12px 14px;box-shadow:0 6px 18px #0003}
+  /* Guided Mode */
+  .guided-overlay{
+    position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;
+  }
+  .guided-overlay.show{display:flex}
+  .guided-head{
+    padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between
+  }
+  .guided-title{font-weight:700}
+  .guided-body{flex:1;overflow:auto;padding:16px}
+  .guided-nav{
+    padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;background:linear-gradient(180deg,#101824,#0b1119)
+  }
+  .step-ind{font-size:12px;color:var(--muted)}
+  .hidden{display:none !important}
 
-    /* Guided overlay */
-    .overlay{position:fixed;inset:0;background:#0008;display:none;z-index:30}
-    .overlay .panel{position:absolute;left:0;right:0;bottom:0;background:#fff;
-      color:#000;border-radius:18px 18px 0 0;padding:18px}
-    .overlay h3{margin:0 0 6px}
-    .overlay p{margin:0 0 12px;color:#333}
-    .overlay .actions{display:flex;gap:10px}
-    .overlay button{padding:10px 12px;border-radius:10px;border:1px solid #ddd;cursor:pointer}
+  /* Footer space for mobile */
+  .spacer{height:80px}
+  .bottom-bar{
+    position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(180deg,#141c28,#0b1119);border:1px solid var(--line);border-radius:999px;padding:8px 10px;
+    display:flex;gap:8px;z-index:20;box-shadow:var(--shadow)
+  }
 
-    @media (max-width:480px){
-      .row{grid-template-columns:1fr 90px 100px 100px}
-    }
-  </style>
+  @media (min-width:900px){
+    .row{grid-template-columns:2fr auto auto auto 38px}
+    .row.debt{grid-template-columns:2fr 90px 120px 80px 38px}
+  }
+</style>
 </head>
 <body>
+<div class="wrap" id="app">
 
-  <!-- Top header -->
-  <header class="topbar">
-    <div class="inner">
-      <img class="logo" src="icons/app-h3-cube-contrast-Hwhite.svg" alt="H³">
-      <div class="titlebox">
-        <div class="appname">H³ Budget Tool</div>
-        <div class="tagline">Private • Goal-Focused • Offline •</div>
+  <div class="header">
+    <div class="brand">
+      <div class="cube" aria-hidden="true"></div>
+      <div class="title-row">
+        <div class="title">H³ Budget Tool</div>
       </div>
     </div>
-  </header>
-
-  <main class="container">
-
-    <!-- Personalize -->
-    <section class="card">
-      <div class="sec-title">Personalize</div>
-      <div class="row">
-        <label>Display Name</label>
-        <input id="displayName" placeholder="Your name">
-        <div style="grid-column: span 2; display:flex;align-items:center;gap:10px">
-          <label for="guidedToggle" style="font-weight:700;color:var(--muted)">Guided Mode</label>
-          <select id="guidedToggle">
-            <option value="on">ON</option>
-            <option value="off">OFF</option>
-          </select>
-        </div>
-      </div>
-    </section>
-
-    <!-- Income -->
-    <section class="card" id="sec-income">
-      <div class="sec-title">Income</div>
-      <div class="monolabel">Monthly Income</div>
-      <div class="row header">
-        <div>Source</div><div>Freq</div><div>Per Pay</div><div>Monthly</div>
-      </div>
-      <div id="incomeRows"></div>
-      <div class="pillbar">
-        <button class="chipbtn" id="addIncome">+ Add income source</button>
-        <button class="chipbtn" id="editIncome">Edit</button>
-      </div>
-    </section>
-
-    <!-- Essentials -->
-    <section class="card" id="sec-essentials">
-      <div class="sec-title">Essentials</div>
-      <div class="monolabel">Monthly Essentials</div>
-      <div class="row header">
-        <div>Item</div><div>Freq</div><div>Per Pay</div><div>Monthly</div>
-      </div>
-      <div id="essRows"></div>
-      <div class="pillbar">
-        <button class="chipbtn" id="addEss">+ Add expense</button>
-        <button class="chipbtn" id="editEss">Edit</button>
-      </div>
-    </section>
-
-    <!-- Debts -->
-    <section class="card" id="sec-debts">
-      <div class="sec-title">Debts</div>
-      <div class="row header">
-        <div>Name</div><div>APR %</div><div>Balance</div><div>Min Pay</div>
-      </div>
-      <div id="debtRows"></div>
-      <div class="pillbar">
-        <button class="chipbtn" id="addDebt">+ Add debt</button>
-        <button class="chipbtn" id="editDebt">Edit</button>
-      </div>
-    </section>
-
-    <!-- Goal -->
-    <section class="card" id="sec-goal">
-      <div class="sec-title">Goal</div>
-      <div class="row">
-        <label>What are you saving for?</label>
-        <input id="goalName" placeholder="e.g., Down payment">
-        <label>Target date</label>
-        <input id="goalDate" type="date">
-      </div>
-    </section>
-
-    <!-- Summary -->
-    <section class="card" id="sec-summary">
-      <div class="sec-title">Plan Summary</div>
-      <div id="summaryText">Enter income, essentials, debts, and a goal to see your plan.</div>
-    </section>
-
-  </main>
-
-  <!-- Sticky footer actions -->
-  <footer class="footbar">
-    <button class="chipbtn" id="saveBtn">Save</button>
-    <button class="chipbtn" id="shareBtn">Share</button>
-    <button class="chipbtn" id="exportBtn">Export JSON</button>
-  </footer>
-
-  <!-- Help FAB -->
-  <button class="help-fab" id="helpFab">?</button>
-
-  <!-- Guided overlay -->
-  <div class="overlay" id="guide">
-    <div class="panel">
-      <h3 id="guideTitle">Welcome</h3>
-      <p id="guideBody">Guided Mode explains each field and takes you step-by-step.</p>
-      <div class="actions">
-        <button id="guideBack">Back</button>
-        <button id="guideNext" style="background:#0f9a9b;color:#fff;border-color:#0f9a9b">Next</button>
-        <button id="guideClose">Close</button>
-      </div>
+    <div class="tagline">
+      <span>Private</span><span>Goal-Focused</span><span>Offline</span>
     </div>
   </div>
 
-  <script>
-  ;(()=>{
+  <div class="topbar">
+    <div class="pill">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <span style="font-weight:600">Guided Mode</span>
+        <span class="switch">
+          <input type="checkbox" id="guidedToggle">
+          <span class="knob"></span>
+        </span>
+      </label>
+    </div>
+    <div class="pill">
+      <label style="display:flex;align-items:center;gap:10px">
+        <span>Display Name</span>
+        <input id="displayName" class="wide-on-focus" placeholder="Your name" style="min-width:160px">
+      </label>
+    </div>
+  </div>
 
-    const $ = s=>document.querySelector(s);
-    const $$ = s=>document.querySelectorAll(s);
+  <!-- Income -->
+  <section class="card" id="sec-income">
+    <h2>Income</h2>
+    <p class="subtle">Add each paycheck or income source (net / take-home).</p>
+    <div class="hdr">Source</div>
+    <div class="row" style="grid-template-columns:2fr 140px 140px 1fr 38px">
+      <div class="hdr">Name</div><div class="hdr">Frequency</div><div class="hdr">Per Pay</div><div class="hdr" style="text-align:right">Monthly</div><div></div>
+    </div>
+    <div id="incomeList"></div>
+    <button class="btn small good" id="addIncomeBtn">+ Add Income Source</button>
+    <div style="margin-top:10px;text-align:right;color:var(--muted)">
+      <strong style="color:var(--ink)">Monthly Income Total:</strong> <span id="incomeTotal">$0.00</span>
+    </div>
+  </section>
 
-    // --- State ---
-    let state = {
-      name:"",
-      guided:"on",
-      income:[],
-      essentials:[],
-      debts:[],
-      goal:{ name:"", date:"" }
-    };
+  <!-- Essentials -->
+  <section class="card" id="sec-essentials">
+    <h2>Essentials</h2>
+    <p class="subtle">Add recurring monthly essentials (rent, utilities, insurance, etc.).</p>
+    <div class="row" style="grid-template-columns:2fr 1fr 38px">
+      <div class="hdr">Name</div><div class="hdr" style="text-align:right">Monthly</div><div></div>
+    </div>
+    <div id="essentialsList"></div>
+    <button class="btn small good" id="addEssBtn">+ Add Expense</button>
+    <div style="margin-top:10px;text-align:right;color:var(--muted)">
+      <strong style="color:var(--ink)">Monthly Essentials Total:</strong> <span id="essTotal">$0.00</span>
+    </div>
+  </section>
 
-    // --- Load / Save ---
-    const KEY='h3xt0.v1';
-    function load(){
-      try{
-        const raw=localStorage.getItem(KEY);
-        if(raw){ state=JSON.parse(raw); }
-      }catch(e){}
-      $('#displayName').value = state.name||"";
-      $('#guidedToggle').value = state.guided||"on";
-      $('#goalName').value = state.goal?.name||"";
-      $('#goalDate').value = state.goal?.date||"";
-      renderAll();
-    }
-    function save(){
-      state.name = $('#displayName').value.trim();
-      state.guided = $('#guidedToggle').value;
-      state.goal = { name:$('#goalName').value.trim(), date:$('#goalDate').value };
-      localStorage.setItem(KEY, JSON.stringify(state));
-      renderAll();
-    }
+  <!-- Debts -->
+  <section class="card" id="sec-debts">
+    <h2>Debts</h2>
+    <p class="subtle">Add debts to plan avalanche paydown (higher APRs first by default).</p>
+    <div class="row debt">
+      <div class="hdr">Name</div>
+      <div class="hdr" style="text-align:right">APR %</div>
+      <div class="hdr" style="text-align:right">Balance</div>
+      <div class="hdr" style="text-align:right">Term (m)</div>
+      <div></div>
+    </div>
+    <div id="debtsList"></div>
+    <button class="btn small good" id="addDebtBtn">+ Add Debt</button>
+  </section>
 
-    // --- Formatters ---
-    const fmtMoney = v => {
-      const n = +v||0;
-      return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
-    };
+  <!-- Goal -->
+  <section class="card" id="sec-goal">
+    <h2>Goal</h2>
+    <div class="row" style="grid-template-columns:2fr 1fr 1fr">
+      <div>
+        <div class="hdr">Goal Name</div>
+        <input id="goalName" class="wide-on-focus" placeholder="e.g., Car fund">
+      </div>
+      <div>
+        <div class="hdr">Amount</div>
+        <input id="goalAmt" class="money" placeholder="$0.00">
+      </div>
+      <div>
+        <div class="hdr">Target Date</div>
+        <input id="goalDate" type="date">
+      </div>
+    </div>
+  </section>
 
-    // --- Rows renderers ---
-    function renderIncome(){
-      const wrap = $('#incomeRows'); wrap.innerHTML='';
-      (state.income||[]).forEach((r,i)=>{
-        const row = document.createElement('div'); row.className='row';
-        row.innerHTML = `
-          <input value="${r.src||''}" placeholder="Employer / source">
-          <select>
-            <option value="monthly"${r.freq==='monthly'?' selected':''}>Monthly</option>
-            <option value="biweekly"${r.freq==='biweekly'?' selected':''}>Bi-weekly</option>
-            <option value="semimonthly"${r.freq==='semimonthly'?' selected':''}>Semi-monthly</option>
-          </select>
-          <input value="${r.per||''}" inputmode="decimal" placeholder="$ per pay">
-          <input value="${r.mon||''}" inputmode="decimal" placeholder="$ monthly">
-        `;
-        wrap.appendChild(row);
-      });
-    }
-    function renderEss(){
-      const wrap = $('#essRows'); wrap.innerHTML='';
-      (state.essentials||[]).forEach((r,i)=>{
-        const row = document.createElement('div'); row.className='row';
-        row.innerHTML = `
-          <input value="${r.item||''}" placeholder="Bill / expense">
-          <select>
-            <option value="monthly"${r.freq==='monthly'?' selected':''}>Monthly</option>
-            <option value="biweekly"${r.freq==='biweekly'?' selected':''}>Bi-weekly</option>
-            <option value="semimonthly"${r.freq==='semimonthly'?' selected':''}>Semi-monthly</option>
-          </select>
-          <input value="${r.per||''}" inputmode="decimal" placeholder="$ per pay">
-          <input value="${r.mon||''}" inputmode="decimal" placeholder="$ monthly">
-        `;
-        wrap.appendChild(row);
-      });
-    }
-    function renderDebts(){
-      const wrap = $('#debtRows'); wrap.innerHTML='';
-      (state.debts||[]).forEach((r,i)=>{
-        const row = document.createElement('div'); row.className='row';
-        row.innerHTML = `
-          <input value="${r.name||''}" placeholder="Debt name">
-          <input value="${r.apr||''}" inputmode="decimal" placeholder="APR %">
-          <input value="${r.bal||''}" inputmode="decimal" placeholder="Balance">
-          <input value="${r.min||''}" inputmode="decimal" placeholder="Min pay">
-        `;
-        wrap.appendChild(row);
-      });
-    }
-    function renderSummary(){
-      const inc = (state.income||[]).reduce((s,r)=>s+(+r.mon||0),0);
-      const ess = (state.essentials||[]).reduce((s,r)=>s+(+r.mon||0),0);
-      const min = (state.debts||[]).reduce((s,r)=>s+(+r.min||0),0);
-      const left = inc - ess - min;
-      $('#summaryText').textContent =
-        `Monthly: Income ${fmtMoney(inc)} • Essentials ${fmtMoney(ess)} • Debt mins ${fmtMoney(min)} → Leftover ${fmtMoney(left)}.`;
-    }
-    function renderAll(){
-      $('.appname').textContent = 'H³ Budget Tool' + (state.name?` — ${state.name}`:'');
-      renderIncome(); renderEss(); renderDebts(); renderSummary();
-    }
+  <!-- Summary -->
+  <section class="card" id="sec-summary">
+    <h2>Plan Summary</h2>
+    <div id="summaryText" class="subtle">Fill in your details to see plan highlights here.</div>
+  </section>
 
-    // --- Buttons ---
-    $('#addIncome').onclick = ()=>{
-      (state.income = state.income||[]).push({src:'',freq:'monthly',per:'',mon:''});
+  <div class="spacer"></div>
+  <div class="bottom-bar">
+    <button class="btn small" id="saveBtn">Save</button>
+    <button class="btn small" id="shareBtn">Share</button>
+    <button class="btn small" id="exportBtn">Export JSON</button>
+  </div>
+</div>
+
+<!-- Guided overlay -->
+<div class="guided-overlay" id="guidedOverlay" aria-hidden="true">
+  <div class="guided-head">
+    <div>
+      <div class="guided-title" id="guidedTitle">Guided Setup</div>
+      <div class="step-ind" id="stepInd">Step 1 of 5</div>
+    </div>
+    <button class="btn small danger" id="exitGuidedBtn">Exit</button>
+  </div>
+  <div class="guided-body">
+    <!-- We’ll show the real sections here (not dummy text) by toggling visibility -->
+    <section id="g-income"></section>
+    <section id="g-essentials" class="hidden"></section>
+    <section id="g-debts" class="hidden"></section>
+    <section id="g-goal" class="hidden"></section>
+    <section id="g-review" class="hidden">
+      <div class="card">
+        <h2>Review</h2>
+        <p class="subtle">Looks good? You can adjust anything later from the main screen.</p>
+        <div id="reviewText" style="white-space:pre-wrap"></div>
+      </div>
+    </section>
+  </div>
+  <div class="guided-nav">
+    <button class="btn small" id="backStepBtn">Back</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn small" id="cancelStepBtn">Cancel</button>
+      <button class="btn small primary" id="nextStepBtn">Next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============= STATE ============= */
+const $ = (q,ctx=document)=>ctx.querySelector(q);
+const $$ = (q,ctx=document)=>Array.from(ctx.querySelectorAll(q));
+
+const state = {
+  displayName: '',
+  incomes: [],       // {id, name, freq, per, monthly}
+  essentials: [],    // {id, name, monthly}
+  debts: [],         // {id, name, apr, balance, term}
+  goal: { name:'', amount:0, date:'' }
+};
+
+const FREQS = [
+  {v:'monthly', label:'Monthly', mult:1},
+  {v:'semi-monthly', label:'Semi-Monthly (24/yr)', mult:24/12},
+  {v:'biweekly', label:'Bi-Weekly (26/yr)', mult:26/12},
+  {v:'weekly', label:'Weekly (52/yr)', mult:52/12},
+];
+
+/* ============= UTIL ============= */
+const uid = ()=>Math.random().toString(36).slice(2,9);
+const toNum = (s)=> {
+  if (typeof s === 'number') return s;
+  if (!s) return 0;
+  return parseFloat(String(s).replace(/[^0-9.-]/g,''))||0;
+};
+const fmtMoney = (n)=>
+  (isNaN(n)?0:n).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+const monthlyFrom = (freq, per)=>{
+  const f = FREQS.find(x=>x.v===freq) || FREQS[0];
+  return toNum(per) * f.mult;
+};
+
+/* ============= STORAGE ============= */
+const load = ()=>{
+  try {
+    const raw = localStorage.getItem('h3x-budget');
+    if (!raw) return;
+    const j = JSON.parse(raw);
+    Object.assign(state, j);
+  } catch(e){}
+};
+const save = ()=>{
+  localStorage.setItem('h3x-budget', JSON.stringify(state));
+};
+
+/* ============= RENDER ROW HELPERS ============= */
+function nameInput(value='', extraClasses='compact-name'){
+  const el = document.createElement('input');
+  el.placeholder = 'Name';
+  el.value = value || '';
+  el.className = extraClasses;
+  el.addEventListener('focus', ()=> {
+    el.dataset.prevWidth = el.style.width;
+    el.style.width = 'min(70vw, 28ch)';
+  });
+  el.addEventListener('blur', ()=> {
+    el.style.width = '4ch';
+  });
+  return el;
+}
+function moneyInput(value=''){
+  const el = document.createElement('input');
+  el.className = 'money';
+  el.placeholder = '$0.00';
+  el.inputMode = 'decimal';
+  el.autocomplete = 'off';
+  // show raw number while typing
+  el.addEventListener('focus', ()=>{
+    const val = toNum(el.value);
+    el.value = val ? String(val) : '';
+    el.select();
+  });
+  el.addEventListener('blur', ()=>{
+    const n = toNum(el.value);
+    el.value = n ? fmtMoney(n) : '$0.00';
+  });
+  el.value = value ? fmtMoney(toNum(value)) : '';
+  return el;
+}
+function freqSelect(value='monthly'){
+  const sel = document.createElement('select');
+  FREQS.forEach(f=>{
+    const o = document.createElement('option');
+    o.value=f.v; o.textContent = f.label;
+    if (f.v===value) o.selected=true;
+    sel.appendChild(o);
+  });
+  return sel;
+}
+function iconDel(onClick){
+  const b = document.createElement('button');
+  b.className = 'icon-btn';
+  b.title='Delete';
+  b.innerHTML = '🗑️';
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+/* ============= RENDER SECTIONS ============= */
+function renderIncome(){
+  const wrap = $('#incomeList');
+  wrap.innerHTML='';
+  let total=0;
+  state.incomes.forEach(item=>{
+    const row = document.createElement('div');
+    row.className='row';
+
+    const nameEl = nameInput(item.name);
+    const sel = freqSelect(item.freq);
+    const perEl = moneyInput(item.per);
+    const monthlyEl = document.createElement('div');
+    monthlyEl.style.textAlign='right';
+    monthlyEl.style.paddingRight='6px';
+
+    const del = iconDel(()=>{
+      state.incomes = state.incomes.filter(x=>x.id!==item.id);
+      save(); renderIncome(); renderSummary();
+    });
+
+    function recalc(){
+      const m = monthlyFrom(sel.value, toNum(perEl.value));
+      monthlyEl.textContent = fmtMoney(m);
+      item.name = nameEl.value.trim();
+      item.freq = sel.value;
+      item.per = toNum(perEl.value);
+      item.monthly = m;
       save();
-    };
-    $('#editIncome').onclick = ()=> alert('Edit mode coming soon');
-    $('#addEss').onclick = ()=>{
-      (state.essentials = state.essentials||[]).push({item:'',freq:'monthly',per:'',mon:''});
-      save();
-    };
-    $('#editEss').onclick = ()=> alert('Edit mode coming soon');
-    $('#addDebt').onclick = ()=>{
-      (state.debts = state.debts||[]).push({name:'',apr:'',bal:'',min:''});
-      save();
-    };
-    $('#editDebt').onclick = ()=> alert('Edit mode coming soon');
-
-    $('#saveBtn').onclick = save;
-    $('#exportBtn').onclick = ()=>{
-      save();
-      const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'h3-budget.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    };
-    $('#shareBtn').onclick = ()=>{
-      save();
-      const enc = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
-      const url = location.origin + location.pathname + '#d=' + enc;
-      if(navigator.share){
-        navigator.share({title:'H³ Budget Tool', text:'My plan', url});
-      }else{
-        prompt('Copy this link', url);
-      }
-    };
-
-    // Guided mode overlay (simple stepper)
-    const steps = [
-      {t:'Income', b:'Add your income sources. Use Per Pay or Monthly — whichever is easiest.'},
-      {t:'Essentials', b:'Add your essential bills (rent, utilities, etc.).'},
-      {t:'Debts', b:'List debts with APR, balance, and minimum payment.'},
-      {t:'Goal', b:'Name your goal and choose a target date.'},
-      {t:'Summary', b:'Review the monthly picture and adjust as needed.'}
-    ];
-    let ix=0;
-    function showGuide(show){
-      $('#guide').style.display = show?'block':'none';
-      if(show){ ix=0; paintStep(); }
-    }
-    function paintStep(){
-      $('#guideTitle').textContent = steps[ix].t;
-      $('#guideBody').textContent  = steps[ix].b;
-    }
-    $('#guidedToggle').onchange = (e)=> {
-      state.guided = e.target.value; save();
-      if(state.guided==='on') showGuide(true); else showGuide(false);
-    };
-    $('#helpFab').onclick = ()=> showGuide(true);
-    $('#guideBack').onclick = ()=>{ ix=Math.max(0,ix-1); paintStep(); };
-    $('#guideNext').onclick = ()=>{ ix=Math.min(steps.length-1,ix+1); paintStep(); };
-    $('#guideClose').onclick = ()=> showGuide(false);
-
-    // Handle shared state via URL hash
-    (function tryImportFromHash(){
-      const m = location.hash.match(/#d=([^&]+)/);
-      if(m){
-        try{
-          const json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
-          const obj = JSON.parse(json);
-          if(obj && typeof obj==='object'){ state = Object.assign(state,obj); save(); location.hash=''; }
-        }catch(e){}
-      }
-    })();
-
-    // Init
-    load();
-
-    // Register service worker (bump query to force update)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=23').catch(()=>{});
+      renderSummary();
     }
 
-  })();
-  </script>
+    nameEl.addEventListener('input', recalc);
+    sel.addEventListener('change', recalc);
+    perEl.addEventListener('blur', recalc);
+    perEl.addEventListener('input', ()=>{}); // keep raw while typing
+
+    // initial
+    recalc();
+
+    row.append(nameEl, sel, perEl, monthlyEl, del);
+    wrap.appendChild(row);
+
+    total += item.monthly||0;
+  });
+  $('#incomeTotal').textContent = fmtMoney(total);
+}
+
+function renderEssentials(){
+  const wrap = $('#essentialsList');
+  wrap.innerHTML='';
+  let total=0;
+  state.essentials.forEach(item=>{
+    const row = document.createElement('div');
+    row.className='row';
+    row.style.gridTemplateColumns='2fr 1fr 38px';
+
+    const nameEl = nameInput(item.name);
+    const amtEl = moneyInput(item.monthly);
+
+    const del = iconDel(()=>{
+      state.essentials = state.essentials.filter(x=>x.id!==item.id);
+      save(); renderEssentials(); renderSummary();
+    });
+
+    function recalc(){
+      item.name = nameEl.value.trim();
+      item.monthly = toNum(amtEl.value);
+      save(); renderSummary();
+    }
+    nameEl.addEventListener('input', recalc);
+    amtEl.addEventListener('blur', recalc);
+
+    row.append(nameEl, amtEl, del);
+    wrap.appendChild(row);
+    total += item.monthly||0;
+  });
+  $('#essTotal').textContent = fmtMoney(total);
+}
+
+function renderDebts(){
+  const wrap = $('#debtsList');
+  wrap.innerHTML='';
+  state.debts.forEach(item=>{
+    const row = document.createElement('div');
+    row.className='row debt';
+
+    const nameEl = nameInput(item.name);
+    const aprEl = document.createElement('input');
+    aprEl.inputMode='decimal'; aprEl.placeholder='0'; aprEl.style.textAlign='right';
+    aprEl.value = item.apr ?? '';
+    const balEl = moneyInput(item.balance);
+    const termEl = document.createElement('input');
+    termEl.inputMode='numeric'; termEl.placeholder='0'; termEl.style.textAlign='right';
+    termEl.value = item.term ?? '';
+
+    const del = iconDel(()=>{
+      state.debts = state.debts.filter(x=>x.id!==item.id);
+      save(); renderDebts(); renderSummary();
+    });
+
+    function recalc(){
+      item.name = nameEl.value.trim();
+      item.apr = toNum(aprEl.value);
+      item.balance = toNum(balEl.value);
+      item.term = parseInt(termEl.value||'0',10) || 0;
+      save(); renderSummary();
+    }
+    nameEl.addEventListener('input', recalc);
+    aprEl.addEventListener('input', recalc);
+    balEl.addEventListener('blur', recalc);
+    termEl.addEventListener('input', recalc);
+
+    row.append(nameEl, aprEl, balEl, termEl, del);
+    wrap.appendChild(row);
+  });
+}
+
+/* ============= SUMMARY (simple) ============= */
+function renderSummary(){
+  const inc = state.incomes.reduce((a,b)=>a+(b.monthly||0),0);
+  const ess = state.essentials.reduce((a,b)=>a+(b.monthly||0),0);
+  const free = inc - ess;
+
+  let line1 = `${state.displayName?state.displayName+"'s ":""}Plan: ${fmtMoney(inc)} income – ${fmtMoney(ess)} essentials = ${fmtMoney(free)} free cash.`;
+  const goal = state.goal;
+  if (goal.amount && goal.date){
+    const monthsLeft = Math.max(1, Math.ceil((new Date(goal.date)-new Date())/(1000*60*60*24*30)));
+    const perMonth = toNum(goal.amount)/monthsLeft;
+    line1 += ` Goal “${goal.name||'Goal'}” needs ~${fmtMoney(perMonth)}/mo for ${monthsLeft} mo.`;
+  }
+  $('#summaryText').textContent = line1;
+
+  // Guided review text
+  $('#reviewText').textContent =
+`Income: ${fmtMoney(inc)}
+Essentials: ${fmtMoney(ess)}
+Free cash: ${fmtMoney(free)}
+Goal: ${goal.name||'-'}  Amount: ${fmtMoney(toNum(goal.amount))}  Date: ${goal.date||'-'}`;
+}
+
+/* ============= GUIDED MODE ============= */
+const steps = [
+  { id:'g-income',      title:'Income',      section:'#sec-income' },
+  { id:'g-essentials',  title:'Essentials',  section:'#sec-essentials' },
+  { id:'g-debts',       title:'Debts',       section:'#sec-debts' },
+  { id:'g-goal',        title:'Goal',        section:'#sec-goal' },
+  { id:'g-review',      title:'Review',      section:null }
+];
+let stepIdx = 0;
+
+function enterGuided(){
+  // Hide main sections
+  ['#sec-income','#sec-essentials','#sec-debts','#sec-goal','#sec-summary'].forEach(sel=>{
+    $(sel).classList.add('hidden');
+  });
+  // Mount the actual sections into guided containers (not clones, so edits persist)
+  $('#g-income').append( $('#sec-income') );
+  $('#g-essentials').append( $('#sec-essentials') );
+  $('#g-debts').append( $('#sec-debts') );
+  $('#g-goal').append( $('#sec-goal') );
+  $('#guidedOverlay').classList.add('show');
+  stepIdx = 0;
+  showStep();
+}
+function exitGuided(){
+  // Move sections back into the main flow (before summary)
+  const root = $('.wrap');
+  const summary = $('#sec-summary');
+  root.insertBefore($('#sec-income'), summary);
+  root.insertBefore($('#sec-essentials'), summary);
+  root.insertBefore($('#sec-debts'), summary);
+  root.insertBefore($('#sec-goal'), summary);
+
+  // Unhide main
+  ['#sec-income','#sec-essentials','#sec-debts','#sec-goal','#sec-summary'].forEach(sel=>{
+    $(sel).classList.remove('hidden');
+  });
+  // Hide overlay
+  $('#guidedOverlay').classList.remove('show');
+}
+function showStep(){
+  // toggle containers
+  steps.forEach((s,i)=>{
+    const el = $('#'+s.id);
+    if (!el) return;
+    if (i===stepIdx) el.classList.remove('hidden'); else el.classList.add('hidden');
+  });
+  $('#guidedTitle').textContent = steps[stepIdx].title;
+  $('#stepInd').textContent = `Step ${stepIdx+1} of ${steps.length}`;
+  // buttons
+  $('#backStepBtn').disabled = (stepIdx===0);
+  $('#nextStepBtn').textContent = (stepIdx===steps.length-1) ? 'Finish' : 'Next';
+}
+
+/* ============= EVENTS & INIT ============= */
+function addIncome(){
+  state.incomes.push({id:uid(), name:'', freq:'monthly', per:0, monthly:0});
+  save(); renderIncome();
+}
+function addEssential(){
+  state.essentials.push({id:uid(), name:'', monthly:0});
+  save(); renderEssentials();
+}
+function addDebt(){
+  state.debts.push({id:uid(), name:'', apr:0, balance:0, term:0});
+  save(); renderDebts();
+}
+
+function bind(){
+  // top controls
+  $('#displayName').value = state.displayName||'';
+  $('#displayName').addEventListener('input', ()=>{
+    state.displayName = $('#displayName').value.trim();
+    save(); renderSummary();
+  });
+
+  // add buttons
+  $('#addIncomeBtn').addEventListener('click', addIncome);
+  $('#addEssBtn').addEventListener('click', addEssential);
+  $('#addDebtBtn').addEventListener('click', addDebt);
+
+  // goal fields
+  $('#goalName').value = state.goal.name||'';
+  $('#goalAmt').value = state.goal.amount?fmtMoney(state.goal.amount):'';
+  $('#goalDate').value = state.goal.date||'';
+  $('#goalName').addEventListener('input', ()=>{ state.goal.name=$('#goalName').value.trim(); save(); renderSummary(); });
+  $('#goalAmt').addEventListener('focus', ()=>{
+    const v = toNum($('#goalAmt').value); $('#goalAmt').value = v ? String(v) : '';
+  });
+  $('#goalAmt').addEventListener('blur', ()=>{
+    state.goal.amount = toNum($('#goalAmt').value); $('#goalAmt').value = fmtMoney(state.goal.amount); save(); renderSummary();
+  });
+  $('#goalDate').addEventListener('change', ()=>{ state.goal.date=$('#goalDate').value; save(); renderSummary(); });
+
+  // save / share / export
+  $('#saveBtn').addEventListener('click', ()=>{ save(); alert('Saved on this device ✅'); });
+  $('#exportBtn').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'h3-budget-plan.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  $('#shareBtn').addEventListener('click', ()=>{
+    const data = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
+    const url = location.origin + '/H3_Budget_App/budget.html#s=' + data;
+    if (navigator.share){
+      navigator.share({title:'H³ Budget Plan', url});
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('Link copied to clipboard');
+    }
+  });
+
+  // guided
+  $('#guidedToggle').addEventListener('change', (e)=>{
+    if (e.target.checked) enterGuided(); else exitGuided();
+  });
+  $('#exitGuidedBtn').addEventListener('click', ()=>{
+    $('#guidedToggle').checked=false; exitGuided();
+  });
+  $('#cancelStepBtn').addEventListener('click', ()=>{
+    $('#guidedToggle').checked=false; exitGuided();
+  });
+  $('#backStepBtn').addEventListener('click', ()=>{
+    if (stepIdx>0){ stepIdx--; showStep(); }
+  });
+  $('#nextStepBtn').addEventListener('click', ()=>{
+    if (stepIdx<steps.length-1){ stepIdx++; showStep(); }
+    else { // finish
+      $('#guidedToggle').checked=false; exitGuided();
+    }
+  });
+}
+
+/* ============= LOAD FROM HASH (share) ============= */
+function tryImportFromHash(){
+  if (location.hash.startsWith('#s=')){
+    try{
+      const b64 = decodeURIComponent(location.hash.slice(3));
+      const json = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      Object.assign(state,json);
+      save();
+      location.hash='';
+    }catch(e){}
+  }
+}
+
+/* ============= BOOT ============= */
+load();
+tryImportFromHash();
+bind();
+renderIncome();
+renderEssentials();
+renderDebts();
+renderSummary();
+
+/* ============= Service Worker (optional) ============= */
+if ('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/H3_Budget_App/sw.js?ver=24').catch(()=>{});
+}
+</script>
 </body>
 </html>
-
-
-
