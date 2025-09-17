@@ -60,7 +60,7 @@
     .row .trash{justify-self:auto}
   }
 
-  /* totals line (inside card, right aligned) */
+  /* totals line */
   .totals{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:6px}
   .totals b{font-size:16px}
   .totals .amt{font-weight:800}
@@ -212,6 +212,8 @@
       </div>
       <div class="bar"><span id="goalBar" style="width:0%"></span></div>
       <div id="goalLine" class="sub" style="margin-top:6px">$0.00 of $0.00 (0%)</div>
+      <!-- NEW: concise per-pay suggestion -->
+      <div id="goalAdvice" class="sub" style="margin-top:6px"></div>
     </div>
 
     <div class="pill" id="avalancheBox">
@@ -430,6 +432,17 @@ function avalanchePick(){
   if (!list.length) return null;
   return list.sort((a,b)=>toNum(b.apr)-toNum(a.apr))[0];
 }
+
+/* months between now and date (ceil, min 1) */
+function monthsUntil(dateStr){
+  const d = new Date(dateStr);
+  const now = new Date();
+  if (!dateStr || isNaN(d) || d <= now) return 0;
+  const ms = d - now;
+  const months = ms / (1000*60*60*24*(365.2425/12));
+  return Math.max(1, Math.ceil(months));
+}
+
 function calc(){
   const inc=incomeMonthly(), ess=essentialsMonthly();
   $('#incomeTotal').textContent=fmt.format(inc);
@@ -443,9 +456,31 @@ function calc(){
   $('#dtiPct').textContent=`${Math.round(dti)}%`;
   $('#dtiBar').style.width = clamp(dti,0,100)+'%';
 
-  const goalAmt=toNum(state.goal.amount), saved=0, gpct=goalAmt>0 ? Math.round((saved/goalAmt)*100):0;
+  const goalAmt=toNum(state.goal.amount), saved=0;
+  const gpct = goalAmt>0 ? Math.round((saved/goalAmt)*100):0;
   $('#goalPct').textContent=`${gpct}%`; $('#goalBar').style.width=gpct+'%';
   $('#goalLine').textContent=`${fmt.format(saved)} of ${fmt.format(goalAmt)} (${gpct}%)`;
+
+  /* NEW: per-pay suggestion for the goal */
+  let advice = '';
+  const monthsLeft = monthsUntil(state.goal.date);
+  if (!goalAmt){
+    advice = '';
+  } else if (!state.goal.date){
+    advice = 'Set a target date to get a per-pay savings suggestion.';
+  } else if (monthsLeft===0){
+    advice = 'Pick a future target date to get a per-pay savings suggestion.';
+  } else {
+    const paysLeft = Math.ceil(monthsLeft * (perYearFactor()/12));
+    const requiredPerPay = goalAmt / paysLeft;
+    const requiredPerMonth = requiredPerPay * (perYearFactor()/12);
+    const freePerPay = state.cadence==='monthly' ? free : (perYearFactor()/12>0 ? free/(perYearFactor()/12) : free);
+    advice = `To reach <b>${escapeHTML(state.goal.name||'your goal')}</b> by ${new Date(state.goal.date).toLocaleDateString()}: save <b>${fmt.format(requiredPerPay)}</b> per pay (≈ <b>${fmt.format(requiredPerMonth)}</b>/mo).`;
+    if (requiredPerPay > freePerPay + 1e-6){
+      advice += ` <span class="sub">Note: this exceeds your free cash (~${fmt.format(freePerPay)}/pay). Consider a later date or reducing expenses.</span>`;
+    }
+  }
+  $('#goalAdvice').innerHTML = advice;
 
   const cadenceLabel={monthly:'Monthly',biweekly:'Bi-Weekly',weekly:'Weekly',twicemonthly:'Twice-Monthly'}[state.cadence]||'Monthly';
   const pick=avalanchePick();
@@ -457,11 +492,14 @@ function calc(){
 
   if (pick){
     const nameHTML = `<span class="neutral">${escapeHTML(pick.name||'highest-APR debt')}</span>`;
-    text += `<p>Pay <b>${fmt.format(free)}</b> / mo (≈ <b>${fmt.format(perPay)}</b> per pay) `
-          + `toward ${nameHTML} first (avalanche).</p>`;
+    text += `<p>Pay <b>${fmt.format(free)}</b> / mo (≈ <b>${fmt.format(perPay)}</b> per pay) toward ${nameHTML} first (avalanche).</p>`;
   }else{
     text += `<p>Add at least one debt to see a recommendation.</p>`;
   }
+
+  /* add goal advice into Review panel too */
+  if (advice) text += `<p>${advice}</p>`;
+
   $('#avalancheText').innerHTML=text;
   $('#wizReview').innerHTML=text;
 
@@ -483,7 +521,7 @@ function render(){
   buildList('#essentialsList','essentials');
   buildList('#debtList','debts');
 
-  // wizard mirrors (fresh, bound rows)
+  // wizard mirrors
   buildList('#wizIncome','income');
   buildList('#wizEss','essentials');
   buildList('#wizDebts','debts');
@@ -511,11 +549,11 @@ $('#addDebt').onclick     = ()=>{ state.debts.push({name:'',apr:0,balance:0,term
 
 $('#goalName').oninput    = ()=>{ state.goal.name=$('#goalName').value; save(); };
 $('#goalAmount').onblur   = ()=>{ state.goal.amount=toNum($('#goalAmount').value); calc(); };
-$('#goalDate').onchange   = ()=>{ state.goal.date=$('#goalDate').value; save(); };
+$('#goalDate').onchange   = ()=>{ state.goal.date=$('#goalDate').value; save(); calc(); };
 
 $('#wizGoalName').oninput = ()=>{ state.goal.name=$('#wizGoalName').value; $('#goalName').value=state.goal.name; save(); };
 $('#wizGoalAmount').onblur= ()=>{ state.goal.amount=toNum($('#wizGoalAmount').value); $('#goalAmount').value=fmt.format(state.goal.amount); calc(); };
-$('#wizGoalDate').onchange= ()=>{ state.goal.date=$('#wizGoalDate').value; $('#goalDate').value=state.goal.date; save(); };
+$('#wizGoalDate').onchange= ()=>{ state.goal.date=$('#wizGoalDate').value; $('#goalDate').value=state.goal.date; save(); calc(); };
 
 $('#save').onclick   = ()=>{ save(); alert('Saved locally on this device.'); };
 $('#export').onclick = ()=>{
