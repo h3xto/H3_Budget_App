@@ -74,14 +74,19 @@
   .footer{position:fixed;inset:auto 0 0;display:flex;justify-content:center;background:linear-gradient(180deg,transparent,rgba(0,0,0,.4));padding:14px}
   .footer .group{background:#0f1a24;border:1px solid var(--ring);border-radius:999px;padding:8px;display:flex;gap:8px}
 
-  /* wizard */
+  /* overlay + wizard */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none}
   .overlay.show{display:block}
   .wizard{position:fixed;inset:0;display:none;place-items:center;padding:18px}
   .wizard.show{display:grid}
-  .sheet{max-width:920px;width:100%;background:var(--card);border:1px solid var(--ring);border-radius:18px;box-shadow:var(--shadow)}
+  /* FIX: scrollable body inside the sheet */
+  .sheet{
+    max-width:920px;width:100%;
+    background:var(--card);border:1px solid var(--ring);border-radius:18px;box-shadow:var(--shadow);
+    max-height:90vh;display:flex;flex-direction:column;
+  }
   .sheet header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--ring)}
-  .sheet .body{padding:16px}
+  .sheet .body{padding:16px;overflow:auto;flex:1; -webkit-overflow-scrolling:touch;}
   .sheet .nav{display:flex;gap:12px;justify-content:flex-end;padding:14px;border-top:1px solid var(--ring);background:#0f151d;border-radius:0 0 18px 18px}
   .step{display:none}
   .step.show{display:block}
@@ -212,8 +217,11 @@
       </div>
       <div class="bar"><span id="goalBar" style="width:0%"></span></div>
       <div id="goalLine" class="sub" style="margin-top:6px">$0.00 of $0.00 (0%)</div>
-      <!-- NEW: concise per-pay suggestion -->
       <div id="goalAdvice" class="sub" style="margin-top:6px"></div>
+      <!-- NEW: button to see a large, readable savings plan -->
+      <div id="goalPlanBtnWrap" style="margin-top:8px;display:none">
+        <button id="openGoalPlan" class="btn ghost">View savings plan</button>
+      </div>
     </div>
 
     <div class="pill" id="avalancheBox">
@@ -292,6 +300,23 @@
     <div class="nav">
       <button class="btn ghost" id="wizBack">Back</button>
       <button class="btn" id="wizNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Savings Plan modal -->
+<div class="overlay" id="goalOverlay"></div>
+<div class="wizard" id="goalModal">
+  <div class="sheet">
+    <header>
+      <div style="font-weight:800">Savings Plan</div>
+      <button class="btn danger" id="closeGoalPlan">Close</button>
+    </header>
+    <div class="body">
+      <div id="goalPlanBig" class="sub"></div>
+    </div>
+    <div class="nav">
+      <button class="btn" id="closeGoalPlan2">Done</button>
     </div>
   </div>
 </div>
@@ -433,7 +458,7 @@ function avalanchePick(){
   return list.sort((a,b)=>toNum(b.apr)-toNum(a.apr))[0];
 }
 
-/* months between now and date (ceil, min 1) */
+/* months + days until target */
 function monthsUntil(dateStr){
   const d = new Date(dateStr);
   const now = new Date();
@@ -441,6 +466,11 @@ function monthsUntil(dateStr){
   const ms = d - now;
   const months = ms / (1000*60*60*24*(365.2425/12));
   return Math.max(1, Math.ceil(months));
+}
+function daysUntil(dateStr){
+  const d=new Date(dateStr), now=new Date();
+  if (!dateStr || isNaN(d) || d<=now) return 0;
+  return Math.max(1, Math.ceil((d-now)/(1000*60*60*24)));
 }
 
 function calc(){
@@ -461,26 +491,44 @@ function calc(){
   $('#goalPct').textContent=`${gpct}%`; $('#goalBar').style.width=gpct+'%';
   $('#goalLine').textContent=`${fmt.format(saved)} of ${fmt.format(goalAmt)} (${gpct}%)`;
 
-  /* NEW: per-pay suggestion for the goal */
+  /* Savings plan (small + big) */
   let advice = '';
+  let big = '';
   const monthsLeft = monthsUntil(state.goal.date);
+  const daysLeft = daysUntil(state.goal.date);
+  const paysPerMonth = (perYearFactor()/12);
   if (!goalAmt){
     advice = '';
-  } else if (!state.goal.date){
-    advice = 'Set a target date to get a per-pay savings suggestion.';
-  } else if (monthsLeft===0){
-    advice = 'Pick a future target date to get a per-pay savings suggestion.';
+    $('#goalPlanBtnWrap').style.display='none';
+  } else if (!state.goal.date || monthsLeft===0 || daysLeft===0){
+    advice = 'Set a future target date to get a savings plan.';
+    $('#goalPlanBtnWrap').style.display='none';
   } else {
-    const paysLeft = Math.ceil(monthsLeft * (perYearFactor()/12));
-    const requiredPerPay = goalAmt / paysLeft;
-    const requiredPerMonth = requiredPerPay * (perYearFactor()/12);
-    const freePerPay = state.cadence==='monthly' ? free : (perYearFactor()/12>0 ? free/(perYearFactor()/12) : free);
-    advice = `To reach <b>${escapeHTML(state.goal.name||'your goal')}</b> by ${new Date(state.goal.date).toLocaleDateString()}: save <b>${fmt.format(requiredPerPay)}</b> per pay (≈ <b>${fmt.format(requiredPerMonth)}</b>/mo).`;
-    if (requiredPerPay > freePerPay + 1e-6){
-      advice += ` <span class="sub">Note: this exceeds your free cash (~${fmt.format(freePerPay)}/pay). Consider a later date or reducing expenses.</span>`;
+    const paysLeft = Math.ceil(monthsLeft * paysPerMonth);
+    const perPayReq  = goalAmt / paysLeft;
+    const perMonthReq= perPayReq * paysPerMonth;
+    const perDayReq  = goalAmt / daysLeft;
+    const cadenceLabel={monthly:'Monthly',biweekly:'Bi-Weekly',weekly:'Weekly',twicemonthly:'Twice-Monthly'}[state.cadence]||'Monthly';
+    const freePerPay = state.cadence==='monthly' ? free : free/paysPerMonth;
+
+    advice = `To reach <b>${escapeHTML(state.goal.name||'your goal')}</b> by ${new Date(state.goal.date).toLocaleDateString()}: save <b>${fmt.format(perPayReq)}</b> per pay (≈ <b>${fmt.format(perMonthReq)}</b>/mo).`;
+    if (perPayReq > freePerPay + 1e-6){
+      advice += ` <span class="sub">Note: this exceeds your free cash (~${fmt.format(freePerPay)}/pay).</span>`;
     }
+    $('#goalPlanBtnWrap').style.display='block';
+
+    big = `
+      <p>To reach <b>${escapeHTML(state.goal.name||'your goal')}</b> by <b>${new Date(state.goal.date).toLocaleDateString()}</b>:</p>
+      <ul>
+        <li>Save about <b>${fmt.format(Math.round(perDayReq))}</b> per day.</li>
+        <li>Save about <b>${fmt.format(Math.round(perPayReq))}</b> each pay (<b>${cadenceLabel}</b>).</li>
+        <li>That’s ≈ <b>${fmt.format(Math.round(perMonthReq))}</b> per month.</li>
+      </ul>
+      <p class="sub"><b>“Save” means moving this amount into a savings account.</b> Automating a transfer on payday helps.</p>
+    `;
   }
   $('#goalAdvice').innerHTML = advice;
+  $('#goalPlanBig').innerHTML = big;
 
   const cadenceLabel={monthly:'Monthly',biweekly:'Bi-Weekly',weekly:'Weekly',twicemonthly:'Twice-Monthly'}[state.cadence]||'Monthly';
   const pick=avalanchePick();
@@ -497,7 +545,6 @@ function calc(){
     text += `<p>Add at least one debt to see a recommendation.</p>`;
   }
 
-  /* add goal advice into Review panel too */
   if (advice) text += `<p>${advice}</p>`;
 
   $('#avalancheText').innerHTML=text;
@@ -583,6 +630,13 @@ $('#wizNext').onclick=()=>{ step=Math.min(5,step+1); updateStep(); };
 $('#wizAddIncome').onclick=()=>{ state.income.push({name:'',perPay:0}); render(); };
 $('#wizAddEss').onclick   =()=>{ state.essentials.push({name:'',monthly:0}); render(); };
 $('#wizAddDebt').onclick  =()=>{ state.debts.push({name:'',apr:0,balance:0,term:0}); render(); };
+
+/* ---------- Savings Plan modal ---------- */
+function openGoalPlan(){ $('#goalOverlay').classList.add('show'); $('#goalModal').classList.add('show'); }
+function closeGoalPlan(){ $('#goalOverlay').classList.remove('show'); $('#goalModal').classList.remove('show'); }
+$('#openGoalPlan')?.addEventListener('click', openGoalPlan);
+$('#closeGoalPlan').onclick=closeGoalPlan;
+$('#closeGoalPlan2').onclick=closeGoalPlan;
 
 /* ---------- Tip Jar (Digital Goods API) ---------- */
 const PLAY_ORIGIN='https://play.google.com/billing';
