@@ -751,17 +751,61 @@
       $('tipVenmo').href = LINKS.venmo;
     })();
 
-      // ---- Tip Jar (Play Billing) ----
+          // ---- Tip Jar (Play Billing) ----
     const PLAY_ORIGIN = 'https://play.google.com/billing';
 
-    // Heuristic: Is this the Android Play build? (WebView/TWA on Android)
-    function isLikelyPlayBuild() {
-      const ua = navigator.userAgent || '';
-      const isAndroid = /Android/i.test(ua);
-      const isWebViewish = ua.includes(' wv') || ua.includes('; wv;') || ua.includes('Version/');
+    async function setupTips() {
+      const hint = $('tipState');
       const hasDGS = typeof getDigitalGoodsService === 'function';
-      // Treat Android + (WebView-ish or DGS present) as Play build
-      return isAndroid && (isWebViewish || hasDGS);
+
+      // If no Play Billing capability, always show web tips and hide Play tips
+      if (!hasDGS) {
+        $('webTips').classList.remove('hide');
+        $('playTips').classList.add('hide');
+        return;
+      }
+
+      // Play-capable environment (Android app/TWA with DGS)
+      // Policy: never show web links in Play-capable builds
+      $('webTips').classList.add('hide');
+
+      try {
+        const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
+
+        // Optional: preflight to check that products exist
+        try {
+          await dgs.listPurchasableItems(['tip_small', 'tip_medium', 'tip_large']);
+          if (hint) hint.textContent = ''; // clear any stale message
+        } catch {
+          if (hint) hint.textContent = 'Tip products unavailable.';
+        }
+
+        async function buy(id) {
+          try {
+            const details = await dgs.getDetails([id]);
+            if (!details?.length) { alert('Product not available.'); return; }
+            const p = await dgs.launchBillingFlow({ itemId: id });
+            if (p?.purchaseToken) {
+              await dgs.acknowledge({ purchaseToken: p.purchaseToken });
+              alert('Thanks for the tip! 🙏');
+            }
+          } catch {
+            alert('Purchase cancelled or failed.');
+          }
+        }
+
+        document.querySelectorAll('[data-tip]').forEach(b => {
+          b.onclick = () => buy(b.dataset.tip);
+        });
+
+        // Show Play tips now that handlers are wired
+        $('playTips').classList.remove('hide');
+
+      } catch {
+        // Still Play-capable (hasDGS was true), but init failed—keep web links hidden for policy
+        $('playTips').classList.add('hide');
+        if (hint) hint.textContent = 'Tips unavailable at the moment.';
+      }
     }
 
     async function setupTips() {
@@ -1088,4 +1132,3 @@
     setupTips();
   </script>
 </body>
-</html>
