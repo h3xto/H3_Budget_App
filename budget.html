@@ -216,6 +216,10 @@
       gap: 6px;
       align-items: center;
     }
+    /* Prevent name wrapping on phones */
+    .tip-brand-name,
+    .nowrap { white-space: nowrap; }
+
     @media (max-width: 600px) {
       .tip-col.brand {
         flex: 1 1 100%;
@@ -408,7 +412,8 @@
     <!-- Tip jar -->
     <div class="section">
       <h2>Tip jar</h2>
-      <p class="muted">On Google Play, tips use Play Billing. On the web, you can scan a QR or use the direct links.</p>
+      <!-- Hidden helper text retained for logic but not user-visible -->
+      <p class="muted tip-note" style="display:none;">On Google Play, tips use Play Billing. On the web, you can scan a QR or use the direct links.</p>
 
       <!-- Google Play tips (auto-shown on Play-capable context) -->
       <div id="playTips" class="tip-row hide">
@@ -421,23 +426,23 @@
       <!-- Updated Web tips with brand icons -->
       <div id="webTips" class="tip-row">
         <div class="tip-col brand">
-          <img src="assets/icon-cashapp.png" alt="Cash App" />
+          <img src="assets/icon-cashapp.png" alt="CashApp logo" />
           <div class="tip-info">
-            <div>Cash App</div>
+            <div class="tip-brand-name">CashApp</div>
             <a class="chip" id="tipCashApp" href="https://cash.app/$h3xto" target="_blank" rel="noopener">Open link</a>
           </div>
         </div>
         <div class="tip-col brand">
-          <img src="assets/icon-paypal.png" alt="PayPal" />
+          <img src="assets/icon-paypal.png" alt="PayPal logo" />
           <div class="tip-info">
-            <div>PayPal</div>
+            <div class="tip-brand-name">PayPal</div>
             <a class="chip" id="tipPayPal" href="https://paypal.me/h3xto" target="_blank" rel="noopener">Open link</a>
           </div>
         </div>
         <div class="tip-col brand">
-          <img src="assets/icon-venmo.png" alt="Venmo" />
+          <img src="assets/icon-venmo.png" alt="Venmo logo" />
           <div class="tip-info">
-            <div>Venmo</div>
+            <div class="tip-brand-name">Venmo</div>
             <a class="chip" id="tipVenmo" href="https://www.venmo.com/u/HEXTO" target="_blank" rel="noopener">Open link</a>
           </div>
         </div>
@@ -776,7 +781,6 @@
         $('webTips').classList.remove('hide');
       }
     }
-
     // ---- CSV Export/Import & PDF ----
     const includeMap = () => ({
       income: $('incChk').checked,
