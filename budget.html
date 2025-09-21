@@ -179,13 +179,49 @@
     .kpi { border: 1px dashed var(--border); border-radius: var(--radius); padding: 10px; background: rgba(255,255,255,0.02); }
     .kpi h3 { margin: 0 0 6px; font-size: 14px; }
 
-    /* ---- Tip Jar ---- */
-    .tip-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .tip-col {
-      display: grid; grid-template-columns: 72px 1fr; gap: 10px; align-items: center;
-      border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; background: rgba(255,255,255,0.02);
+    /* ---- Tip Jar (updated layout) ---- */
+    .tip-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      width: 100%;
+      align-items: stretch;
     }
-    .tip-col img { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; background: #fff; }
+    .tip-col.brand {
+      flex: 1 1 30%;
+      max-width: 32%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .tip-col.brand img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      background: transparent;
+      border-radius: 10px;
+    }
+    .tip-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    }
+    @media (max-width: 600px) {
+      .tip-col.brand {
+        flex: 1 1 100%;
+        max-width: 100%;
+      }
+    }
     .hide { display: none !important; }
 
     /* ---- Export/Import ---- */
@@ -369,7 +405,6 @@
         <div id="importErrors" class="muted"></div>
       </div>
     </div>
-
     <!-- Tip jar -->
     <div class="section">
       <h2>Tip jar</h2>
@@ -383,27 +418,27 @@
         <span id="tipState" class="muted"></span>
       </div>
 
-      <!-- Web tips with QR codes -->
+      <!-- Updated Web tips with brand icons -->
       <div id="webTips" class="tip-row">
-        <div class="tip-col">
-          <img src="assets/qr-cashapp.png" alt="Cash App QR" />
-          <div>
+        <div class="tip-col brand">
+          <img src="assets/icon-cashapp.png" alt="Cash App" />
+          <div class="tip-info">
             <div>Cash App</div>
-            <a class="chip" id="tipCashApp" href="#" target="_blank" rel="noopener">Open link</a>
+            <a class="chip" id="tipCashApp" href="https://cash.app/$h3xto" target="_blank" rel="noopener">Open link</a>
           </div>
         </div>
-        <div class="tip-col">
-          <img src="assets/qr-paypal.png" alt="PayPal QR" />
-          <div>
+        <div class="tip-col brand">
+          <img src="assets/icon-paypal.png" alt="PayPal" />
+          <div class="tip-info">
             <div>PayPal</div>
-            <a class="chip" id="tipPayPal" href="#" target="_blank" rel="noopener">Open link</a>
+            <a class="chip" id="tipPayPal" href="https://paypal.me/h3xto" target="_blank" rel="noopener">Open link</a>
           </div>
         </div>
-        <div class="tip-col">
-          <img src="assets/qr-venmo.png" alt="Venmo QR" />
-          <div>
+        <div class="tip-col brand">
+          <img src="assets/icon-venmo.png" alt="Venmo" />
+          <div class="tip-info">
             <div>Venmo</div>
-            <a class="chip" id="tipVenmo" href="#" target="_blank" rel="noopener">Open link</a>
+            <a class="chip" id="tipVenmo" href="https://www.venmo.com/u/HEXTO" target="_blank" rel="noopener">Open link</a>
           </div>
         </div>
       </div>
@@ -655,7 +690,6 @@
 
       save();
     }
-
     function projection(debts, extra, strategy){
       debts = debts.map(d=>({...d, bal:d.balance, alive:(d.balance||0)>0}));
       let month=0, guard=0;
@@ -700,7 +734,7 @@
     $('essCatFilter').addEventListener('change', renderEssentials);
     $('debtCatFilter').addEventListener('change', renderDebts);
 
-    // ---- Tip Links/QR (web) ----
+    // ---- Tip Links (web) ----
     const LINKS = {
       cashapp: 'https://cash.app/$h3xto',
       paypal: 'https://paypal.me/h3xto',
