@@ -751,34 +751,73 @@
       $('tipVenmo').href = LINKS.venmo;
     })();
 
-    // ---- Tip Jar (Play Billing) ----
-    const PLAY_ORIGIN='https://play.google.com/billing';
-    async function setupTips(){
+      // ---- Tip Jar (Play Billing) ----
+    const PLAY_ORIGIN = 'https://play.google.com/billing';
+
+    // Heuristic: Is this the Android Play build? (WebView/TWA on Android)
+    function isLikelyPlayBuild() {
+      const ua = navigator.userAgent || '';
+      const isAndroid = /Android/i.test(ua);
+      const isWebViewish = ua.includes(' wv') || ua.includes('; wv;') || ua.includes('Version/');
+      const hasDGS = typeof getDigitalGoodsService === 'function';
+      // Treat Android + (WebView-ish or DGS present) as Play build
+      return isAndroid && (isWebViewish || hasDGS);
+    }
+
+    async function setupTips() {
       const hint = $('tipState');
-      if (!('getDigitalGoodsService' in window)){
+
+      // Non-Android web: show web links, hide Play buttons
+      if (!isLikelyPlayBuild()) {
         $('playTips').classList.add('hide');
         $('webTips').classList.remove('hide');
         return;
       }
-      try{
-        const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
-        const items = await dgs.listPurchasableItems(['tip_small','tip_medium','tip_large']);
-        $('webTips').classList.add('hide');
-        $('playTips').classList.remove('hide');
-        hint.textContent = (items?.length ? 'Tip products loaded.' : 'Tip products unavailable.');
-        async function buy(id){
-          try{
-            const details = await dgs.getDetails([id]);
-            if(!details?.length) return alert('Product not available.');
-            const p = await dgs.launchBillingFlow({itemId:id});
-            if(p?.purchaseToken){ await dgs.acknowledge({purchaseToken:p.purchaseToken}); alert('Thanks for the tip! 🙏'); }
-          }catch{ alert('Purchase cancelled or failed.'); }
+
+      // Android Play build: hide web links no matter what
+      $('webTips').classList.add('hide');
+
+      // Try to enable Play Billing UI
+      try {
+        if (typeof getDigitalGoodsService !== 'function') {
+          // No DGS available in this context — keep Play UI hidden, never show web links on Play build
+          $('playTips').classList.add('hide');
+          if (hint) hint.textContent = 'Tips unavailable on this device.';
+          return;
         }
-        document.querySelectorAll('[data-tip]').forEach(b=> b.onclick=()=>buy(b.dataset.tip));
-      }catch{
-        hint.textContent='Play Billing not available.';
+
+        const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
+        // Optionally ensure products exist; if not, we still show the buttons to let the Billing Flow error gracefully
+        try {
+          await dgs.listPurchasableItems(['tip_small', 'tip_medium', 'tip_large']);
+        } catch {
+          // If listing fails, we still proceed to show UI but set a hint
+          if (hint) hint.textContent = 'Tip products unavailable.';
+        }
+
+        // Wire purchase buttons
+        async function buy(id) {
+          try {
+            const details = await dgs.getDetails([id]);
+            if (!details?.length) { alert('Product not available.'); return; }
+            const p = await dgs.launchBillingFlow({ itemId: id });
+            if (p?.purchaseToken) {
+              await dgs.acknowledge({ purchaseToken: p.purchaseToken });
+              alert('Thanks for the tip! 🙏');
+            }
+          } catch {
+            alert('Purchase cancelled or failed.');
+          }
+        }
+        document.querySelectorAll('[data-tip]').forEach(b => b.onclick = () => buy(b.dataset.tip));
+
+        // Show Play tips
+        $('playTips').classList.remove('hide');
+        if (hint && !hint.textContent) hint.textContent = '';
+      } catch {
+        // If anything fails, keep Play UI hidden and NEVER show web links on Play build
         $('playTips').classList.add('hide');
-        $('webTips').classList.remove('hide');
+        if (hint) hint.textContent = 'Tips unavailable at the moment.';
       }
     }
     // ---- CSV Export/Import & PDF ----
