@@ -83,7 +83,6 @@
     }
     header img.logo:hover { transform: translateY(-1px); }
     .title { display: flex; flex-direction: column; gap: 2px; }
-    /* Enlarge app name per request */
     .title .name { font-weight: 900; letter-spacing: 0.2px; font-size: 22px; line-height: 1.2; }
     .title .motto { color: var(--muted); font-size: 12px; letter-spacing: 0.3px; }
     .controls { display: flex; gap: 8px; align-items: center; }
@@ -216,7 +215,6 @@
       gap: 6px;
       align-items: center;
     }
-    /* Prevent name wrapping on phones */
     .tip-brand-name,
     .nowrap { white-space: nowrap; }
 
@@ -275,6 +273,7 @@
         <div class="motto">Private • Goal‑Focused • Offline</div>
       </div>
       <div class="controls">
+        <button id="guidedToggle" class="chip ghost" type="button" aria-pressed="false">Guided</button>
         <!-- Icon-only theme toggle -->
         <button id="themeToggle" class="chip" type="button" aria-label="Toggle theme"></button>
       </div>
@@ -343,10 +342,10 @@
       </div>
     </div>
 
-    <!-- Goals -->
+    <!-- Savings Goals -->
     <div class="section" id="goalsSec">
       <h2>
-        Goal
+        Savings Goal(s)
         <button class="chip" id="addGoal" type="button">+ Add goal</button>
       </h2>
       <div id="goalsList" class="list"></div>
@@ -409,10 +408,10 @@
         <div id="importErrors" class="muted"></div>
       </div>
     </div>
+
     <!-- Tip jar -->
     <div class="section">
       <h2>Tip jar</h2>
-      <!-- Hidden helper text retained for logic but not user-visible -->
       <p class="muted tip-note" style="display:none;">On Google Play, tips use Play Billing. On the web, you can scan a QR or use the direct links.</p>
 
       <!-- Google Play tips (auto-shown on Play-capable context) -->
@@ -423,7 +422,7 @@
         <span id="tipState" class="muted"></span>
       </div>
 
-      <!-- Updated Web tips with brand icons -->
+      <!-- Web tips with brand icons -->
       <div id="webTips" class="tip-row">
         <div class="tip-col brand">
           <img src="assets/icon-cashapp.png" alt="CashApp logo" />
@@ -459,6 +458,10 @@
     // ---- Currency: Force USD "$" ----
     const CURRENCY = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'symbol' });
     const fmtMoney = v => CURRENCY.format(Number(v||0));
+    const parseMoney = s => {
+      const n = parseFloat(String(s||'').replace(/[^0-9.-]/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    };
 
     // ---- Helpers ----
     const $ = id => document.getElementById(id);
@@ -477,7 +480,7 @@
       cadence: 26,
       strategy: 'avalanche',
       incomes: [],      // {name, amountMonthly}
-      essentials: [],   // {name, category, amountMonthly}
+      essentials: [],   // {name, category, amountMonthly, cadenceMonths}
       debts: [],        // {name, category, balance, apr, min, term}
       goals: []         // {name, goalAmt, goalDate, goalNow}
     });
@@ -505,12 +508,30 @@
     // ---- Orientation (best effort in browser contexts) ----
     (async function lockPortrait(){ try { await screen.orientation?.lock?.('portrait'); } catch {} })();
 
-    // ---- Builders ----
-    function bindNumber(el, obj, key){ el.addEventListener('input', () => { obj[key] = parseFloat(el.value) || 0; compute(); save(); }); }
+    // ---- Binders ----
+    function bindNumber(el, obj, key){
+      el.addEventListener('input', () => {
+        obj[key] = parseMoney(el.value);
+        compute();
+        save();
+      });
+    }
     function bindText(el, obj, key){ el.addEventListener('input', () => { obj[key] = el.value; compute(); save(); }); }
+    function bindMoney(input, obj, key) {
+      const syncState = () => { obj[key] = parseMoney(input.value); compute(); save(); };
+      input.addEventListener('input', syncState);
+      input.addEventListener('blur', () => {
+        const v = obj[key] || 0;
+        input.value = v ? fmtMoney(v) : '';
+      });
+      input.addEventListener('focus', () => {
+        const v = obj[key] || 0;
+        input.value = v ? String(v) : '';
+      });
+    }
     function removeAt(list, i, after){ list.splice(i,1); save(); after(); compute(); }
 
-    // Income
+    // ---- Income ----
     function addIncomeRow(item={name:'', amountMonthly:0}){ state.incomes.push(item); save(); renderIncomes(); }
     function renderIncomes(){
       const host = $('incomeList'); host.innerHTML = '';
@@ -519,11 +540,13 @@
         div.innerHTML = `
           <div class="row">
             <label>Source <input value="${it.name||''}" placeholder="e.g., Salary" /></label>
-            <label>Monthly amount <input type="number" step="0.01" value="${it.amountMonthly||0}" /></label>
+            <label>Monthly amount <input type="text" inputmode="decimal" class="currency-input" value="${it.amountMonthly||0}" /></label>
           </div>
           <div class="right"><button class="minor" type="button" data-del>Remove</button></div>`;
         const [src, amt] = div.querySelectorAll('input');
-        bindText(src, it, 'name'); bindNumber(amt, it, 'amountMonthly');
+        bindText(src, it, 'name');
+        bindMoney(amt, it, 'amountMonthly');
+        amt.value = it.amountMonthly ? fmtMoney(it.amountMonthly) : '';
         div.querySelector('[data-del]').onclick=()=>removeAt(state.incomes,i,renderIncomes);
         host.appendChild(div);
       });
@@ -531,8 +554,8 @@
       compute();
     }
 
-    // Essentials
-    function addEssentialRow(item={name:'', category:'General', amountMonthly:0}){ state.essentials.push(item); save(); renderEssentials(); }
+    // ---- Essentials (with cadence) ----
+    function addEssentialRow(item={name:'', category:'General', amountMonthly:0, cadenceMonths:1}){ state.essentials.push(item); save(); renderEssentials(); }
     function renderEssentials(){
       const host = $('essentialsList'); host.innerHTML = '';
       const filter = $('essCatFilter').value || 'All';
@@ -540,17 +563,34 @@
         .filter(it => filter==='All' || (it.category||'General')===filter)
         .forEach((it,i)=>{
         const div = document.createElement('div'); div.className='card';
+        const c = (+it.cadenceMonths||1);
         div.innerHTML = `
-          <div class="row-3">
+          <div class="row-4">
             <label>Expense <input value="${it.name||''}" placeholder="e.g., Rent" /></label>
             <label>Category
               <input list="essCats" value="${it.category||'General'}" placeholder="e.g., Housing" />
             </label>
-            <label>Monthly amount <input type="number" step="0.01" value="${it.amountMonthly||0}" /></label>
+            <label>Amount (gross) <input type="text" inputmode="decimal" class="currency-input" value="${it.amountMonthly||0}" /></label>
+            <label>Cadence
+              <select class="cadence-select">
+                <option value="1" ${c===1?'selected':''}>Monthly</option>
+                <option value="3" ${c===3?'selected':''}>Quarterly</option>
+                <option value="6" ${c===6?'selected':''}>Bi-annual</option>
+                <option value="12" ${c===12?'selected':''}>Annual</option>
+              </select>
+            </label>
           </div>
           <div class="right"><button class="minor" type="button" data-del>Remove</button></div>`;
         const inputs = div.querySelectorAll('input');
-        bindText(inputs[0], it, 'name'); bindText(inputs[1], it, 'category'); bindNumber(inputs[2], it, 'amountMonthly');
+        const selCad = div.querySelector('.cadence-select');
+        bindText(inputs[0], it, 'name');
+        bindText(inputs[1], it, 'category');
+        bindMoney(inputs[2], it, 'amountMonthly');
+        inputs[2].value = it.amountMonthly ? fmtMoney(it.amountMonthly) : '';
+        selCad.addEventListener('change', () => {
+          it.cadenceMonths = parseInt(selCad.value, 10) || 1;
+          compute(); save();
+        });
         div.querySelector('[data-del]').onclick=()=>{ const idx = state.essentials.indexOf(it); removeAt(state.essentials, idx, renderEssentials); };
         host.appendChild(div);
       });
@@ -559,7 +599,7 @@
       compute();
     }
 
-    // Debts
+    // ---- Debts ----
     function addDebtRow(item={name:'', category:'General', balance:0, apr:0, min:0, term:0}){ state.debts.push(item); save(); renderDebts(); }
     function renderDebts(){
       const host = $('debtsList'); host.innerHTML = '';
@@ -571,9 +611,9 @@
         div.innerHTML = `
           <div class="row-5">
             <label>Debt name <input value="${d.name||''}" placeholder="e.g., Visa"/></label>
-            <label>Balance <input type="number" step="0.01" value="${d.balance||0}" /></label>
+            <label>Balance <input type="text" inputmode="decimal" class="currency-input" value="${d.balance||0}" /></label>
             <label>APR % <input type="number" step="0.01" value="${d.apr||0}" /></label>
-            <label>Min (optional) <input type="number" step="0.01" value="${d.min||0}" /></label>
+            <label>Min (optional) <input type="text" inputmode="decimal" class="currency-input" value="${d.min||0}" /></label>
             <label>Term months (opt) <input type="number" step="1" value="${d.term||0}" /></label>
           </div>
           <div class="row">
@@ -581,7 +621,14 @@
             <div class="right"><button class="minor" type="button" data-del>Remove</button></div>
           </div>`;
         const ins = div.querySelectorAll('input');
-        bindText(ins[0], d, 'name'); bindNumber(ins[1], d, 'balance'); bindNumber(ins[2], d, 'apr'); bindNumber(ins[3], d, 'min'); bindNumber(ins[4], d, 'term'); bindText(ins[5], d, 'category');
+        bindText(ins[0], d, 'name');
+        bindMoney(ins[1], d, 'balance');
+        bindNumber(ins[2], d, 'apr');
+        bindMoney(ins[3], d, 'min');
+        bindNumber(ins[4], d, 'term');
+        bindText(ins[5], d, 'category');
+        ins[1].value = d.balance ? fmtMoney(d.balance) : '';
+        ins[3].value = d.min ? fmtMoney(d.min) : '';
         div.querySelector('[data-del]').onclick=()=>{ const idx = state.debts.indexOf(d); removeAt(state.debts, idx, renderDebts); };
         host.appendChild(div);
       });
@@ -589,7 +636,7 @@
       compute();
     }
 
-    // Goals
+    // ---- Goals (Savings Goal(s)) ----
     function addGoalRow(item={name:'', goalAmt:0, goalDate:todayISO(), goalNow:0}){ state.goals.push(item); save(); renderGoals(); }
     function renderGoals(){
       const host = $('goalsList'); host.innerHTML = '';
@@ -598,26 +645,34 @@
         div.innerHTML = `
           <div class="row-4">
             <label>Goal name <input value="${g.name||''}" placeholder="e.g., Emergency fund"/></label>
-            <label>Target amount <input type="number" step="0.01" value="${g.goalAmt||0}" /></label>
+            <label>Target amount <input type="text" inputmode="decimal" class="currency-input" value="${g.goalAmt||0}" /></label>
             <label>Target date <input type="date" value="${g.goalDate||todayISO()}" /></label>
-            <label>Saved so far <input type="number" step="0.01" value="${g.goalNow||0}" /></label>
+            <label>Saved so far <input type="text" inputmode="decimal" class="currency-input" value="${g.goalNow||0}" /></label>
           </div>
           <div class="right"><button class="minor" type="button" data-del>Remove</button></div>`;
         const [name, amt, date, now] = div.querySelectorAll('input');
-        bindText(name, g, 'name'); bindNumber(amt, g, 'goalAmt');
+        bindText(name, g, 'name');
+        bindMoney(amt, g, 'goalAmt');
         date.addEventListener('change', ()=>{ g.goalDate = date.value; compute(); save(); });
-        bindNumber(now, g, 'goalNow');
+        bindMoney(now, g, 'goalNow');
+        amt.value = g.goalAmt ? fmtMoney(g.goalAmt) : '';
+        now.value = g.goalNow ? fmtMoney(g.goalNow) : '';
         div.querySelector('[data-del]').onclick=()=>removeAt(state.goals, i, renderGoals);
         host.appendChild(div);
       });
       compute();
     }
 
-    // Totals
-    const totalIncome = () => state.incomes.reduce((s,x)=>s+(x.amountMonthly||0), 0);
-    const totalEssentials = () => state.essentials.reduce((s,x)=>s+(x.amountMonthly||0), 0);
+    // ---- Totals ----
+    const totalIncome = () => state.incomes.reduce((s,x)=>s+(parseMoney(x.amountMonthly)||0), 0);
+    const totalEssentials = () =>
+      state.essentials.reduce((s, x) => {
+        const amt = parseMoney(x.amountMonthly);
+        const cad = parseInt(x.cadenceMonths, 10) || 1; // Monthly=1, Quarterly=3, Bi-annual=6, Annual=12
+        return s + (amt / cad);
+      }, 0);
 
-    // Category dropdowns
+    // ---- Category dropdowns ----
     function refreshEssCategories(){
       const sel = $('essCatFilter');
       const cats = Array.from(new Set(state.essentials.map(e=>e.category||'General')));
@@ -647,19 +702,23 @@
       const months = g.goalDate ? monthsBetween(new Date(), g.goalDate) : '';
       $('monthsToGoal').textContent = months || '—';
       $('monthsBadge').textContent = months || '—';
-      const reqSave = (g.goalAmt > 0 && months) ? Math.max(0, ((g.goalAmt||0)-(g.goalNow||0))/months) : 0;
+      const reqSave = (g.goalAmt > 0 && months) ? Math.max(0, ((parseMoney(g.goalAmt)||0)-(parseMoney(g.goalNow)||0))/months) : 0;
       $('reqSave').textContent = fmtMoney(reqSave);
       $('reqSaveBadge').textContent = fmtMoney(reqSave);
 
       // Debts normalization (minimums)
       let totBal=0, totMin=0;
-      const normalized = state.debts.filter(d=>(d.balance||0)>0).map(d=>{
-        const r = (d.apr||0)/100/12;
-        const amortMin = (d.term>0 && r>0) ? ((d.balance*r)/(1 - Math.pow(1+r, -d.term))) : 0;
-        const floorMin = Math.min(d.balance||0, 25);
-        const min = d.min>0 ? d.min : (amortMin>0 ? amortMin : floorMin);
-        totBal += (d.balance||0); totMin += min;
-        return {...d, r, min};
+      const normalized = state.debts.filter(d=>(parseMoney(d.balance)||0)>0).map(d=>{
+        const balance = parseMoney(d.balance);
+        const minIn = parseMoney(d.min);
+        const apr = parseMoney(d.apr);
+        const term = parseInt(d.term)||0;
+        const r = (apr||0)/100/12;
+        const amortMin = (term>0 && r>0) ? ((balance*r)/(1 - Math.pow(1+r, -term))) : 0;
+        const floorMin = Math.min(balance||0, 25);
+        const min = minIn>0 ? minIn : (amortMin>0 ? amortMin : floorMin);
+        totBal += (balance||0); totMin += min;
+        return {...d, balance, apr, term, r, min};
       });
       $('totBal').textContent = fmtMoney(totBal);
       $('totMin').textContent = fmtMoney(totMin);
@@ -672,6 +731,7 @@
       const dti = inc>0 ? (totMin/inc) : 0;
       $('dti').textContent = inc>0 ? (dti*100).toFixed(1)+'%' : '—';
 
+      // Avalanche approach: allocate extra to highest APR first (snowball = smallest balance)
       let target='—';
       if (normalized.length){
         const sorted = normalized.slice().sort((a,b) => state.strategy==='avalanche' ? (b.apr - a.apr) : ((a.balance||0) - (b.balance||0)));
@@ -682,7 +742,7 @@
       const flags=[];
       if (extraPool < 0) flags.push('⚠️ Negative cash flow — raise income, reduce essentials, delay goal, or adjust debt terms.');
       if ((g.goalAmt||0)>0 && !g.goalDate) flags.push('ℹ️ Set a goal date to compute required monthly saving.');
-      if (normalized.some(d=> d.min < (d.balance||0)*d.r)) flags.push('⚠️ A minimum payment is below monthly interest (negative amortization).');
+      if (normalized.some(d=> (d.min||0) < (d.balance||0)*d.r)) flags.push('⚠️ A minimum payment is below monthly interest (negative amortization).');
       $('flags').innerHTML = flags.length
         ? `<div class="${extraPool<0?'danger':'warn'}">${flags.join('<br>')}</div>`
         : `<div class="ok">✅ Plan is feasible based on current inputs.</div>`;
@@ -751,9 +811,8 @@
       $('tipVenmo').href = LINKS.venmo;
     })();
 
-          // ---- Tip Jar (Play Billing) ----
+    // ---- Tip Jar (Play Billing) — policy-safe ----
     const PLAY_ORIGIN = 'https://play.google.com/billing';
-
     async function setupTips() {
       const hint = $('tipState');
       const hasDGS = typeof getDigitalGoodsService === 'function';
@@ -808,62 +867,6 @@
       }
     }
 
-    async function setupTips() {
-      const hint = $('tipState');
-
-      // Non-Android web: show web links, hide Play buttons
-      if (!isLikelyPlayBuild()) {
-        $('playTips').classList.add('hide');
-        $('webTips').classList.remove('hide');
-        return;
-      }
-
-      // Android Play build: hide web links no matter what
-      $('webTips').classList.add('hide');
-
-      // Try to enable Play Billing UI
-      try {
-        if (typeof getDigitalGoodsService !== 'function') {
-          // No DGS available in this context — keep Play UI hidden, never show web links on Play build
-          $('playTips').classList.add('hide');
-          if (hint) hint.textContent = 'Tips unavailable on this device.';
-          return;
-        }
-
-        const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
-        // Optionally ensure products exist; if not, we still show the buttons to let the Billing Flow error gracefully
-        try {
-          await dgs.listPurchasableItems(['tip_small', 'tip_medium', 'tip_large']);
-        } catch {
-          // If listing fails, we still proceed to show UI but set a hint
-          if (hint) hint.textContent = 'Tip products unavailable.';
-        }
-
-        // Wire purchase buttons
-        async function buy(id) {
-          try {
-            const details = await dgs.getDetails([id]);
-            if (!details?.length) { alert('Product not available.'); return; }
-            const p = await dgs.launchBillingFlow({ itemId: id });
-            if (p?.purchaseToken) {
-              await dgs.acknowledge({ purchaseToken: p.purchaseToken });
-              alert('Thanks for the tip! 🙏');
-            }
-          } catch {
-            alert('Purchase cancelled or failed.');
-          }
-        }
-        document.querySelectorAll('[data-tip]').forEach(b => b.onclick = () => buy(b.dataset.tip));
-
-        // Show Play tips
-        $('playTips').classList.remove('hide');
-        if (hint && !hint.textContent) hint.textContent = '';
-      } catch {
-        // If anything fails, keep Play UI hidden and NEVER show web links on Play build
-        $('playTips').classList.add('hide');
-        if (hint) hint.textContent = 'Tips unavailable at the moment.';
-      }
-    }
     // ---- CSV Export/Import & PDF ----
     const includeMap = () => ({
       income: $('incChk').checked,
@@ -874,34 +877,33 @@
     });
 
     function toCsv(rows){
-      // Escape commas/quotes/newlines
-      const esc = v => {
+      const escCsv = v => {
         v = (v ?? '').toString();
         if (/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
         return v;
       };
-      return rows.map(r=> r.map(esc).join(',')).join('\n');
+      return rows.map(r=> r.map(escCsv).join(',')).join('\n');
     }
 
     function buildCsv(include){
       const rows = [];
-      rows.push(['section','name','category','amountMonthly','balance','apr','min','term','goalAmt','goalDate','goalNow','cadence','strategy','displayName']);
+      rows.push(['section','name','category','amountMonthly','balance','apr','min','term','goalAmt','goalDate','goalNow','cadence','strategy','displayName','cadenceMonths']);
       if (include.income){
-        state.incomes.forEach(x=> rows.push(['income', x.name||'', '', x.amountMonthly||0, '', '', '', '', '', '', '', state.cadence, state.strategy, state.displayName]));
+        state.incomes.forEach(x=> rows.push(['income', x.name||'', '', parseMoney(x.amountMonthly)||0, '', '', '', '', '', '', '', state.cadence, state.strategy, state.displayName, '']));
       }
       if (include.essentials){
-        state.essentials.forEach(x=> rows.push(['essentials', x.name||'', x.category||'General', x.amountMonthly||0, '', '', '', '', '', '', '', state.cadence, state.strategy, state.displayName]));
+        state.essentials.forEach(x=> rows.push(['essentials', x.name||'', x.category||'General', parseMoney(x.amountMonthly)||0, '', '', '', '', '', '', '', state.cadence, state.strategy, state.displayName, (parseInt(x.cadenceMonths)||1)]));
       }
       if (include.debts){
-        state.debts.forEach(d=> rows.push(['debts', d.name||'', d.category||'General', '', d.balance||0, d.apr||0, d.min||0, d.term||0, '', '', '', state.cadence, state.strategy, state.displayName]));
+        state.debts.forEach(d=> rows.push(['debts', d.name||'', d.category||'General', '', parseMoney(d.balance)||0, parseMoney(d.apr)||0, parseMoney(d.min)||0, parseInt(d.term)||0, '', '', '', state.cadence, state.strategy, state.displayName, '']));
       }
       if (include.goals){
-        state.goals.forEach(g=> rows.push(['goals', g.name||'', '', '', '', '', '', '', g.goalAmt||0, g.goalDate||'', g.goalNow||0, state.cadence, state.strategy, state.displayName]));
+        state.goals.forEach(g=> rows.push(['goals', g.name||'', '', '', '', '', '', '', parseMoney(g.goalAmt)||0, g.goalDate||'', parseMoney(g.goalNow)||0, state.cadence, state.strategy, state.displayName, '']));
       }
       if (include.summary){
         const inc = totalIncome(), ess = totalEssentials();
-        rows.push(['summary','incomeTotal','', inc,'','','','','','','', state.cadence, state.strategy, state.displayName]);
-        rows.push(['summary','essentialsTotal','', ess,'','','','','','','', state.cadence, state.strategy, state.displayName]);
+        rows.push(['summary','incomeTotal','', inc,'','','','','','','', state.cadence, state.strategy, state.displayName, '']);
+        rows.push(['summary','essentialsTotal','', ess,'','','','','','','', state.cadence, state.strategy, state.displayName, '']);
       }
       return toCsv(rows);
     }
@@ -924,12 +926,12 @@
     };
 
     $('blankCsv').onclick = ()=>{
-      const header = ['section','name','category','amountMonthly','balance','apr','min','term','goalAmt','goalDate','goalNow','cadence','strategy','displayName'];
+      const header = ['section','name','category','amountMonthly','balance','apr','min','term','goalAmt','goalDate','goalNow','cadence','strategy','displayName','cadenceMonths'];
       const example = [
-        ['income','Salary','', '5000','','','','','','','','26','avalanche',''],
-        ['essentials','Rent','Housing','1800','','','','','','','','26','avalanche',''],
-        ['debts','Visa','Credit Card','', '3000','24.99','','','', '', '', '26','avalanche',''],
-        ['goals','Emergency Fund','', '', '','','','', '6000','2026-12-01','1500','26','avalanche','']
+        ['income','Salary','', '5000','','','','','','','','26','avalanche','', ''],
+        ['essentials','Rent','Housing','1800','','','','','','','','26','avalanche','', '1'],
+        ['debts','Visa','Credit Card','', '3000','24.99','','','', '', '', '26','avalanche','', ''],
+        ['goals','Emergency Fund','', '', '','','','', '6000','2026-12-01','1500','26','avalanche','', '']
       ];
       const csv = toCsv([header, ...example]);
       download('h3-blank-template.csv', csv, 'text/csv');
@@ -972,24 +974,29 @@
           const section = get(cells,'section').toLowerCase();
           try{
             if (section==='income'){
-              next.incomes.push({ name:get(cells,'name'), amountMonthly: parseFloat(get(cells,'amountMonthly'))||0 });
+              next.incomes.push({ name:get(cells,'name'), amountMonthly: parseMoney(get(cells,'amountMonthly'))||0 });
             } else if (section==='essentials'){
-              next.essentials.push({ name:get(cells,'name'), category:get(cells,'category')||'General', amountMonthly: parseFloat(get(cells,'amountMonthly'))||0 });
+              next.essentials.push({
+                name:get(cells,'name'),
+                category:get(cells,'category')||'General',
+                amountMonthly: parseMoney(get(cells,'amountMonthly'))||0,
+                cadenceMonths: parseInt(get(cells,'cadenceMonths'))||1
+              });
             } else if (section==='debts'){
               next.debts.push({
                 name:get(cells,'name'),
                 category:get(cells,'category')||'General',
-                balance: parseFloat(get(cells,'balance'))||0,
-                apr: parseFloat(get(cells,'apr'))||0,
-                min: parseFloat(get(cells,'min'))||0,
+                balance: parseMoney(get(cells,'balance'))||0,
+                apr: parseMoney(get(cells,'apr'))||0,
+                min: parseMoney(get(cells,'min'))||0,
                 term: parseInt(get(cells,'term'))||0
               });
             } else if (section==='goals'){
               next.goals.push({
                 name:get(cells,'name'),
-                goalAmt: parseFloat(get(cells,'goalAmt'))||0,
+                goalAmt: parseMoney(get(cells,'goalAmt'))||0,
                 goalDate: get(cells,'goalDate')||todayISO(),
-                goalNow: parseFloat(get(cells,'goalNow'))||0
+                goalNow: parseMoney(get(cells,'goalNow'))||0
               });
             } else if (section==='summary'){
               // ignore; recomputed
@@ -1003,7 +1010,7 @@
             err.push(`Row ${i+1}: ${ex?.message||'parse error'}`);
           }
         }
-        // Replace state if no fatal
+        // Replace state
         state = next;
         save();
         renderAll();
@@ -1028,38 +1035,43 @@
           th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
           .mono { font-variant-numeric: tabular-nums; }
         </style>`;
-      const esc = s => (s??'').toString().replace(/[&<>]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-      const rows = (arr, cols) => arr.map(o=> `<tr>${cols.map(k=>`<td>${esc(o[k]??'')}</td>`).join('')}</tr>`).join('');
+      const escHtml = s => (s??'').toString().replace(/[&<>]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+      const rows = (arr, cols) => arr.map(o=> `<tr>${cols.map(k=>`<td>${escHtml(o[k]??'')}</td>`).join('')}</tr>`).join('');
       const inc = totalIncome(), ess = totalEssentials();
       const g = state.goals[0]||{};
       const content = [];
-      content.push(`<h1>H³ Budget Tool — ${esc(state.displayName||'Plan')}</h1>`);
+      content.push(`<h1>H³ Budget Tool — ${escHtml(state.displayName||'Plan')}</h1>`);
       if (include.summary){
         content.push(`<h2>Plan summary</h2>
           <table><tbody>
           <tr><th>Income</th><td class="mono">${fmtMoney(inc)}</td></tr>
-          <tr><th>Essentials</th><td class="mono">${fmtMoney(ess)}</td></tr>
+          <tr><th>Essentials (monthly equivalent)</th><td class="mono">${fmtMoney(ess)}</td></tr>
           <tr><th>Debt minimums</th><td class="mono">${document.getElementById('totMin').textContent}</td></tr>
           <tr><th>Required saving</th><td class="mono">${document.getElementById('reqSave').textContent}</td></tr>
           <tr><th>Free cash</th><td class="mono">${document.getElementById('extraPool').textContent}</td></tr>
           <tr><th>DTI</th><td>${document.getElementById('dti').textContent}</td></tr>
-          <tr><th>Strategy</th><td>${esc(state.strategy)}</td></tr>
-          <tr><th>Target debt</th><td>${esc(document.getElementById('targetDebt').textContent)}</td></tr>
-          <tr><th>Projected debt‑free date</th><td>${esc(document.getElementById('projDone').textContent)}</td></tr>
-          <tr><th>Goal</th><td>${esc(g.name||'—')}</td></tr>
+          <tr><th>Strategy</th><td>${escHtml(state.strategy)}</td></tr>
+          <tr><th>Target debt</th><td>${escHtml(document.getElementById('targetDebt').textContent)}</td></tr>
+          <tr><th>Projected debt‑free date</th><td>${escHtml(document.getElementById('projDone').textContent)}</td></tr>
+          <tr><th>Primary goal</th><td>${escHtml(g.name||'—')}</td></tr>
           <tr><th>Months to goal</th><td>${document.getElementById('monthsToGoal').textContent}</td></tr>
           </tbody></table>`);
       }
       if (include.income && state.incomes.length){
         content.push(`<h2>Income</h2>
           <table><thead><tr><th>Source</th><th>Monthly amount</th></tr></thead><tbody>
-          ${rows(state.incomes.map(x=>({name:x.name||'', amt:fmtMoney(x.amountMonthly||0)})), ['name','amt'])}
+          ${rows(state.incomes.map(x=>({name:x.name||'', amt:fmtMoney(parseMoney(x.amountMonthly)||0)})), ['name','amt'])}
           </tbody></table>`);
       }
       if (include.essentials && state.essentials.length){
         content.push(`<h2>Essentials</h2>
-          <table><thead><tr><th>Expense</th><th>Category</th><th>Monthly amount</th></tr></thead><tbody>
-          ${rows(state.essentials.map(x=>({name:x.name||'', cat:x.category||'General', amt:fmtMoney(x.amountMonthly||0)})), ['name','cat','amt'])}
+          <table><thead><tr><th>Expense</th><th>Category</th><th>Amount (gross)</th><th>Cadence</th></tr></thead><tbody>
+          ${rows(state.essentials.map(x=>({
+            name:x.name||'',
+            cat:x.category||'General',
+            amt:fmtMoney(parseMoney(x.amountMonthly)||0),
+            cad:(parseInt(x.cadenceMonths)||1)
+          })), ['name','cat','amt','cad'])}
           </tbody></table>`);
       }
       if (include.debts && state.debts.length){
@@ -1067,15 +1079,15 @@
           <table><thead><tr><th>Name</th><th>Category</th><th>Balance</th><th>APR %</th><th>Min</th><th>Term (mo)</th></tr></thead><tbody>
           ${rows(state.debts.map(d=>({
             name:d.name||'', cat:d.category||'General',
-            bal:fmtMoney(d.balance||0), apr:(d.apr||0).toFixed(2),
-            min:fmtMoney(d.min||0), term: d.term||0
+            bal:fmtMoney(parseMoney(d.balance)||0), apr:(parseMoney(d.apr)||0).toFixed(2),
+            min:fmtMoney(parseMoney(d.min)||0), term: parseInt(d.term)||0
           })), ['name','cat','bal','apr','min','term'])}
           </tbody></table>`);
       }
       if (include.goals && state.goals.length){
-        content.push(`<h2>Goals</h2>
+        content.push(`<h2>Savings Goal(s)</h2>
           <table><thead><tr><th>Name</th><th>Target amount</th><th>Target date</th><th>Saved so far</th></tr></thead><tbody>
-          ${rows(state.goals.map(g=>({name:g.name||'', amt:fmtMoney(g.goalAmt||0), date:g.goalDate||'', now:fmtMoney(g.goalNow||0)})), ['name','amt','date','now'])}
+          ${rows(state.goals.map(g=>({name:g.name||'', amt:fmtMoney(parseMoney(g.goalAmt)||0), date:g.goalDate||'', now:fmtMoney(parseMoney(g.goalNow)||0)})), ['name','amt','date','now'])}
           </tbody></table>`);
       }
       w.document.write(`<html><head><title>H3 Budget Export</title>${style}</head><body>${content.join('')}</body></html>`);
@@ -1083,23 +1095,6 @@
       w.focus();
       w.print(); // user can choose "Save as PDF"
     };
-
-    // ---- Render/boot ----
-    function renderAll(){
-      $('displayName').value = state.displayName || '';
-      $('cadence').value = String(state.cadence || 26);
-      $('strategy').value = state.strategy || 'avalanche';
-      // seed filters
-      refreshEssCategories();
-      refreshDebtCategories();
-      if (!$('essCatFilter').value) $('essCatFilter').value = 'All';
-      if (!$('debtCatFilter').value) $('debtCatFilter').value = 'All';
-      renderIncomes();
-      renderEssentials();
-      renderDebts();
-      renderGoals();
-      compute();
-    }
 
     // ---- Datalists for categories ----
     const dlEss = document.createElement('datalist'); dlEss.id = 'essCats';
@@ -1117,6 +1112,65 @@
       refreshDatalists();
     };
 
+    // ---- Guided Mode (toggle, non-destructive) ----
+    const guided = {
+      enabled: false,
+      order: ['incomeSec', 'essentialsSec', 'debtsSec', 'goalsSec'],
+      idx: 0
+    };
+
+    function applyGuided() {
+      const btn = $('guidedToggle');
+      btn.setAttribute('aria-pressed', guided.enabled ? 'true' : 'false');
+      btn.classList.toggle('primary', guided.enabled);
+
+      const sections = ['incomeSec','essentialsSec','debtsSec','goalsSec'];
+      sections.forEach(id => {
+        const el = $(id).closest('.section');
+        if (!el) return;
+        el.classList.toggle('hide', guided.enabled && guided.order[guided.idx] !== id);
+      });
+
+      $('guidedControls').classList.toggle('hide', !guided.enabled);
+      $('guidedHint').classList.toggle('hide', !guided.enabled);
+    }
+
+    function nextStep() {
+      if (guided.idx < guided.order.length - 1) guided.idx++;
+      applyGuided();
+    }
+    function prevStep() {
+      if (guided.idx > 0) guided.idx--;
+      applyGuided();
+    }
+
+    (function initGuided(){
+      // Controls UI
+      const ctrls = document.createElement('div');
+      ctrls.id = 'guidedControls';
+      ctrls.className = 'section hide';
+      ctrls.innerHTML = `
+        <div class="row" style="align-items:center;">
+          <div id="guidedHint" class="muted">Guided Mode: focus on one section at a time. Use Next to move forward.</div>
+          <div class="right">
+            <button id="guidedBack" class="chip ghost" type="button">Back</button>
+            <button id="guidedNext" class="chip" type="button">Next</button>
+          </div>
+        </div>
+      `;
+      document.querySelector('.app').appendChild(ctrls);
+
+      $('guidedToggle').addEventListener('click', () => {
+        guided.enabled = !guided.enabled;
+        guided.idx = 0;
+        applyGuided();
+      });
+      $('guidedBack').addEventListener('click', prevStep);
+      $('guidedNext').addEventListener('click', nextStep);
+
+      applyGuided(); // start hidden
+    })();
+
     // ---- Logo zoom behavior ----
     (function initLogoZoom(){
       const overlay = $('logoOverlay');
@@ -1126,9 +1180,25 @@
       document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') overlay.classList.remove('show'); });
     })();
 
-    // Boot
+    // ---- Boot ----
+    function renderAll(){
+      $('displayName').value = state.displayName || '';
+      $('cadence').value = String(state.cadence || 26);
+      $('strategy').value = state.strategy || 'avalanche';
+      refreshEssCategories();
+      refreshDebtCategories();
+      if (!$('essCatFilter').value) $('essCatFilter').value = 'All';
+      if (!$('debtCatFilter').value) $('debtCatFilter').value = 'All';
+      renderIncomes();
+      renderEssentials();
+      renderDebts();
+      renderGoals();
+      compute();
+    }
+
     load();
     renderAll();
     setupTips();
   </script>
 </body>
+</html>
