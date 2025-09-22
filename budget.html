@@ -832,48 +832,60 @@
     })();
 
     // ---- Tip Jar (Play Billing) — single policy-safe implementation ----
-    const PLAY_ORIGIN = 'https://play.google.com/billing';
-    async function setupTips() {
-      const hint = $('tipState');
-      const hasDGS = typeof getDigitalGoodsService === 'function';
+  const PLAY_ORIGIN = 'https://play.google.com/billing';
 
-      // Browsers / non-Play-capable: show web tips, hide Play buttons
-      if (!hasDGS) {
-        $('webTips').classList.remove('hide');
-        $('playTips').classList.add('hide');
-        return;
-      }
+  async function setupTips() {
+    const hint = $('tipState');
 
-      // Play-capable: hide web links (policy), enable Play buttons
-      $('webTips').classList.add('hide');
-      try {
-        const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
-        try {
-          await dgs.listPurchasableItems(['tip_small','tip_medium','tip_large']);
-          if (hint) hint.textContent = '';
-        } catch {
-          if (hint) hint.textContent = 'Tip products unavailable.';
-        }
-        async function buy(id) {
-          try {
-            const details = await dgs.getDetails([id]);
-            if (!details?.length) { alert('Product not available.'); return; }
-            const p = await dgs.launchBillingFlow({ itemId: id });
-            if (p?.purchaseToken) {
-              await dgs.acknowledge({ purchaseToken: p.purchaseToken });
-              alert('Thanks for the tip! 🙏');
-            }
-          } catch {
-            alert('Purchase cancelled or failed.');
-          }
-        }
-        document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = () => buy(b.dataset.tip); });
-        $('playTips').classList.remove('hide');
-      } catch {
-        $('playTips').classList.add('hide');
-        if (hint) hint.textContent = 'Tips unavailable at the moment.';
-      }
+    // Default: show web tips, hide Play tips
+    $('webTips').classList.remove('hide');
+    $('playTips').classList.add('hide');
+
+    // If Play Billing API not present, stop here
+    if (typeof getDigitalGoodsService !== 'function') {
+      return;
     }
+
+    // Try to init Play Billing — if it fails, leave web tips visible
+    try {
+      const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
+
+      // If we got here, we’re in a real Play‑capable context: hide web tips for policy
+      $('webTips').classList.add('hide');
+
+      try {
+        await dgs.listPurchasableItems(['tip_small', 'tip_medium', 'tip_large']);
+        if (hint) hint.textContent = '';
+      } catch {
+        if (hint) hint.textContent = 'Tip products unavailable.';
+      }
+
+      async function buy(id) {
+        try {
+          const details = await dgs.getDetails([id]);
+          if (!details?.length) { alert('Product not available.'); return; }
+          const p = await dgs.launchBillingFlow({ itemId: id });
+          if (p?.purchaseToken) {
+            await dgs.acknowledge({ purchaseToken: p.purchaseToken });
+            alert('Thanks for the tip! 🙏');
+          }
+        } catch {
+          alert('Purchase cancelled or failed.');
+        }
+      }
+
+      document.querySelectorAll('[data-tip]').forEach(b => {
+        b.onclick = () => buy(b.dataset.tip);
+      });
+
+      $('playTips').classList.remove('hide');
+
+    } catch {
+      // Billing init failed — leave web tips visible
+      $('playTips').classList.add('hide');
+      if (hint) hint.textContent = 'Tips unavailable at the moment.';
+    }
+  }
 
     // ---- CSV / PDF ----
     const includeMap = () => ({
