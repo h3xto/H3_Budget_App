@@ -177,7 +177,7 @@
     .kpi { border: 1px dashed var(--border); border-radius: var(--radius); padding: 10px; background: rgba(255,255,255,0.02); }
     .kpi h3 { margin: 0 0 6px; font-size: 14px; }
 
-    /* ---- Tip Jar ---- */
+    /* ---- Tip rows ---- */
     .tip-row {
       display: flex;
       flex-wrap: wrap;
@@ -270,7 +270,7 @@
 
     /* ---- Print/PDF view ---- */
     @media print {
-      header, #themeToggle, #playTips, #webTips, #guidedControls { display: none !important; }
+      header, #themeToggle, #guidedControls { display: none !important; }
       body { background: #fff; color: #000; }
       .section { break-inside: avoid; box-shadow: none; border-color: #ccc; }
     }
@@ -422,7 +422,6 @@
         <p class="line"><span>Months to goal</span><span id="monthsToGoal" class="mono right">—</span></p>
       </div>
     </div>
-
     <!-- Export / Import -->
     <div class="section" id="exportSec">
       <h2>Export & import</h2>
@@ -445,20 +444,28 @@
       </div>
     </div>
 
-    <!-- Tip jar -->
-    <div class="section" id="tipSec">
-      <h2>Tip jar</h2>
-      <p class="muted tip-note" style="display:none;">On Google Play, tips use Play Billing. On the web, you can scan a QR or use the direct links.</p>
-
-      <!-- Google Play tips (auto-shown on Play-capable context) -->
-      <div id="playTips" class="tip-row hide">
-        <button class="chip" data-tip="tip_small">$1</button>
-        <button class="chip" data-tip="tip_medium">$3</button>
-        <button class="chip" data-tip="tip_large">$5</button>
-        <span id="tipState" class="muted"></span>
+    <!-- In-App Purchase – No New Features (Play build) -->
+    <div class="section" id="iapSec">
+      <h2>In‑App Purchase – No New Features</h2>
+      <div id="playPurchases" class="tip-row hide">
+        <div class="tip-col brand">
+          <img src="assets/icon-1.png" alt="$1 icon" />
+          <button class="chip" data-tip="tip_small">$1</button>
+        </div>
+        <div class="tip-col brand">
+          <img src="assets/icon-3.png" alt="$3 icon" />
+          <button class="chip" data-tip="tip_medium">$3</button>
+        </div>
+        <div class="tip-col brand">
+          <img src="assets/icon-5.png" alt="$5 icon" />
+          <button class="chip" data-tip="tip_large">$5</button>
+        </div>
       </div>
+    </div>
 
-      <!-- Web tips with brand icons (must show in browsers) -->
+    <!-- Support the Developer (Web build) -->
+    <div class="section" id="tipSec">
+      <h2>Support the Developer</h2>
       <div id="webTips" class="tip-row">
         <div class="tip-col brand">
           <img src="assets/icon-cashapp.png" alt="CashApp logo" />
@@ -502,186 +509,15 @@
   <div id="logoOverlay" aria-hidden="true">
     <img src="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true" alt="H3 Logo Large" />
   </div>
-
-  <script>
-    // ---- Currency helpers ----
-    const CURRENCY = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'symbol' });
-    const fmtMoney = v => CURRENCY.format(Number(v||0));
-    const parseMoney = s => {
-      const n = parseFloat(String(s||'').replace(/[^0-9.-]/g, ''));
-      return Number.isFinite(n) ? n : 0;
-    };
-
-    // ---- DOM helpers ----
-    const $ = id => document.getElementById(id);
-    const todayISO = () => new Date().toISOString().slice(0,10);
-    const monthsBetween = (a, b) => {
-      const d1 = new Date(a), d2 = new Date(b);
-      const years = d2.getFullYear() - d1.getFullYear();
-      const months = d2.getMonth() - d1.getMonth();
-      const total = years*12 + months + (d2.getDate() >= d1.getDate() ? 0 : -1);
-      return Math.max(1, total);
-    };
-
-    // ---- State ----
-    const empty = () => ({
-      displayName: '',
-      cadence: 26,                // paychecks per year
-      strategy: 'avalanche',
-      incomes: [],                // {name, amountPerPeriod}
-      essentials: [],             // {name, category, amountMonthly, cadenceMonths}
-      debts: [],                  // {name, category, balance, apr, min, term}
-      goals: []                   // {name, goalAmt, goalDate, goalNow}
-    });
-    let state = empty();
-
-    function save(){ localStorage.setItem('h3-budget', JSON.stringify(state)); }
-    function load(){
-      try{
-        const raw = localStorage.getItem('h3-budget');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          // Back-compat: migrate incomes.amountMonthly -> amountPerPeriod
-          if (Array.isArray(parsed.incomes)) {
-            parsed.incomes = parsed.incomes.map(x => {
-              if (x && x.amountPerPeriod == null && x.amountMonthly != null) {
-                const cad = Number(parsed.cadence || 26);
-                const perMonth = Number(x.amountMonthly || 0);
-                const perPeriod = cad ? perMonth * 12 / cad : perMonth;
-                return { name: x.name || '', amountPerPeriod: perPeriod };
-              }
-              return { name: x?.name || '', amountPerPeriod: Number(x?.amountPerPeriod||0) };
-            });
-          }
-          // Back-compat: essentials cadence
-          if (Array.isArray(parsed.essentials)) {
-            parsed.essentials = parsed.essentials.map(e => ({ ...e, cadenceMonths: parseInt(e?.cadenceMonths)||1 }));
-          }
-          state = { ...empty(), ...parsed };
-        }
-      }catch{}
-    }
-
-    // ---- Theme ----
-    (function initTheme(){
-      const saved = localStorage.getItem('h3-theme') || 'dark';
-      document.documentElement.dataset.theme = saved;
-      $('themeToggle').onclick = () => {
-        const cur = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = cur;
-        localStorage.setItem('h3-theme', cur);
-      };
-    })();
-
-    // ---- Orientation lock best-effort ----
-    (async function lockPortrait(){ try { await screen.orientation?.lock?.('portrait'); } catch {} })();
-
-    // ---- Binders ----
-    function bindText(el, obj, key){ el.addEventListener('input', () => { obj[key] = el.value; compute(); save(); }); }
-    function bindNumber(el, obj, key){ el.addEventListener('input', () => { obj[key] = parseMoney(el.value); compute(); save(); }); }
-    function bindMoney(input, obj, key) {
-      const syncState = () => { obj[key] = parseMoney(input.value); compute(); save(); };
-      input.addEventListener('input', syncState);
-      input.addEventListener('blur', () => {
-        const v = obj[key] || 0;
-        input.value = v ? fmtMoney(v) : '';
-      });
-      input.addEventListener('focus', () => {
-        const v = obj[key] || 0;
-        input.value = v ? String(v) : '';
-      });
-    }
-    function removeAt(list, i, rerender){ list.splice(i,1); save(); rerender(); compute(); }
-
-    // ---- Income (per-pay-period inputs) ----
-    function addIncomeRow(item={name:'', amountPerPeriod:0}){ state.incomes.push(item); save(); renderIncomes(); }
-    function renderIncomes(){
-      const host = $('incomeList'); host.innerHTML = '';
-      state.incomes.forEach((it,i)=>{
-        const div = document.createElement('div'); div.className='card';
-        div.innerHTML = `
-          <div class="row">
-            <label>Source <input value="${it.name||''}" placeholder="e.g., Salary" /></label>
-            <label>Paycheck amount (net) <input type="text" inputmode="decimal" class="currency-input" value="${it.amountPerPeriod||0}" /></label>
-          </div>
-          <div class="right"><button class="minor" type="button" data-del>Remove</button></div>`;
-        const [src, amt] = div.querySelectorAll('input');
-        bindText(src, it, 'name');
-        bindMoney(amt, it, 'amountPerPeriod');
-        amt.value = it.amountPerPeriod ? fmtMoney(it.amountPerPeriod) : '';
-        div.querySelector('[data-del]').onclick=()=>removeAt(state.incomes,i,renderIncomes);
-        host.appendChild(div);
-      });
-      $('incomeTotal').textContent = fmtMoney(totalIncomeMonthly());
-      compute();
-    }
-
-    // ---- Essentials (with cadence conversion) ----
-    function addEssentialRow(item={name:'', category:'General', amountMonthly:0, cadenceMonths:1}){ state.essentials.push(item); save(); renderEssentials(); }
-    function renderEssentials(){
-      const host = $('essentialsList'); host.innerHTML = '';
-      const filter = $('essCatFilter').value || 'All';
-      state.essentials
-        .filter(it => filter==='All' || (it.category||'General')===filter)
-        .forEach((it,i)=>{
-        const div = document.createElement('div'); div.className='card';
-        const c = (+it.cadenceMonths||1);
-        div.innerHTML = `
-          <div class="row-4">
-            <label>Expense <input value="${it.name||''}" placeholder="e.g., Rent" /></label>
-            <label>Category
-              <input list="essCats" value="${it.category||'General'}" placeholder="e.g., Housing" />
-            </label>
-            <label>Amount (gross) <input type="text" inputmode="decimal" class="currency-input" value="${it.amountMonthly||0}" /></label>
-            <label>Cadence
-              <select class="cadence-select">
-                <option value="1" ${c===1?'selected':''}>Monthly</option>
-                <option value="3" ${c===3?'selected':''}>Quarterly</option>
-                <option value="6" ${c===6?'selected':''}>Bi-annual</option>
-                <option value="12" ${c===12?'selected':''}>Annual</option>
-              </select>
-            </label>
-          </div>
-          <div class="right"><button class="minor" type="button" data-del>Remove</button></div>`;
-        const inputs = div.querySelectorAll('input');
-        const selCad = div.querySelector('.cadence-select');
-        bindText(inputs[0], it, 'name');
-        bindText(inputs[1], it, 'category');
-        bindMoney(inputs[2], it, 'amountMonthly');
-        inputs[2].value = it.amountMonthly ? fmtMoney(it.amountMonthly) : '';
-        selCad.addEventListener('change', () => {
-          it.cadenceMonths = parseInt(selCad.value, 10) || 1;
-          compute(); save();
-        });
-        div.querySelector('[data-del]').onclick=()=>{ const idx = state.essentials.indexOf(it); removeAt(state.essentials, idx, renderEssentials); };
-        host.appendChild(div);
-      });
-      $('essentialsTotal').textContent = fmtMoney(totalEssentialsMonthly());
-      refreshEssCategories();
-      compute();
-    }
-
-    // ---- Debts ----
-    function addDebtRow(item={name:'', category:'General', balance:0, apr:0, min:0, term:0}){ state.debts.push(item); save(); renderDebts(); }
-    function renderDebts(){
-      const host = $('debtsList'); host.innerHTML = '';
-      const filter = $('debtCatFilter').value || 'All';
-      state.debts
-        .filter(d => filter==='All' || (d.category||'General')===filter)
-        .forEach((d,i)=>{
-        const div = document.createElement('div'); div.className='card';
-        div.innerHTML = `
-          <div class="row-5">
-            <label>Debt name <input value="${d.name||''}" placeholder="e.g., Visa"/></label>
-            <label>Balance <input type="text" inputmode="decimal" class="currency-input" value="${d.balance||0}" /></label>
-            <label>APR % <input type="number" step="0.01" value="${d.apr||0}" /></label>
-            <label>Min (optional) <input type="text" inputmode="decimal" class="currency-input" value="${d.min||0}" /></label>
-            <label>Term months (opt) <input type="number" step="1" value="${d.term||0}" /></label>
-          </div>
-          <div class="row">
-            <label>Category <input list="debtCats" value="${d.category||'General'}" placeholder="e.g., Credit Card"/></label>
-            <div class="right"><button class="minor" type="button" data-del>Remove</button></div>
-          </div>`;
+          <label>Balance <input type="text" inputmode="decimal" class="currency-input" value="${d.balance||0}" /></label>
+          <label>APR % <input type="number" step="0.01" value="${d.apr||0}" /></label>
+          <label>Min (optional) <input type="text" inputmode="decimal" class="currency-input" value="${d.min||0}" /></label>
+          <label>Term months (opt) <input type="number" step="1" value="${d.term||0}" /></label>
+        </div>
+        <div class="row">
+          <label>Category <input list="debtCats" value="${d.category||'General'}" placeholder="e.g., Credit Card"/></label>
+          <div class="right"><button class="minor" type="button" data-del>Remove</button></div>
+        </div>`;
         const ins = div.querySelectorAll('input');
         bindText(ins[0], d, 'name');
         bindMoney(ins[1], d, 'balance');
@@ -698,7 +534,6 @@
       compute();
     }
 
-    // ---- Goals ----
     function addGoalRow(item={name:'', goalAmt:0, goalDate:todayISO(), goalNow:0}){ state.goals.push(item); save(); renderGoals(); }
     function renderGoals(){
       const host = $('goalsList'); host.innerHTML = '';
@@ -731,7 +566,7 @@
     const totalEssentialsMonthly = () =>
       state.essentials.reduce((s, x) => {
         const amt = parseMoney(x.amountMonthly);
-        const cad = parseInt(x.cadenceMonths, 10) || 1; // Monthly=1, Quarterly=3, Bi-annual=6, Annual=12
+        const cad = parseInt(x.cadenceMonths, 10) || 1;
         return s + (amt / cad);
       }, 0);
 
@@ -752,7 +587,6 @@
       sel.innerHTML = values.map(v=>`<option>${v}</option>`).join('');
       sel.value = values.includes(cur)?cur:'All';
     }
-
     // ---- Recommendation explanation ----
     function buildRecommendationText() {
       const inc = totalIncomeMonthly();
@@ -784,12 +618,10 @@
 
     // ---- Math & planning ----
     function compute(){
-      // Sync header inputs
       $('displayName').value = state.displayName || '';
       $('cadence').value = String(state.cadence || 26);
       $('strategy').value = state.strategy || 'avalanche';
 
-      // Goal KPIs from first goal
       const g = state.goals[0] || {};
       const months = g.goalDate ? monthsBetween(new Date(), g.goalDate) : '';
       $('monthsToGoal').textContent = months || '—';
@@ -798,7 +630,6 @@
       $('reqSave').textContent = fmtMoney(reqSave);
       $('reqSaveBadge').textContent = fmtMoney(reqSave);
 
-      // Debts normalization
       let totBal=0, totMin=0;
       const normalized = state.debts.filter(d=>(parseMoney(d.balance)||0)>0).map(d=>{
         const balance = parseMoney(d.balance);
@@ -823,7 +654,6 @@
       const dti = inc>0 ? (totMin/inc) : 0;
       $('dti').textContent = inc>0 ? (dti*100).toFixed(1)+'%' : '—';
 
-      // Avalanche vs Snowball target
       let target='—';
       if (normalized.length){
         const sorted = normalized.slice().sort((a,b) => state.strategy==='avalanche' ? (b.apr - a.apr) : ((a.balance||0) - (b.balance||0)));
@@ -841,11 +671,9 @@
 
       $('projDone').textContent = projection(normalized, Math.max(0, extraPool), state.strategy);
 
-      // Totals UI
       $('incomeTotal').textContent = fmtMoney(inc);
       $('essentialsTotal').textContent = fmtMoney(fixed);
 
-      // Inject recommendation explanation
       $('planExplanation').textContent = buildRecommendationText();
 
       save();
@@ -883,16 +711,13 @@
     $('cadence').addEventListener('change', e=>{ state.cadence = parseInt(e.target.value,10); save(); compute(); });
     $('strategy').addEventListener('change', e=>{ state.strategy = e.target.value; save(); compute(); });
 
-    // ---- Add buttons ----
     $('addIncome').onclick = ()=>addIncomeRow();
     $('addEssential').onclick = ()=>addEssentialRow();
     $('addDebt').onclick = ()=>addDebtRow();
     $('addGoal').onclick = ()=>addGoalRow({name:'', goalAmt:0, goalDate:todayISO(), goalNow:0});
 
-    // ---- Filters ----
     $('essCatFilter').addEventListener('change', renderEssentials);
     $('debtCatFilter').addEventListener('change', renderDebts);
-
     // ---- Tip links (web) ----
     (function initLinks(){
       $('tipCashApp').href = 'https://cash.app/$h3xto';
@@ -900,43 +725,34 @@
       $('tipVenmo').href = 'https://www.venmo.com/u/HEXTO';
     })();
 
-    // ---- Tip Jar (Play Billing) — single policy-safe implementation ----
+    // ---- Tip Jar / In-App Purchase logic ----
     const PLAY_ORIGIN = 'https://play.google.com/billing';
 
     async function setupTips() {
-      const hint = $('tipState');
+      const hasDGS = typeof getDigitalGoodsService === 'function';
 
-      // Default: show web tips, hide Play tips
+      // Default: show web tips, hide Play purchases
       $('webTips').classList.remove('hide');
-      $('playTips').classList.add('hide');
+      $('playPurchases').classList.add('hide');
 
-      // If Play Billing API not present, stop here
-      if (typeof getDigitalGoodsService !== 'function') {
-        return;
-      }
+      if (!hasDGS) return;
 
-      // Try to init Play Billing — if it fails, leave web tips visible
       try {
         const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
 
-        // If we got here, we’re in a real Play‑capable context: hide web tips for policy
+        // Play-capable: hide web tips, show in-app purchases
         $('webTips').classList.add('hide');
-
-        try {
-          await dgs.listPurchasableItems(['tip_small', 'tip_medium', 'tip_large']);
-          if (hint) hint.textContent = '';
-        } catch {
-          if (hint) hint.textContent = 'Tip products unavailable.';
-        }
+        $('playPurchases').classList.remove('hide');
 
         async function buy(id) {
+          alert("Paying does not unlock or add any features or functionality to the app. It only helps keep the app completely ad‑free and support the developer.");
           try {
             const details = await dgs.getDetails([id]);
             if (!details?.length) { alert('Product not available.'); return; }
             const p = await dgs.launchBillingFlow({ itemId: id });
             if (p?.purchaseToken) {
               await dgs.acknowledge({ purchaseToken: p.purchaseToken });
-              alert('Thanks for the tip! 🙏');
+              alert('Thank you for your support! 🙏');
             }
           } catch {
             alert('Purchase cancelled or failed.');
@@ -947,12 +763,9 @@
           b.onclick = () => buy(b.dataset.tip);
         });
 
-        $('playTips').classList.remove('hide');
-
       } catch {
-        // Billing init failed — leave web tips visible
-        $('playTips').classList.add('hide');
-        if (hint) hint.textContent = 'Tips unavailable at the moment.';
+        $('webTips').classList.remove('hide');
+        $('playPurchases').classList.add('hide');
       }
     }
 
@@ -993,7 +806,6 @@
         const inc = totalIncomeMonthly(), ess = totalEssentialsMonthly();
         rows.push(['summary','incomeTotal','', inc,'','','','','','','', state.cadence, state.strategy, state.displayName, '', '']);
         rows.push(['summary','essentialsTotal','', ess,'','','','','','','', state.cadence, state.strategy, state.displayName, '', '']);
-        // Add plan explanation row
         rows.push(['summary','planExplanation','','','','','','','','','', state.cadence, state.strategy, state.displayName, '', buildRecommendationText()]);
       }
       return toCsv(rows);
@@ -1018,7 +830,7 @@
     $('blankCsv').onclick = ()=>{
       const header = ['section','name','category','amountPerPeriod','balance','apr','min','term','goalAmt','goalDate','goalNow','cadence','strategy','displayName','cadenceMonths','amountMonthlyLegacy'];
       const example = [
-        ['income','Salary','', '2500','','','','','','','','26','avalanche','', '', ''],  // example net per paycheck
+        ['income','Salary','', '2500','','','','','','','','26','avalanche','', '', ''],
         ['essentials','Rent','Housing','', '', '', '', '', '', '', '', '26','avalanche','', '1', '1800'],
         ['debts','Visa','Credit Card','', '3000','24.99','','','', '', '', '26','avalanche','', '', ''],
         ['goals','Emergency Fund','', '', '','','','', '6000','2026-12-01','1500','26','avalanche','', '', '']
@@ -1081,7 +893,7 @@
                 balance: parseMoney(get(cells,'balance'))||0,
                 apr: parseMoney(get(cells,'apr'))||0,
                 min: parseMoney(get(cells,'min'))||0,
-                term: parseInt(get(cells,'term'))||0
+                                term: parseInt(get(cells,'term'))||0
               });
             } else if (section==='goals'){
               next.goals.push({
@@ -1109,7 +921,7 @@
       e.target.value = '';
     });
 
-    // PDF via print-friendly view (add plan explanation paragraph)
+    // ---- PDF export ----
     $('exportPdf').onclick = ()=>{
       const include = includeMap();
       const w = window.open('', '_blank');
@@ -1197,7 +1009,7 @@
     const _save = save;
     save = function(){ _save(); refreshDatalists(); };
 
-    // ---- Guided Mode (toggle + fullscreen focus + sticky footer + overlay header) ----
+    // ---- Guided Mode ----
     const guided = {
       enabled: false,
       order: ['incomeSec','essentialsSec','debtsSec','goalsSec'],
@@ -1212,16 +1024,15 @@
       toggle.classList.toggle('primary', isOn);
       toggle.textContent = isOn ? 'Guided Mode (On)' : 'Guided Mode';
 
-      // Focus only active section and inject header
-      const ids = ['profileSec','incomeSec','essentialsSec','debtsSec','goalsSec','summarySec','exportSec','tipSec'];
+      const ids = ['profileSec','incomeSec','essentialsSec','debtsSec','goalsSec','summarySec','exportSec','iapSec','tipSec'];
       ids.forEach(id => {
         const sec = $(id);
         if (!sec) return;
         const activeId = guided.order[guided.idx];
-        const focus = (id === activeId);
+                const focus = (id === activeId);
         sec.classList.toggle('guided-focus', isOn && focus);
 
-        // Guided overlay header
+        // Guided overlay header injection
         const existingHeader = sec.querySelector('.guided-header');
         if (isOn && focus) {
           if (!existingHeader) {
@@ -1250,6 +1061,7 @@
         if (active) active.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
+
     function nextStep() {
       if (guided.idx < guided.order.length - 1) {
         guided.idx++;
@@ -1258,7 +1070,10 @@
       }
       applyGuided();
     }
-    function prevStep() { if (guided.idx > 0) guided.idx--; applyGuided(); }
+    function prevStep() {
+      if (guided.idx > 0) guided.idx--;
+      applyGuided();
+    }
 
     (function initGuided(){
       $('guidedToggle').addEventListener('click', () => {
@@ -1269,8 +1084,8 @@
       $('guidedBack').addEventListener('click', prevStep);
       $('guidedNext').addEventListener('click', nextStep);
 
-      // Jump to a section if header clicked while guided is on
-      [['incomeSec'],['essentialsSec'],['debtsSec'],['goalsSec']].forEach(([id])=>{
+      // Allow clicking section headers to jump in Guided Mode
+      guided.order.forEach(id=>{
         const sec = $(id);
         if (sec) {
           sec.querySelector('h2')?.addEventListener('click', ()=>{
@@ -1282,7 +1097,7 @@
       });
     })();
 
-    // ---- Logo zoom ----
+    // ---- Logo zoom overlay ----
     (function initLogoZoom(){
       const overlay = $('logoOverlay');
       const logo = $('logoImg');
