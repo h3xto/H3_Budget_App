@@ -246,6 +246,28 @@
     }
     #guidedToggle.primary { background: var(--primary); color: #fff; }
 
+    /* ---- Guided overlay header inside focused panel ---- */
+    .guided-header {
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 21;
+    }
+    .guided-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .guided-header button {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+
     /* ---- Print/PDF view ---- */
     @media print {
       header, #themeToggle, #playTips, #webTips, #guidedControls { display: none !important; }
@@ -1175,7 +1197,7 @@
     const _save = save;
     save = function(){ _save(); refreshDatalists(); };
 
-    // ---- Guided Mode (toggle + fullscreen focus + sticky footer) ----
+    // ---- Guided Mode (toggle + fullscreen focus + sticky footer + overlay header) ----
     const guided = {
       enabled: false,
       order: ['incomeSec','essentialsSec','debtsSec','goalsSec'],
@@ -1190,7 +1212,7 @@
       toggle.classList.toggle('primary', isOn);
       toggle.textContent = isOn ? 'Guided Mode (On)' : 'Guided Mode';
 
-      // Focus only active section
+      // Focus only active section and inject header
       const ids = ['profileSec','incomeSec','essentialsSec','debtsSec','goalsSec','summarySec','exportSec','tipSec'];
       ids.forEach(id => {
         const sec = $(id);
@@ -1198,9 +1220,24 @@
         const activeId = guided.order[guided.idx];
         const focus = (id === activeId);
         sec.classList.toggle('guided-focus', isOn && focus);
-        if (!isOn) {
-          sec.style.opacity = '';
-          sec.style.filter = '';
+
+        // Guided overlay header
+        const existingHeader = sec.querySelector('.guided-header');
+        if (isOn && focus) {
+          if (!existingHeader) {
+            const header = document.createElement('div');
+            header.className = 'guided-header';
+            const titleText = sec.querySelector('h2')?.textContent || '';
+            header.innerHTML = `<h3>${titleText}</h3>
+              <button class="chip ghost" type="button" id="exitGuided">Exit</button>`;
+            sec.insertBefore(header, sec.firstChild);
+            header.querySelector('#exitGuided').onclick = () => {
+              guided.enabled = false;
+              applyGuided();
+            };
+          }
+        } else {
+          if (existingHeader) existingHeader.remove();
         }
       });
 
