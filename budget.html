@@ -422,6 +422,7 @@
         <p class="line"><span>Months to goal</span><span id="monthsToGoal" class="mono right">—</span></p>
       </div>
     </div>
+
     <!-- Export / Import -->
     <div class="section" id="exportSec">
       <h2>Export & import</h2>
@@ -509,15 +510,186 @@
   <div id="logoOverlay" aria-hidden="true">
     <img src="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true" alt="H3 Logo Large" />
   </div>
-          <label>Balance <input type="text" inputmode="decimal" class="currency-input" value="${d.balance||0}" /></label>
-          <label>APR % <input type="number" step="0.01" value="${d.apr||0}" /></label>
-          <label>Min (optional) <input type="text" inputmode="decimal" class="currency-input" value="${d.min||0}" /></label>
-          <label>Term months (opt) <input type="number" step="1" value="${d.term||0}" /></label>
-        </div>
-        <div class="row">
-          <label>Category <input list="debtCats" value="${d.category||'General'}" placeholder="e.g., Credit Card"/></label>
-          <div class="right"><button class="minor" type="button" data-del>Remove</button></div>
-        </div>`;
+
+  <script>
+    // ---- Currency helpers ----
+    const CURRENCY = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'symbol' });
+    const fmtMoney = v => CURRENCY.format(Number(v||0));
+    const parseMoney = s => {
+      const n = parseFloat(String(s||'').replace(/[^0-9.-]/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    // ---- DOM helpers ----
+    const $ = id => document.getElementById(id);
+    const todayISO = () => new Date().toISOString().slice(0,10);
+    const monthsBetween = (a, b) => {
+      const d1 = new Date(a), d2 = new Date(b);
+      const years = d2.getFullYear() - d1.getFullYear();
+      const months = d2.getMonth() - d1.getMonth();
+      const total = years*12 + months + (d2.getDate() >= d1.getDate() ? 0 : -1);
+      return Math.max(1, total);
+    };
+
+    // ---- State ----
+    const empty = () => ({
+      displayName: '',
+      cadence: 26,                // paychecks per year
+      strategy: 'avalanche',
+      incomes: [],                // {name, amountPerPeriod}
+      essentials: [],             // {name, category, amountMonthly, cadenceMonths}
+      debts: [],                  // {name, category, balance, apr, min, term}
+      goals: []                   // {name, goalAmt, goalDate, goalNow}
+    });
+    let state = empty();
+
+    function save(){ localStorage.setItem('h3-budget', JSON.stringify(state)); }
+    function load(){
+      try{
+        const raw = localStorage.getItem('h3-budget');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          // Back-compat: migrate incomes.amountMonthly -> amountPerPeriod
+          if (Array.isArray(parsed.incomes)) {
+            parsed.incomes = parsed.incomes.map(x => {
+              if (x && x.amountPerPeriod == null && x.amountMonthly != null) {
+                const cad = Number(parsed.cadence || 26);
+                const perMonth = Number(x.amountMonthly || 0);
+                const perPeriod = cad ? perMonth * 12 / cad : perMonth;
+                return { name: x.name || '', amountPerPeriod: perPeriod };
+              }
+              return { name: x?.name || '', amountPerPeriod: Number(x?.amountPerPeriod||0) };
+            });
+          }
+          // Back-compat: essentials cadence
+          if (Array.isArray(parsed.essentials)) {
+            parsed.essentials = parsed.essentials.map(e => ({ ...e, cadenceMonths: parseInt(e?.cadenceMonths)||1 }));
+          }
+          state = { ...empty(), ...parsed };
+        }
+      }catch{}
+    }
+
+    // ---- Theme ----
+    (function initTheme(){
+      const saved = localStorage.getItem('h3-theme') || 'dark';
+      document.documentElement.dataset.theme = saved;
+      $('themeToggle').onclick = () => {
+        const cur = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = cur;
+        localStorage.setItem('h3-theme', cur);
+      };
+    })();
+
+    // ---- Orientation lock best-effort ----
+    (async function lockPortrait(){ try { await screen.orientation?.lock?.('portrait'); } catch {} })();
+
+    // ---- Binders ----
+    function bindText(el, obj, key){ el.addEventListener('input', () => { obj[key] = el.value; compute(); save(); }); }
+    function bindNumber(el, obj, key){ el.addEventListener('input', () => { obj[key] = parseMoney(el.value); compute(); save(); }); }
+    function bindMoney(input, obj, key) {
+      const syncState = () => { obj[key] = parseMoney(input.value); compute(); save(); };
+      input.addEventListener('input', syncState);
+      input.addEventListener('blur', () => {
+        const v = obj[key] || 0;
+        input.value = v ? fmtMoney(v) : '';
+      });
+      input.addEventListener('focus', () => {
+        const v = obj[key] || 0;
+        input.value = v ? String(v) : '';
+      });
+    }
+    function removeAt(list, i, rerender){ list.splice(i,1); save(); rerender(); compute(); }
+
+    // ---- Income (per-pay-period inputs) ----
+    function addIncomeRow(item={name:'', amountPerPeriod:0}){ state.incomes.push(item); save(); renderIncomes(); }
+    function renderIncomes(){
+      const host = $('incomeList'); host.innerHTML = '';
+      state.incomes.forEach((it,i)=>{
+        const div = document.createElement('div'); div.className='card';
+        div.innerHTML = `
+          <div class="row">
+            <label>Source <input value="${it.name||''}" placeholder="e.g., Salary" /></label>
+            <label>Paycheck amount (net) <input type="text" inputmode="decimal" class="currency-input" value="${it.amountPerPeriod||0}" /></label>
+          </div>
+          <div class="right"><button class="minor" type="button" data-del>Remove</button></div>`;
+        const [src, amt] = div.querySelectorAll('input');
+        bindText(src, it, 'name');
+        bindMoney(amt, it, 'amountPerPeriod');
+        amt.value = it.amountPerPeriod ? fmtMoney(it.amountPerPeriod) : '';
+        div.querySelector('[data-del]').onclick=()=>removeAt(state.incomes,i,renderIncomes);
+        host.appendChild(div);
+      });
+      $('incomeTotal').textContent = fmtMoney(totalIncomeMonthly());
+      compute();
+    }
+
+    // ---- Essentials (with cadence conversion) ----
+    function addEssentialRow(item={name:'', category:'General', amountMonthly:0, cadenceMonths:1}){ state.essentials.push(item); save(); renderEssentials(); }
+    function renderEssentials(){
+      const host = $('essentialsList'); host.innerHTML = '';
+      const filter = $('essCatFilter').value || 'All';
+      state.essentials
+        .filter(it => filter==='All' || (it.category||'General')===filter)
+        .forEach((it,i)=>{
+        const div = document.createElement('div'); div.className='card';
+        const c = (+it.cadenceMonths||1);
+        div.innerHTML = `
+          <div class="row-4">
+            <label>Expense <input value="${it.name||''}" placeholder="e.g., Rent" /></label>
+            <label>Category
+              <input list="essCats" value="${it.category||'General'}" placeholder="e.g., Housing" />
+            </label>
+            <label>Amount (gross) <input type="text" inputmode="decimal" class="currency-input" value="${it.amountMonthly||0}" /></label>
+            <label>Cadence
+              <select class="cadence-select">
+                <option value="1" ${c===1?'selected':''}>Monthly</option>
+                <option value="3" ${c===3?'selected':''}>Quarterly</option>
+                <option value="6" ${c===6?'selected':''}>Bi-annual</option>
+                <option value="12" ${c===12?'selected':''}>Annual</option>
+              </select>
+            </label>
+          </div>
+          <div class="right"><button class="minor" type="button" data-del>Remove</button></div>`;
+        const inputs = div.querySelectorAll('input');
+        const selCad = div.querySelector('.cadence-select');
+        bindText(inputs[0], it, 'name');
+        bindText(inputs[1], it, 'category');
+        bindMoney(inputs[2], it, 'amountMonthly');
+        inputs[2].value = it.amountMonthly ? fmtMoney(it.amountMonthly) : '';
+        selCad.addEventListener('change', () => {
+          it.cadenceMonths = parseInt(selCad.value, 10) || 1;
+          compute(); save();
+        });
+        div.querySelector('[data-del]').onclick=()=>{ const idx = state.essentials.indexOf(it); removeAt(state.essentials, idx, renderEssentials); };
+        host.appendChild(div);
+      });
+      $('essentialsTotal').textContent = fmtMoney(totalEssentialsMonthly());
+      refreshEssCategories();
+      compute();
+    }
+
+    // ---- Debts ----
+    function addDebtRow(item={name:'', category:'General', balance:0, apr:0, min:0, term:0}){ state.debts.push(item); save(); renderDebts(); }
+    function renderDebts(){
+      const host = $('debtsList'); host.innerHTML = '';
+      const filter = $('debtCatFilter').value || 'All';
+      state.debts
+        .filter(d => filter==='All' || (d.category||'General')===filter)
+        .forEach((d,i)=>{
+        const div = document.createElement('div'); div.className='card';
+        div.innerHTML = `
+          <div class="row-5">
+            <label>Debt name <input value="${d.name||''}" placeholder="e.g., Visa"/></label>
+            <label>Balance <input type="text" inputmode="decimal" class="currency-input" value="${d.balance||0}" /></label>
+            <label>APR % <input type="number" step="0.01" value="${d.apr||0}" /></label>
+            <label>Min (optional) <input type="text" inputmode="decimal" class="currency-input" value="${d.min||0}" /></label>
+            <label>Term months (opt) <input type="number" step="1" value="${d.term||0}" /></label>
+          </div>
+          <div class="row">
+            <label>Category <input list="debtCats" value="${d.category||'General'}" placeholder="e.g., Credit Card"/></label>
+            <div class="right"><button class="minor" type="button" data-del>Remove</button></div>
+          </div>`;
         const ins = div.querySelectorAll('input');
         bindText(ins[0], d, 'name');
         bindMoney(ins[1], d, 'balance');
@@ -534,6 +706,7 @@
       compute();
     }
 
+    // ---- Goals ----
     function addGoalRow(item={name:'', goalAmt:0, goalDate:todayISO(), goalNow:0}){ state.goals.push(item); save(); renderGoals(); }
     function renderGoals(){
       const host = $('goalsList'); host.innerHTML = '';
@@ -566,7 +739,7 @@
     const totalEssentialsMonthly = () =>
       state.essentials.reduce((s, x) => {
         const amt = parseMoney(x.amountMonthly);
-        const cad = parseInt(x.cadenceMonths, 10) || 1;
+        const cad = parseInt(x.cadenceMonths, 10) || 1; // Monthly=1, Quarterly=3, Bi-annual=6, Annual=12
         return s + (amt / cad);
       }, 0);
 
@@ -587,6 +760,7 @@
       sel.innerHTML = values.map(v=>`<option>${v}</option>`).join('');
       sel.value = values.includes(cur)?cur:'All';
     }
+
     // ---- Recommendation explanation ----
     function buildRecommendationText() {
       const inc = totalIncomeMonthly();
@@ -618,10 +792,12 @@
 
     // ---- Math & planning ----
     function compute(){
+      // Sync header inputs
       $('displayName').value = state.displayName || '';
       $('cadence').value = String(state.cadence || 26);
       $('strategy').value = state.strategy || 'avalanche';
 
+      // Goal KPIs from first goal
       const g = state.goals[0] || {};
       const months = g.goalDate ? monthsBetween(new Date(), g.goalDate) : '';
       $('monthsToGoal').textContent = months || '—';
@@ -630,6 +806,7 @@
       $('reqSave').textContent = fmtMoney(reqSave);
       $('reqSaveBadge').textContent = fmtMoney(reqSave);
 
+      // Debts normalization
       let totBal=0, totMin=0;
       const normalized = state.debts.filter(d=>(parseMoney(d.balance)||0)>0).map(d=>{
         const balance = parseMoney(d.balance);
@@ -654,6 +831,7 @@
       const dti = inc>0 ? (totMin/inc) : 0;
       $('dti').textContent = inc>0 ? (dti*100).toFixed(1)+'%' : '—';
 
+      // Avalanche vs Snowball target
       let target='—';
       if (normalized.length){
         const sorted = normalized.slice().sort((a,b) => state.strategy==='avalanche' ? (b.apr - a.apr) : ((a.balance||0) - (b.balance||0)));
@@ -671,9 +849,11 @@
 
       $('projDone').textContent = projection(normalized, Math.max(0, extraPool), state.strategy);
 
+      // Totals UI
       $('incomeTotal').textContent = fmtMoney(inc);
       $('essentialsTotal').textContent = fmtMoney(fixed);
 
+      // Inject recommendation explanation
       $('planExplanation').textContent = buildRecommendationText();
 
       save();
@@ -711,13 +891,16 @@
     $('cadence').addEventListener('change', e=>{ state.cadence = parseInt(e.target.value,10); save(); compute(); });
     $('strategy').addEventListener('change', e=>{ state.strategy = e.target.value; save(); compute(); });
 
+    // ---- Add buttons ----
     $('addIncome').onclick = ()=>addIncomeRow();
     $('addEssential').onclick = ()=>addEssentialRow();
     $('addDebt').onclick = ()=>addDebtRow();
     $('addGoal').onclick = ()=>addGoalRow({name:'', goalAmt:0, goalDate:todayISO(), goalNow:0});
 
+    // ---- Filters ----
     $('essCatFilter').addEventListener('change', renderEssentials);
     $('debtCatFilter').addEventListener('change', renderDebts);
+
     // ---- Tip links (web) ----
     (function initLinks(){
       $('tipCashApp').href = 'https://cash.app/$h3xto';
@@ -725,24 +908,24 @@
       $('tipVenmo').href = 'https://www.venmo.com/u/HEXTO';
     })();
 
-    // ---- Tip Jar / In-App Purchase logic ----
+    // ---- Tip / In-App Purchase logic (Play vs Web) ----
     const PLAY_ORIGIN = 'https://play.google.com/billing';
 
     async function setupTips() {
-      const hasDGS = typeof getDigitalGoodsService === 'function';
+      // Default: show web support section, hide Play purchases
+      const webTips = document.getElementById('webTips');
+      const playPurchases = document.getElementById('playPurchases');
+      webTips?.classList.remove('hide');
+      playPurchases?.classList.add('hide');
 
-      // Default: show web tips, hide Play purchases
-      $('webTips').classList.remove('hide');
-      $('playPurchases').classList.add('hide');
-
-      if (!hasDGS) return;
+      if (typeof getDigitalGoodsService !== 'function') return;
 
       try {
         const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
 
-        // Play-capable: hide web tips, show in-app purchases
-        $('webTips').classList.add('hide');
-        $('playPurchases').classList.remove('hide');
+        // Play-capable: hide web tips, show Play purchases
+        webTips?.classList.add('hide');
+        playPurchases?.classList.remove('hide');
 
         async function buy(id) {
           alert("Paying does not unlock or add any features or functionality to the app. It only helps keep the app completely ad‑free and support the developer.");
@@ -764,8 +947,9 @@
         });
 
       } catch {
-        $('webTips').classList.remove('hide');
-        $('playPurchases').classList.add('hide');
+        // Billing init failed — keep web support visible
+        webTips?.classList.remove('hide');
+        playPurchases?.classList.add('hide');
       }
     }
 
@@ -830,7 +1014,7 @@
     $('blankCsv').onclick = ()=>{
       const header = ['section','name','category','amountPerPeriod','balance','apr','min','term','goalAmt','goalDate','goalNow','cadence','strategy','displayName','cadenceMonths','amountMonthlyLegacy'];
       const example = [
-        ['income','Salary','', '2500','','','','','','','','26','avalanche','', '', ''],
+        ['income','Salary','', '2500','','','','','','','','26','avalanche','', '', ''],  // example net per paycheck
         ['essentials','Rent','Housing','', '', '', '', '', '', '', '', '26','avalanche','', '1', '1800'],
         ['debts','Visa','Credit Card','', '3000','24.99','','','', '', '', '26','avalanche','', '', ''],
         ['goals','Emergency Fund','', '', '','','','', '6000','2026-12-01','1500','26','avalanche','', '', '']
@@ -893,7 +1077,7 @@
                 balance: parseMoney(get(cells,'balance'))||0,
                 apr: parseMoney(get(cells,'apr'))||0,
                 min: parseMoney(get(cells,'min'))||0,
-                                term: parseInt(get(cells,'term'))||0
+                term: parseInt(get(cells,'term'))||0
               });
             } else if (section==='goals'){
               next.goals.push({
@@ -921,7 +1105,7 @@
       e.target.value = '';
     });
 
-    // ---- PDF export ----
+    // PDF via print-friendly view (add plan explanation paragraph)
     $('exportPdf').onclick = ()=>{
       const include = includeMap();
       const w = window.open('', '_blank');
@@ -1009,7 +1193,7 @@
     const _save = save;
     save = function(){ _save(); refreshDatalists(); };
 
-    // ---- Guided Mode ----
+    // ---- Guided Mode (toggle + fullscreen focus + sticky footer + overlay header) ----
     const guided = {
       enabled: false,
       order: ['incomeSec','essentialsSec','debtsSec','goalsSec'],
@@ -1024,15 +1208,16 @@
       toggle.classList.toggle('primary', isOn);
       toggle.textContent = isOn ? 'Guided Mode (On)' : 'Guided Mode';
 
+      // Focus only active section and inject header
       const ids = ['profileSec','incomeSec','essentialsSec','debtsSec','goalsSec','summarySec','exportSec','iapSec','tipSec'];
       ids.forEach(id => {
         const sec = $(id);
         if (!sec) return;
         const activeId = guided.order[guided.idx];
-                const focus = (id === activeId);
+        const focus = (id === activeId);
         sec.classList.toggle('guided-focus', isOn && focus);
 
-        // Guided overlay header injection
+        // Guided overlay header
         const existingHeader = sec.querySelector('.guided-header');
         if (isOn && focus) {
           if (!existingHeader) {
@@ -1061,7 +1246,6 @@
         if (active) active.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
-
     function nextStep() {
       if (guided.idx < guided.order.length - 1) {
         guided.idx++;
@@ -1070,10 +1254,7 @@
       }
       applyGuided();
     }
-    function prevStep() {
-      if (guided.idx > 0) guided.idx--;
-      applyGuided();
-    }
+    function prevStep() { if (guided.idx > 0) guided.idx--; applyGuided(); }
 
     (function initGuided(){
       $('guidedToggle').addEventListener('click', () => {
@@ -1084,7 +1265,7 @@
       $('guidedBack').addEventListener('click', prevStep);
       $('guidedNext').addEventListener('click', nextStep);
 
-      // Allow clicking section headers to jump in Guided Mode
+      // Jump to a section if header clicked while guided is on
       guided.order.forEach(id=>{
         const sec = $(id);
         if (sec) {
@@ -1097,7 +1278,7 @@
       });
     })();
 
-    // ---- Logo zoom overlay ----
+    // ---- Logo zoom ----
     (function initLogoZoom(){
       const overlay = $('logoOverlay');
       const logo = $('logoImg');
