@@ -216,7 +216,7 @@
     }
     .hide { display: none !important; }
 
-    /* ---- Guided Mode ---- */
+    /* ---- Guided Mode footer ---- */
     #guidedControls {
       position: fixed;
       left: 0; right: 0; bottom: 0;
@@ -227,9 +227,24 @@
       display: none;
     }
     #guidedControls.show { display: block; }
-    .guided-dim .section { opacity: 0.12; filter: blur(1px); transition: opacity .15s ease; }
-    .guided-focus { opacity: 1 !important; filter: none !important; }
     .guided-hint { color: var(--muted); font-size: 12px; }
+
+    /* ---- Guided Mode fullscreen focus ---- */
+    body.guided-enabled .section { display: none; }
+    body.guided-enabled .section.guided-focus {
+      display: block;
+      position: fixed;
+      top: 76px; /* below sticky header */
+      left: 0; right: 0; bottom: 64px; /* above sticky footer */
+      z-index: 19;
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+    #guidedToggle.primary { background: var(--primary); color: #fff; }
 
     /* ---- Print/PDF view ---- */
     @media print {
@@ -272,7 +287,7 @@
         <div class="motto">Private • Goal‑Focused • Offline</div>
       </div>
       <div class="controls">
-        <button id="guidedToggle" class="chip ghost" type="button" aria-pressed="false" title="Step-by-step mode">Guided</button>
+        <button id="guidedToggle" class="chip ghost" type="button" aria-pressed="false" title="Step-by-step mode">Guided Mode</button>
         <button id="themeToggle" class="chip" type="button" aria-label="Toggle theme"></button>
       </div>
     </header>
@@ -376,6 +391,7 @@
         </div>
       </div>
       <div id="flags" style="margin-top:10px;"></div>
+      <div id="planExplanation" class="muted" style="margin-top:8px;"></div>
 
       <div class="kpi" style="margin-top:10px;">
         <h3>Goal progress</h3>
@@ -507,7 +523,6 @@
           if (Array.isArray(parsed.incomes)) {
             parsed.incomes = parsed.incomes.map(x => {
               if (x && x.amountPerPeriod == null && x.amountMonthly != null) {
-                // reverse out monthly into per-period using cadence
                 const cad = Number(parsed.cadence || 26);
                 const perMonth = Number(x.amountMonthly || 0);
                 const perPeriod = cad ? perMonth * 12 / cad : perMonth;
@@ -716,6 +731,35 @@
       sel.value = values.includes(cur)?cur:'All';
     }
 
+    // ---- Recommendation explanation ----
+    function buildRecommendationText() {
+      const inc = totalIncomeMonthly();
+      const fixed = totalEssentialsMonthly();
+      const g = state.goals[0] || {};
+      const months = g.goalDate ? monthsBetween(new Date(), g.goalDate) : null;
+      const reqSave = (parseMoney(g.goalAmt) > 0 && months) ? Math.max(0, (parseMoney(g.goalAmt)-parseMoney(g.goalNow))/months) : 0;
+      const totMin = state.debts.reduce((s,d)=>s+(parseMoney(d.min)||0),0);
+      const extraPool = inc - fixed - totMin - reqSave;
+
+      const target = $('targetDebt').textContent || '—';
+      const projDate = $('projDone').textContent || '—';
+      const strategy = state.strategy;
+
+      let strategyText = '';
+      if (strategy === 'avalanche') {
+        strategyText = `Using the Avalanche strategy, your highest-interest debt (“${target}”) is prioritized first. This minimizes total interest paid and accelerates your debt-free date (${projDate}).`;
+      } else {
+        strategyText = `Using the Snowball strategy, your smallest balance debt (“${target}”) is prioritized first. This builds momentum and keeps motivation high, with a projected debt-free date of ${projDate}.`;
+      }
+
+      let goalText = '';
+      if (g.name) {
+        goalText = ` With ${fmtMoney(extraPool)} in free cash each month, you can meet your savings goal (“${g.name}”)${months ? ` in ${months} months` : ''} while staying on track financially.`;
+      }
+
+      return strategyText + goalText;
+    }
+
     // ---- Math & planning ----
     function compute(){
       // Sync header inputs
@@ -779,6 +823,9 @@
       $('incomeTotal').textContent = fmtMoney(inc);
       $('essentialsTotal').textContent = fmtMoney(fixed);
 
+      // Inject recommendation explanation
+      $('planExplanation').textContent = buildRecommendationText();
+
       save();
     }
 
@@ -832,60 +879,60 @@
     })();
 
     // ---- Tip Jar (Play Billing) — single policy-safe implementation ----
-  const PLAY_ORIGIN = 'https://play.google.com/billing';
+    const PLAY_ORIGIN = 'https://play.google.com/billing';
 
-  async function setupTips() {
-    const hint = $('tipState');
+    async function setupTips() {
+      const hint = $('tipState');
 
-    // Default: show web tips, hide Play tips
-    $('webTips').classList.remove('hide');
-    $('playTips').classList.add('hide');
-
-    // If Play Billing API not present, stop here
-    if (typeof getDigitalGoodsService !== 'function') {
-      return;
-    }
-
-    // Try to init Play Billing — if it fails, leave web tips visible
-    try {
-      const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
-
-      // If we got here, we’re in a real Play‑capable context: hide web tips for policy
-      $('webTips').classList.add('hide');
-
-      try {
-        await dgs.listPurchasableItems(['tip_small', 'tip_medium', 'tip_large']);
-        if (hint) hint.textContent = '';
-      } catch {
-        if (hint) hint.textContent = 'Tip products unavailable.';
-      }
-
-      async function buy(id) {
-        try {
-          const details = await dgs.getDetails([id]);
-          if (!details?.length) { alert('Product not available.'); return; }
-          const p = await dgs.launchBillingFlow({ itemId: id });
-          if (p?.purchaseToken) {
-            await dgs.acknowledge({ purchaseToken: p.purchaseToken });
-            alert('Thanks for the tip! 🙏');
-          }
-        } catch {
-          alert('Purchase cancelled or failed.');
-        }
-      }
-
-      document.querySelectorAll('[data-tip]').forEach(b => {
-        b.onclick = () => buy(b.dataset.tip);
-      });
-
-      $('playTips').classList.remove('hide');
-
-    } catch {
-      // Billing init failed — leave web tips visible
+      // Default: show web tips, hide Play tips
+      $('webTips').classList.remove('hide');
       $('playTips').classList.add('hide');
-      if (hint) hint.textContent = 'Tips unavailable at the moment.';
+
+      // If Play Billing API not present, stop here
+      if (typeof getDigitalGoodsService !== 'function') {
+        return;
+      }
+
+      // Try to init Play Billing — if it fails, leave web tips visible
+      try {
+        const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
+
+        // If we got here, we’re in a real Play‑capable context: hide web tips for policy
+        $('webTips').classList.add('hide');
+
+        try {
+          await dgs.listPurchasableItems(['tip_small', 'tip_medium', 'tip_large']);
+          if (hint) hint.textContent = '';
+        } catch {
+          if (hint) hint.textContent = 'Tip products unavailable.';
+        }
+
+        async function buy(id) {
+          try {
+            const details = await dgs.getDetails([id]);
+            if (!details?.length) { alert('Product not available.'); return; }
+            const p = await dgs.launchBillingFlow({ itemId: id });
+            if (p?.purchaseToken) {
+              await dgs.acknowledge({ purchaseToken: p.purchaseToken });
+              alert('Thanks for the tip! 🙏');
+            }
+          } catch {
+            alert('Purchase cancelled or failed.');
+          }
+        }
+
+        document.querySelectorAll('[data-tip]').forEach(b => {
+          b.onclick = () => buy(b.dataset.tip);
+        });
+
+        $('playTips').classList.remove('hide');
+
+      } catch {
+        // Billing init failed — leave web tips visible
+        $('playTips').classList.add('hide');
+        if (hint) hint.textContent = 'Tips unavailable at the moment.';
+      }
     }
-  }
 
     // ---- CSV / PDF ----
     const includeMap = () => ({
@@ -924,6 +971,8 @@
         const inc = totalIncomeMonthly(), ess = totalEssentialsMonthly();
         rows.push(['summary','incomeTotal','', inc,'','','','','','','', state.cadence, state.strategy, state.displayName, '', '']);
         rows.push(['summary','essentialsTotal','', ess,'','','','','','','', state.cadence, state.strategy, state.displayName, '', '']);
+        // Add plan explanation row
+        rows.push(['summary','planExplanation','','','','','','','','','', state.cadence, state.strategy, state.displayName, '', buildRecommendationText()]);
       }
       return toCsv(rows);
     }
@@ -991,7 +1040,6 @@
           const section = (get(cells,'section')||'').toLowerCase();
           try{
             if (section==='income'){
-              // prefer amountPerPeriod; fallback to legacy amountMonthly
               const per = parseMoney(get(cells,'amountPerPeriod'));
               const legacy = parseMoney(get(cells,'amountMonthly'));
               const cad = parseInt(get(cells,'cadence'))||next.cadence||26;
@@ -1039,7 +1087,7 @@
       e.target.value = '';
     });
 
-    // PDF via print-friendly view
+    // PDF via print-friendly view (add plan explanation paragraph)
     $('exportPdf').onclick = ()=>{
       const include = includeMap();
       const w = window.open('', '_blank');
@@ -1060,6 +1108,7 @@
       content.push(`<h1>H³ Budget Tool — ${esc(state.displayName||'Plan')}</h1>`);
       if (include.summary){
         content.push(`<h2>Plan summary</h2>
+          <p>${esc(buildRecommendationText())}</p>
           <table><tbody>
           <tr><th>Income</th><td class="mono">${fmtMoney(inc)}</td></tr>
           <tr><th>Essentials (monthly equivalent)</th><td class="mono">${fmtMoney(ess)}</td></tr>
@@ -1126,43 +1175,52 @@
     const _save = save;
     save = function(){ _save(); refreshDatalists(); };
 
-    // ---- Guided Mode (toggle + sticky footer + focus) ----
+    // ---- Guided Mode (toggle + fullscreen focus + sticky footer) ----
     const guided = {
       enabled: false,
       order: ['incomeSec','essentialsSec','debtsSec','goalsSec'],
       idx: 0
     };
     function applyGuided() {
-      document.body.classList.toggle('guided-dim', guided.enabled);
-      $('guidedControls').classList.toggle('show', guided.enabled);
-      $('guidedToggle').setAttribute('aria-pressed', guided.enabled ? 'true' : 'false');
-      $('guidedToggle').classList.toggle('primary', guided.enabled);
+      const isOn = guided.enabled;
+      document.body.classList.toggle('guided-enabled', isOn);
+      $('guidedControls').classList.toggle('show', isOn);
+      const toggle = $('guidedToggle');
+      toggle.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+      toggle.classList.toggle('primary', isOn);
+      toggle.textContent = isOn ? 'Guided Mode (On)' : 'Guided Mode';
 
-      // Dim all sections, focus only active
+      // Focus only active section
       const ids = ['profileSec','incomeSec','essentialsSec','debtsSec','goalsSec','summarySec','exportSec','tipSec'];
       ids.forEach(id => {
         const sec = $(id);
         if (!sec) return;
-        if (!guided.enabled) {
-          sec.classList.remove('guided-focus');
+        const activeId = guided.order[guided.idx];
+        const focus = (id === activeId);
+        sec.classList.toggle('guided-focus', isOn && focus);
+        if (!isOn) {
           sec.style.opacity = '';
           sec.style.filter = '';
-        } else {
-          const activeId = guided.order[guided.idx];
-          const focus = (id === activeId);
-          sec.classList.toggle('guided-focus', focus);
-          sec.style.opacity = focus ? '1' : '';
-          sec.style.filter = focus ? 'none' : '';
         }
       });
 
+      // Change Next button label on last step
+      $('guidedNext').textContent = guided.idx === guided.order.length - 1 ? 'Finish Guided Mode' : 'Next';
+
       // Scroll active into view
-      if (guided.enabled) {
+      if (isOn) {
         const active = $(guided.order[guided.idx]);
         if (active) active.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
-    function nextStep() { if (guided.idx < guided.order.length - 1) guided.idx++; applyGuided(); }
+    function nextStep() {
+      if (guided.idx < guided.order.length - 1) {
+        guided.idx++;
+      } else {
+        guided.enabled = false;
+      }
+      applyGuided();
+    }
     function prevStep() { if (guided.idx > 0) guided.idx--; applyGuided(); }
 
     (function initGuided(){
@@ -1174,8 +1232,8 @@
       $('guidedBack').addEventListener('click', prevStep);
       $('guidedNext').addEventListener('click', nextStep);
 
-      // If user clicks a section header while guided is on, jump to that section
-      [['incomeSec','Income'],['essentialsSec','Essentials'],['debtsSec','Debts'],['goalsSec','Savings Goal(s)']].forEach(([id])=>{
+      // Jump to a section if header clicked while guided is on
+      [['incomeSec'],['essentialsSec'],['debtsSec'],['goalsSec']].forEach(([id])=>{
         const sec = $(id);
         if (sec) {
           sec.querySelector('h2')?.addEventListener('click', ()=>{
