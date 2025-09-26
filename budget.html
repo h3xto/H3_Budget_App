@@ -202,12 +202,14 @@
       gap: 8px;
     }
     .tip-col.brand img {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      background: transparent;
-      border-radius: 10px;
-    }
+    display: block;
+    margin: 0 auto;
+    max-width: 80px;
+    height: auto;
+    object-fit: contain;
+    background: transparent;
+    border-radius: 10px;
+}
     .tip-info { display: flex; flex-direction: column; gap: 6px; align-items: center; }
     .nowrap { white-space: nowrap; }
 
@@ -450,15 +452,15 @@
       <h2>In‑App Purchase – No New Features</h2>
       <div id="playPurchases" class="tip-row hide">
         <div class="tip-col brand">
-          <img src="assets/icon-1.png" alt="$1 icon" />
+          <img src="assets/icon-trend-green.png" alt="Upward trend icon (green) for $1" />
           <button class="chip" data-tip="tip_small">$1</button>
         </div>
         <div class="tip-col brand">
-          <img src="assets/icon-3.png" alt="$3 icon" />
+          <img src="assets/icon-trend-blue.png" alt="Upward trend icon (blue) for $3" />
           <button class="chip" data-tip="tip_medium">$3</button>
         </div>
         <div class="tip-col brand">
-          <img src="assets/icon-5.png" alt="$5 icon" />
+          <img src="assets/icon-trend-orange.png" alt="Upward trend icon (orange) for $5" />
           <button class="chip" data-tip="tip_large">$5</button>
         </div>
       </div>
@@ -965,12 +967,7 @@
     function toCsv(rows){
       const esc = v => {
         v = (v ?? '').toString();
-        if (/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
-        return v;
-      };
-      return rows.map(r=> r.map(esc).join(',')).join('\n');
-    }
-
+        if (/[",\n]/.test(v)) v = '"' + v
     function buildCsv(include){
       const rows = [];
       rows.push(['section','name','category','amountPerPeriod','balance','apr','min','term','goalAmt','goalDate','goalNow','cadence','strategy','displayName','cadenceMonths','amountMonthlyLegacy']);
@@ -1193,7 +1190,7 @@
     const _save = save;
     save = function(){ _save(); refreshDatalists(); };
 
-    // ---- Guided Mode (toggle + fullscreen focus + sticky footer + overlay header) ----
+    // ---- Guided Mode ----
     const guided = {
       enabled: false,
       order: ['incomeSec','essentialsSec','debtsSec','goalsSec'],
@@ -1208,7 +1205,6 @@
       toggle.classList.toggle('primary', isOn);
       toggle.textContent = isOn ? 'Guided Mode (On)' : 'Guided Mode';
 
-      // Focus only active section and inject header
       const ids = ['profileSec','incomeSec','essentialsSec','debtsSec','goalsSec','summarySec','exportSec','iapSec','tipSec'];
       ids.forEach(id => {
         const sec = $(id);
@@ -1217,7 +1213,7 @@
         const focus = (id === activeId);
         sec.classList.toggle('guided-focus', isOn && focus);
 
-        // Guided overlay header
+        // Guided overlay header injection
         const existingHeader = sec.querySelector('.guided-header');
         if (isOn && focus) {
           if (!existingHeader) {
@@ -1237,10 +1233,8 @@
         }
       });
 
-      // Change Next button label on last step
       $('guidedNext').textContent = guided.idx === guided.order.length - 1 ? 'Finish Guided Mode' : 'Next';
 
-      // Scroll active into view
       if (isOn) {
         const active = $(guided.order[guided.idx]);
         if (active) active.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1265,7 +1259,6 @@
       $('guidedBack').addEventListener('click', prevStep);
       $('guidedNext').addEventListener('click', nextStep);
 
-      // Jump to a section if header clicked while guided is on
       guided.order.forEach(id=>{
         const sec = $(id);
         if (sec) {
@@ -1278,7 +1271,7 @@
       });
     })();
 
-    // ---- Logo zoom ----
+    // ---- Logo zoom overlay ----
     (function initLogoZoom(){
       const overlay = $('logoOverlay');
       const logo = $('logoImg');
