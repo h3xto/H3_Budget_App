@@ -917,58 +917,89 @@
     const isChrome = !!window.chrome && /Chrome/i.test(navigator.userAgent);
     const PLAY_ORIGIN = 'https://play.google.com/billing';
 
-    async function setupTips() {
-      const tipSec = document.getElementById('tipSec');
-      const iapSec = document.getElementById('iapSec');
-      const playPurchases = document.getElementById('playPurchases');
-      const iapError = document.getElementById('iapError');
+    <script>
+async function setupTips() {
+  const tipSec = document.getElementById('tipSec');
+  const iapSec = document.getElementById('iapSec');
+  const playPurchases = document.getElementById('playPurchases');
+  const iapError = document.getElementById('iapError');
+  const productIds = ['tip_small', 'tip_medium', 'tip_large'];
 
-      // Default: Web view (show external links, hide IAP)
-      tipSec?.classList.remove('hide');
-      iapSec?.classList.add('hide');
+  // Default: Web view (show external links, hide IAP)
+  tipSec?.classList.remove('hide');
+  iapSec?.classList.add('hide');
 
-      // Strict gate for Play build:
-      if (!(isAndroid && isStandalone && isChrome)) return;
-      if (typeof getDigitalGoodsService !== 'function') {
-        // Android standalone but no DGS: show IAP section disabled, still hide web tips
-        tipSec?.classList.add('hide');
-        iapSec?.classList.remove('hide');
-        playPurchases?.classList.add('iap-disabled');
-        iapError?.classList.remove('hide');
-        return;
-      }
+  // Strict gate for Play build (Android + standalone + Chrome)
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isChrome = !!window.chrome && /Chrome/i.test(navigator.userAgent);
+  const PLAY_ORIGIN = 'https://play.google.com/billing';
 
+  if (!(isAndroid && isStandalone && isChrome)) return;
+
+  // Hide web links for Play build regardless
+  tipSec?.classList.add('hide');
+  iapSec?.classList.remove('hide');
+
+  // If DGS not present: show disabled IAP with status
+  if (typeof getDigitalGoodsService !== 'function') {
+    playPurchases?.classList.add('iap-disabled');
+    iapError?.classList.remove('hide');
+    return;
+  }
+
+  try {
+    const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
+
+    // Prefetch product details and gate buttons
+    let details = [];
+    try { details = await dgs.getDetails(productIds); } catch {}
+    const availableSet = new Set((details || []).map(d => d.itemId));
+
+    // If any product is missing, disable all and show error
+    const allAvailable = productIds.every(id => availableSet.has(id));
+    if (!allAvailable) {
+      playPurchases?.classList.add('iap-disabled');
+      iapError?.classList.remove('hide');
+      // Unbind clicks
+      document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = null; });
+      return;
+    }
+
+    // Products available: enable buttons, hide error
+    playPurchases?.classList.remove('iap-disabled');
+    iapError?.classList.add('hide');
+
+    async function buy(id) {
+      // Disclaimer shown once per launch; feel free to remove if redundant
+      alert("Paying does not unlock or add any features or functionality to the app. It only helps keep the app completely ad‑free and support the developer.");
       try {
-        const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
-        // If DGS resolves, hide web tips and show active IAP
-        tipSec?.classList.add('hide');
-        iapSec?.classList.remove('hide');
-        playPurchases?.classList.remove('iap-disabled');
-        iapError?.classList.add('hide');
-
-        async function buy(id) {
-          try {
-            const details = await dgs.getDetails([id]);
-            if (!details?.length) { alert('Product not available.'); return; }
-            const p = await dgs.launchBillingFlow({ itemId: id });
-            if (p?.purchaseToken) {
-              await dgs.acknowledge({ purchaseToken: p.purchaseToken });
-              alert('Thank you for your support! 🙏');
-            }
-          } catch {
-            alert('Purchase cancelled or failed.');
-          }
+        const p = await dgs.launchBillingFlow({ itemId: id });
+        if (p?.purchaseToken) {
+          await dgs.acknowledge({ purchaseToken: p.purchaseToken });
+          alert('Thank you for your support! 🙏');
+        } else {
+          alert('Purchase cancelled or failed.');
         }
-        document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = () => buy(b.dataset.tip); });
       } catch {
-        // DGS failed: hide web tips, show disabled IAP (policy-safe)
-        tipSec?.classList.add('hide');
-        iapSec?.classList.remove('hide');
-        playPurchases?.classList.add('iap-disabled');
-        iapError?.classList.remove('hide');
-        document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = null; });
+        alert('Purchase cancelled or failed.');
       }
     }
+
+    // Bind buttons
+    document.querySelectorAll('[data-tip]').forEach(b => {
+      const id = b.dataset.tip;
+      b.onclick = () => buy(id);
+    });
+
+  } catch {
+    // DGS failed: show disabled IAP (policy-safe)
+    playPurchases?.classList.add('iap-disabled');
+    iapError?.classList.remove('hide');
+    document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = null; });
+  }
+}
+</script>
 
     // ---- Guided Mode ----
     const guided = {
