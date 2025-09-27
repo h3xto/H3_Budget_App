@@ -301,6 +301,28 @@
     .iap-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
     .iap-error { margin-top: 6px; font-size: 12px; color: var(--warn); }
     .iap-disabled .chip { opacity: 0.6; pointer-events: none; }
+
+    /* ---- Inline SVG trend icons ---- */
+    .trend-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      background: transparent;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* ---- Guided footer light-mode contrast patch ---- */
+    #guidedControls .chip.ghost {
+      color: #ffffff;
+      border-color: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.08);
+    }
+    :root[data-theme="light"] #guidedControls .chip.ghost {
+      color: #ffffff;
+      border-color: rgba(255,255,255,0.45);
+      background: rgba(0,0,0,0.28);
+    }
   </style>
 </head>
 <body>
@@ -459,15 +481,24 @@
       <p class="iap-note" id="iapNote">Paying does not unlock or add any features or functionality to the app. It only helps keep the app completely ad‑free and support the developer.</p>
       <div id="playPurchases" class="tip-row">
         <div class="tip-col brand">
-          <img src="assets/icon-trend-green.png" alt="Upward trend icon (green) for $1" />
+          <svg class="trend-icon" viewBox="0 0 64 64" aria-label="Upward trend icon (green)">
+            <path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#10B981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="52" cy="20" r="3" fill="#10B981"/>
+          </svg>
           <button class="chip" data-tip="tip_small">$1</button>
         </div>
         <div class="tip-col brand">
-          <img src="assets/icon-trend-blue.png" alt="Upward trend icon (blue) for $3" />
+          <svg class="trend-icon" viewBox="0 0 64 64" aria-label="Upward trend icon (blue)">
+            <path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="52" cy="20" r="3" fill="#3B82F6"/>
+          </svg>
           <button class="chip" data-tip="tip_medium">$3</button>
         </div>
         <div class="tip-col brand">
-          <img src="assets/icon-trend-orange.png" alt="Upward trend icon (orange) for $5" />
+          <svg class="trend-icon" viewBox="0 0 64 64" aria-label="Upward trend icon (orange)">
+            <path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="52" cy="20" r="3" fill="#F59E0B"/>
+          </svg>
           <button class="chip" data-tip="tip_large">$5</button>
         </div>
       </div>
@@ -591,6 +622,7 @@
 
     // ---- Orientation lock best-effort ----
     (async function lockPortrait(){ try { await screen.orientation?.lock?.('portrait'); } catch {} })();
+
     // ---- Binders ----
     function bindText(el, obj, key){ el.addEventListener('input', () => { obj[key] = el.value; compute(); save(); }); }
     function bindNumber(el, obj, key){ el.addEventListener('input', () => { obj[key] = parseMoney(el.value); compute(); save(); }); }
@@ -917,11 +949,13 @@
     const isChrome = !!window.chrome && /Chrome/i.test(navigator.userAgent);
     const PLAY_ORIGIN = 'https://play.google.com/billing';
 
+    // ---- Hardened Play/Web IAP setup ----
     async function setupTips() {
       const tipSec = document.getElementById('tipSec');
       const iapSec = document.getElementById('iapSec');
       const playPurchases = document.getElementById('playPurchases');
       const iapError = document.getElementById('iapError');
+      const productIds = ['tip_small', 'tip_medium', 'tip_large'];
 
       // Default: Web view (show external links, hide IAP)
       tipSec?.classList.remove('hide');
@@ -929,10 +963,13 @@
 
       // Strict gate for Play build:
       if (!(isAndroid && isStandalone && isChrome)) return;
+
+      // Hide web tips for Play build
+      tipSec?.classList.add('hide');
+      iapSec?.classList.remove('hide');
+
+      // DGS presence check
       if (typeof getDigitalGoodsService !== 'function') {
-        // Android standalone but no DGS: show IAP section disabled, still hide web tips
-        tipSec?.classList.add('hide');
-        iapSec?.classList.remove('hide');
         playPurchases?.classList.add('iap-disabled');
         iapError?.classList.remove('hide');
         return;
@@ -940,30 +977,46 @@
 
       try {
         const dgs = await getDigitalGoodsService(PLAY_ORIGIN);
-        // If DGS resolves, hide web tips and show active IAP
-        tipSec?.classList.add('hide');
-        iapSec?.classList.remove('hide');
+
+        // Prefetch product details and gate buttons
+        let details = [];
+        try { details = await dgs.getDetails(productIds); } catch {}
+        const availableSet = new Set((details || []).map(d => d.itemId));
+
+        const allAvailable = productIds.every(id => availableSet.has(id));
+        if (!allAvailable) {
+          playPurchases?.classList.add('iap-disabled');
+          iapError?.classList.remove('hide');
+          document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = null; });
+          return;
+        }
+
+        // Products available: enable buttons, hide error
         playPurchases?.classList.remove('iap-disabled');
         iapError?.classList.add('hide');
 
         async function buy(id) {
           try {
-            const details = await dgs.getDetails([id]);
-            if (!details?.length) { alert('Product not available.'); return; }
             const p = await dgs.launchBillingFlow({ itemId: id });
             if (p?.purchaseToken) {
               await dgs.acknowledge({ purchaseToken: p.purchaseToken });
               alert('Thank you for your support! 🙏');
+            } else {
+              alert('Purchase cancelled or failed.');
             }
           } catch {
             alert('Purchase cancelled or failed.');
           }
         }
-        document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = () => buy(b.dataset.tip); });
+
+        // Bind buttons
+        document.querySelectorAll('[data-tip]').forEach(b => {
+          const id = b.dataset.tip;
+          b.onclick = () => buy(id);
+        });
+
       } catch {
-        // DGS failed: hide web tips, show disabled IAP (policy-safe)
-        tipSec?.classList.add('hide');
-        iapSec?.classList.remove('hide');
+        // DGS failed: show disabled IAP (policy-safe)
         playPurchases?.classList.add('iap-disabled');
         iapError?.classList.remove('hide');
         document.querySelectorAll('[data-tip]').forEach(b => { b.onclick = null; });
