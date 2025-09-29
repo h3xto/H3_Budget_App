@@ -1,13 +1,13 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-  <title>H³ Budget Tool</title>
-  <meta name="theme-color" content="#0f172a" />
-  <link rel="icon" href="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true" />
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" name="viewport"/>
+<title>H³ Budget Tool</title>
+<meta content="#0f172a" name="theme-color"/>
+<link href="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true" rel="icon"/>
+<style>
     /* ---- Design system (dark and light) ---- */
     :root {
       --bg: #0b0f19;
@@ -323,236 +323,230 @@
       border-color: rgba(255,255,255,0.45);
       background: rgba(0,0,0,0.28);
     }
-  </style>
+  
+    html {
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }
+</style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <img
-        class="logo"
-        id="logoImg"
-        src="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true"
-        alt="H3 Logo" />
-      <div class="title">
-        <div class="name">H³ Budget Tool</div>
-        <div class="motto">Private • Goal‑Focused • Offline</div>
-      </div>
-      <div class="controls">
-        <button id="guidedToggle" class="chip ghost" type="button" aria-pressed="false" title="Step-by-step mode">Guided Mode</button>
-        <button id="themeToggle" class="chip" type="button" aria-label="Toggle theme"></button>
-      </div>
-    </header>
-
-    <!-- Profile & cadence -->
-    <div class="section" id="profileSec">
-      <h2>Profile & cadence</h2>
-      <div class="row">
-        <label>Display name
-          <input id="displayName" placeholder="Name for your plan" />
-        </label>
-        <label>Pay cadence
+<div class="app">
+<header>
+<img alt="H3 Logo" class="logo" id="logoImg" src="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true"/>
+<div class="title">
+<div class="name">H³ Budget Tool</div>
+<div class="motto">Private • Goal‑Focused • Offline</div>
+</div>
+<div class="controls">
+<button aria-pressed="false" class="chip ghost" id="guidedToggle" title="Step-by-step mode" type="button">Guided Mode</button>
+<button aria-label="Toggle theme" class="chip" id="themeToggle" type="button"></button>
+</div>
+</header>
+<!-- Profile & cadence -->
+<div class="section" id="profileSec">
+<h2>Profile &amp; cadence</h2>
+<div class="row">
+<label>Display name
+          <input id="displayName" placeholder="Name for your plan"/>
+</label>
+<label>Pay cadence
           <select id="cadence">
-            <option value="52">Weekly (52/yr)</option>
-            <option value="26">Bi‑Weekly (26/yr)</option>
-            <option value="24">Twice‑a‑month (24/yr)</option>
-          </select>
-        </label>
-      </div>
-    </div>
-
-    <!-- Income -->
-    <div class="section" id="incomeSec">
-      <h2>
+<option value="52">Weekly (52/yr)</option>
+<option value="26">Bi‑Weekly (26/yr)</option>
+<option value="24">Twice‑a‑month (24/yr)</option>
+</select>
+</label>
+</div>
+</div>
+<!-- Income -->
+<div class="section" id="incomeSec">
+<h2>
         Income
         <span>
-          <button class="chip ghost" id="filterIncome" type="button" disabled>All</button>
-          <button class="chip" id="addIncome" type="button">+ Add income</button>
-        </span>
-      </h2>
-      <div id="incomeList" class="list"></div>
-      <div class="totals">
-        <div class="badge">Monthly income: <span id="incomeTotal" class="mono">$0.00</span></div>
-      </div>
-    </div>
-
-    <!-- Essentials -->
-    <div class="section" id="essentialsSec">
-      <h2>
+<button class="chip ghost" disabled="" id="filterIncome" type="button">All</button>
+<button class="chip" id="addIncome" type="button">+ Add income</button>
+</span>
+</h2>
+<div class="list" id="incomeList"></div>
+<div class="totals">
+<div class="badge">Monthly income: <span class="mono" id="incomeTotal">$0.00</span></div>
+</div>
+</div>
+<!-- Essentials -->
+<div class="section" id="essentialsSec">
+<h2>
         Essentials
         <span>
-          <select id="essCatFilter" title="Filter by category"></select>
-          <button class="chip" id="addEssential" type="button">+ Add expense</button>
-        </span>
-      </h2>
-      <div id="essentialsList" class="list"></div>
-      <div class="totals">
-        <div class="badge">Monthly essentials: <span id="essentialsTotal" class="mono">$0.00</span></div>
-      </div>
-    </div>
-
-    <!-- Debts -->
-    <div class="section" id="debtsSec">
-      <h2>
+<select id="essCatFilter" title="Filter by category"></select>
+<button class="chip" id="addEssential" type="button">+ Add expense</button>
+</span>
+</h2>
+<div class="list" id="essentialsList"></div>
+<div class="totals">
+<div class="badge">Monthly essentials: <span class="mono" id="essentialsTotal">$0.00</span></div>
+</div>
+</div>
+<!-- Debts -->
+<div class="section" id="debtsSec">
+<h2>
         Debts
         <span>
-          <select id="debtCatFilter" title="Filter by category"></select>
-          <button class="chip" id="addDebt" type="button">+ Add debt</button>
-        </span>
-      </h2>
-      <div id="debtsList" class="list"></div>
-      <div class="totals">
-        <div class="badge">Total balance: <span id="totBal" class="mono">$0.00</span></div>
-        <div class="badge">Total minimums: <span id="totMin" class="mono">$0.00</span></div>
-      </div>
-    </div>
-
-    <!-- Savings Goals -->
-    <div class="section" id="goalsSec">
-      <h2>
+<select id="debtCatFilter" title="Filter by category"></select>
+<button class="chip" id="addDebt" type="button">+ Add debt</button>
+</span>
+</h2>
+<div class="list" id="debtsList"></div>
+<div class="totals">
+<div class="badge">Total balance: <span class="mono" id="totBal">$0.00</span></div>
+<div class="badge">Total minimums: <span class="mono" id="totMin">$0.00</span></div>
+</div>
+</div>
+<!-- Savings Goals -->
+<div class="section" id="goalsSec">
+<h2>
         Savings Goal(s)
         <button class="chip" id="addGoal" type="button">+ Add goal</button>
-      </h2>
-      <div id="goalsList" class="list"></div>
-      <div class="totals">
-        <div class="badge">Monthly required saving: <span id="reqSaveBadge" class="mono">$0.00</span></div>
-        <div class="badge">Months to goal: <span id="monthsBadge" class="mono">—</span></div>
-      </div>
-    </div>
+</h2>
+<div class="list" id="goalsList"></div>
+<div class="totals">
+<div class="badge">Monthly required saving: <span class="mono" id="reqSaveBadge">$0.00</span></div>
+<div class="badge">Months to goal: <span class="mono" id="monthsBadge">—</span></div>
+</div>
+</div>
+<!-- Plan summary -->
+<div class="section summary" id="summarySec">
+<h2>Plan summary</h2>
+<div class="grid-2">
+<div class="kpi">
+<h3>Cash flow</h3>
+<p class="muted">Income − Essentials − Debt minimums − Required saving</p>
+<p class="line"><span>Free cash each month</span><span class="mono right" id="extraPool">$0.00</span></p>
+<p class="line"><span>Debt‑to‑income (DTI)</span><span class="mono right" id="dti">—</span></p>
+</div>
+<div class="kpi">
+<h3>Recommendations</h3>
+<p class="line"><span>Strategy</span>
+<select id="strategy">
+<option value="avalanche">Avalanche (highest APR first)</option>
+<option value="snowball">Snowball (smallest balance first)</option>
+</select>
+</p>
+<p class="line"><span>Target debt this month</span><span class="mono right" id="targetDebt">—</span></p>
+<p class="line"><span>Projected debt‑free date</span><span class="mono right" id="projDone">—</span></p>
+</div>
+</div>
+<div id="flags" style="margin-top:10px;"></div>
+<div class="muted" id="planExplanation" style="margin-top:8px;"></div>
+<div class="kpi" style="margin-top:10px;">
+<h3>Goal progress</h3>
+<p class="muted">Updates as you enter “Saved so far” and a target date.</p>
+<p class="line"><span>Required monthly saving</span><span class="mono right" id="reqSave">$0.00</span></p>
+<p class="line"><span>Months to goal</span><span class="mono right" id="monthsToGoal">—</span></p>
+</div>
+</div>
+<!-- Export / Import -->
+<div class="section" id="exportSec">
+<h2>Export &amp; import</h2>
+<div class="export-controls">
+<div class="checks">
+<label><input checked="" id="incChk" type="checkbox"/> Income</label>
+<label><input checked="" id="essChk" type="checkbox"/> Essentials</label>
+<label><input checked="" id="debChk" type="checkbox"/> Debts</label>
+<label><input checked="" id="goaChk" type="checkbox"/> Goals</label>
+<label><input checked="" id="sumChk" type="checkbox"/> Plan summary</label>
+</div>
+<div class="tip-row">
+<button class="chip" id="exportCsv">Export CSV</button>
+<button class="chip" id="exportPdf">Export PDF</button>
+<button class="chip ghost" id="blankCsv">Download blank CSV template</button>
+<label class="chip ghost" for="importCsvInput" style="cursor:pointer;">Import CSV</label>
+<input accept=".csv" id="importCsvInput" style="display:none;" type="file"/>
+</div>
+<div class="muted" id="importErrors"></div>
+</div>
+</div>
+</div>
+<!-- In-App Purchases (Play build only) -->
+<div class="section" id="iapSec">
+<h2 id="iapTitle">In‑App Purchases</h2>
+<p class="iap-note" id="iapNote">Paying does not unlock or add any features or functionality to the app. It only helps keep the app completely ad‑free and support the developer.</p>
+<div class="tip-row" id="playPurchases">
+<div class="tip-col brand">
+<svg aria-label="Upward trend icon (green)" class="trend-icon" viewbox="0 0 64 64">
+<path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#10B981" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<circle cx="52" cy="20" fill="#10B981" r="3"></circle>
+</svg>
+<button class="chip" data-tip="tip_small">$1</button>
+</div>
+<div class="tip-col brand">
+<svg aria-label="Upward trend icon (blue)" class="trend-icon" viewbox="0 0 64 64">
+<path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#3B82F6" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<circle cx="52" cy="20" fill="#3B82F6" r="3"></circle>
+</svg>
+<button class="chip" data-tip="tip_medium">$3</button>
+</div>
+<div class="tip-col brand">
+<svg aria-label="Upward trend icon (orange)" class="trend-icon" viewbox="0 0 64 64">
+<path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#F59E0B" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<circle cx="52" cy="20" fill="#F59E0B" r="3"></circle>
+</svg>
+<button class="chip" data-tip="tip_large">$5</button>
+</div>
+</div>
+<div class="iap-error hide" id="iapError">In‑app purchases are currently unavailable.</div>
+</div>
+<!-- Support the Developer (Web build only) -->
+<div class="section" id="tipSec">
+<h2>Support the Developer</h2>
+<div class="tip-row" id="webTips">
+<div class="tip-col brand">
+<img alt="CashApp logo" src="assets/icon-cashapp.png"/>
+<div class="tip-info">
+<div class="nowrap">CashApp</div>
+<a class="chip" href="https://cash.app/$h3xto" id="tipCashApp" rel="noopener" target="_blank">Open link</a>
+</div>
+</div>
+<div class="tip-col brand">
+<img alt="PayPal logo" src="assets/icon-paypal.png"/>
+<div class="tip-info">
+<div class="nowrap">PayPal</div>
+<a class="chip" href="https://paypal.me/h3xto" id="tipPayPal" rel="noopener" target="_blank">Open link</a>
+</div>
+</div>
+<div class="tip-col brand">
+<img alt="Venmo logo" src="assets/icon-venmo.png"/>
+<div class="tip-info">
+<div class="nowrap">Venmo</div>
+<a class="chip" href="https://www.venmo.com/u/HEXTO" id="tipVenmo" rel="noopener" target="_blank">Open link</a>
+</div>
+</div>
+</div>
+</div>
 
-    <!-- Plan summary -->
-    <div class="section summary" id="summarySec">
-      <h2>Plan summary</h2>
-      <div class="grid-2">
-        <div class="kpi">
-          <h3>Cash flow</h3>
-          <p class="muted">Income − Essentials − Debt minimums − Required saving</p>
-          <p class="line"><span>Free cash each month</span><span id="extraPool" class="mono right">$0.00</span></p>
-          <p class="line"><span>Debt‑to‑income (DTI)</span><span id="dti" class="mono right">—</span></p>
-        </div>
-        <div class="kpi">
-          <h3>Recommendations</h3>
-          <p class="line"><span>Strategy</span>
-            <select id="strategy">
-              <option value="avalanche">Avalanche (highest APR first)</option>
-              <option value="snowball">Snowball (smallest balance first)</option>
-            </select>
-          </p>
-          <p class="line"><span>Target debt this month</span><span id="targetDebt" class="mono right">—</span></p>
-          <p class="line"><span>Projected debt‑free date</span><span id="projDone" class="mono right">—</span></p>
-        </div>
-      </div>
-      <div id="flags" style="margin-top:10px;"></div>
-      <div id="planExplanation" class="muted" style="margin-top:8px;"></div>
-
-      <div class="kpi" style="margin-top:10px;">
-        <h3>Goal progress</h3>
-        <p class="muted">Updates as you enter “Saved so far” and a target date.</p>
-        <p class="line"><span>Required monthly saving</span><span id="reqSave" class="mono right">$0.00</span></p>
-        <p class="line"><span>Months to goal</span><span id="monthsToGoal" class="mono right">—</span></p>
-      </div>
-    </div>
-
-    <!-- Export / Import -->
-    <div class="section" id="exportSec">
-      <h2>Export & import</h2>
-      <div class="export-controls">
-        <div class="checks">
-          <label><input type="checkbox" id="incChk" checked /> Income</label>
-          <label><input type="checkbox" id="essChk" checked /> Essentials</label>
-          <label><input type="checkbox" id="debChk" checked /> Debts</label>
-          <label><input type="checkbox" id="goaChk" checked /> Goals</label>
-          <label><input type="checkbox" id="sumChk" checked /> Plan summary</label>
-        </div>
-        <div class="tip-row">
-          <button id="exportCsv" class="chip">Export CSV</button>
-          <button id="exportPdf" class="chip">Export PDF</button>
-          <button id="blankCsv" class="chip ghost">Download blank CSV template</button>
-          <label class="chip ghost" for="importCsvInput" style="cursor:pointer;">Import CSV</label>
-          <input id="importCsvInput" type="file" accept=".csv" style="display:none;" />
-        </div>
-        <div id="importErrors" class="muted"></div>
-      </div>
-      </div>
-    </div>
-
-    <!-- In-App Purchases (Play build only) -->
-    <div class="section" id="iapSec">
-      <h2 id="iapTitle">In‑App Purchases</h2>
-      <p class="iap-note" id="iapNote">Paying does not unlock or add any features or functionality to the app. It only helps keep the app completely ad‑free and support the developer.</p>
-      <div id="playPurchases" class="tip-row">
-        <div class="tip-col brand">
-          <svg class="trend-icon" viewBox="0 0 64 64" aria-label="Upward trend icon (green)">
-            <path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#10B981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="52" cy="20" r="3" fill="#10B981"/>
-          </svg>
-          <button class="chip" data-tip="tip_small">$1</button>
-        </div>
-        <div class="tip-col brand">
-          <svg class="trend-icon" viewBox="0 0 64 64" aria-label="Upward trend icon (blue)">
-            <path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="52" cy="20" r="3" fill="#3B82F6"/>
-          </svg>
-          <button class="chip" data-tip="tip_medium">$3</button>
-        </div>
-        <div class="tip-col brand">
-          <svg class="trend-icon" viewBox="0 0 64 64" aria-label="Upward trend icon (orange)">
-            <path d="M10 46 L26 30 L34 38 L52 20" fill="none" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="52" cy="20" r="3" fill="#F59E0B"/>
-          </svg>
-          <button class="chip" data-tip="tip_large">$5</button>
-        </div>
-      </div>
-      <div id="iapError" class="iap-error hide">In‑app purchases are currently unavailable.</div>
-    </div>
-
-    <!-- Support the Developer (Web build only) -->
-    <div class="section" id="tipSec">
-      <h2>Support the Developer</h2>
-      <div id="webTips" class="tip-row">
-        <div class="tip-col brand">
-          <img src="assets/icon-cashapp.png" alt="CashApp logo" />
-          <div class="tip-info">
-            <div class="nowrap">CashApp</div>
-            <a class="chip" id="tipCashApp" href="https://cash.app/$h3xto" target="_blank" rel="noopener">Open link</a>
-          </div>
-        </div>
-        <div class="tip-col brand">
-          <img src="assets/icon-paypal.png" alt="PayPal logo" />
-          <div class="tip-info">
-            <div class="nowrap">PayPal</div>
-            <a class="chip" id="tipPayPal" href="https://paypal.me/h3xto" target="_blank" rel="noopener">Open link</a>
-          </div>
-        </div>
-        <div class="tip-col brand">
-          <img src="assets/icon-venmo.png" alt="Venmo logo" />
-          <div class="tip-info">
-            <div class="nowrap">Venmo</div>
-            <a class="chip" id="tipVenmo" href="https://www.venmo.com/u/HEXTO" target="_blank" rel="noopener">Open link</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Guided sticky controls -->
-  <div id="guidedControls">
-    <div class="app" style="padding-top:6px; padding-bottom:6px;">
-      <div class="row" style="grid-template-columns: 1fr auto; align-items:center;">
-        <div class="guided-hint">Guided Mode: fill this section, then click Next. You can exit anytime.</div>
-        <div>
-          <button id="guidedBack" class="chip ghost" type="button">Back</button>
-          <button id="guidedNext" class="chip" type="button">Next</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Logo zoom overlay -->
-  <div id="logoOverlay" aria-hidden="true">
-    <img src="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true" alt="H3 Logo Large" />
-  </div>
-
-  <script>
+<!-- Guided sticky controls -->
+<div id="guidedControls">
+<div class="app" style="padding-top:6px; padding-bottom:6px;">
+<div class="row" style="grid-template-columns: 1fr auto; align-items:center;">
+<div class="guided-hint">Guided Mode: fill this section, then click Next. You can exit anytime.</div>
+<div>
+<button class="chip ghost" id="guidedBack" type="button">Back</button>
+<button class="chip" id="guidedNext" type="button">Next</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Logo zoom overlay -->
+<div aria-hidden="true" id="logoOverlay">
+<img alt="H3 Logo Large" src="https://github.com/h3xto/H3_Budget_App/blob/main/icons/app-h3-cube-contrast-Hwhite.svg?raw=true"/>
+</div>
+<script>
     // ---- Currency helpers ----
     const CURRENCY = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', currencyDisplay: 'symbol' });
     const fmtMoney = v => CURRENCY.format(Number(v||0));
@@ -1131,6 +1125,21 @@
     load();
     renderAll();
     setupTips();
-  </script>
+  
+// Theme toggle logic
+(function() {
+  const themeToggle = document.getElementById('themeToggle');
+  if (!themeToggle) return;
+  let theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.setAttribute('data-theme', theme);
+  themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+  themeToggle.addEventListener('click', () => {
+    theme = theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+  });
+})();
+</script>
 </body>
 </html>
