@@ -93,12 +93,13 @@
       padding: 0;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: conic-gradient(#000 0 50%, #fff 50% 100%);
+      background: var(--panel);
       box-shadow: var(--shadow);
       cursor: pointer;
-    }
-    :root[data-theme="light"] #themeToggle {
-      background: conic-gradient(#0f172a 0 50%, #f8fafc 50% 100%);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #themeToggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
@@ -613,10 +614,14 @@
     (function initTheme(){
       const saved = localStorage.getItem('h3-theme') || 'dark';
       document.documentElement.dataset.theme = saved;
+      // Set initial icon
+      $('themeToggle').textContent = saved === 'dark' ? '☀️' : '🌙';
       $('themeToggle').onclick = () => {
         const cur = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.dataset.theme = cur;
         localStorage.setItem('h3-theme', cur);
+        // Update icon when theme changes
+        $('themeToggle').textContent = cur === 'dark' ? '☀️' : '🌙';
       };
     })();
 
