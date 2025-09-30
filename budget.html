@@ -43,6 +43,22 @@
 
     /* ---- Base ---- */
     * { box-sizing: border-box; }
+/* ---- Custom scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--input);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
     html, body { height: 100%; }
     body {
       margin: 0;
@@ -119,6 +135,11 @@
       padding: 12px;
       box-shadow: var(--shadow);
     }
+.section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
     .section h2 {
       margin: 0 0 10px;
       font-size: 16px;
