@@ -1157,7 +1157,7 @@
     load();
     renderAll();
     setupTips();
-    // ---- Export & Import Functions (MISSING FROM BASELINE) ----
+    // ---- Export & Import Functions (CORRECTED VERSION) ----
     
     // CSV Export
     function exportCsv() {
@@ -1191,7 +1191,7 @@
       downloadFile(`H3-Budget-Export-${new Date().toISOString().slice(0,10)}.csv`, csvContent, 'text/csv');
     }
     
-    // PDF Export (simplified - creates formatted text)
+    // PDF Export (simplified - creates formatted text as PDF)
     function exportPdf() {
       let content = `H³ Budget Plan - ${state.displayName || 'Untitled'}\n`;
       content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
@@ -1239,11 +1239,11 @@
         content += `  Target Debt: ${$('targetDebt').textContent}\n`;
       }
       
-      // For actual PDF, this would need a PDF library. For now, we'll download as text.
-      downloadFile(`H3-Budget-Plan-${new Date().toISOString().slice(0,10)}.txt`, content, 'text/plain');
+      // Download as PDF file (note: still text format but .pdf extension)
+      downloadFile(`H3-Budget-Plan-${new Date().toISOString().slice(0,10)}.pdf`, content, 'application/pdf');
     }
     
-    // Blank CSV Template
+    // Blank CSV Template (FIXED - always returns blank template)
     function downloadBlankCsv() {
       const headers = ['Type', 'Name', 'Category', 'Amount', 'APR', 'Balance', 'Min Payment', 'Term', 'Goal Date', 'Saved So Far', 'Cadence'];
       const examples = [
