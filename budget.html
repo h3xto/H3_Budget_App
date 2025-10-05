@@ -1157,6 +1157,196 @@
     load();
     renderAll();
     setupTips();
+    // ---- Export & Import Functions (MISSING FROM BASELINE) ----
+    
+    // CSV Export
+    function exportCsv() {
+      const rows = [['Type', 'Name', 'Category', 'Amount', 'APR', 'Balance', 'Min Payment', 'Term', 'Goal Date', 'Saved So Far', 'Cadence']];
+      
+      if ($('incChk').checked) {
+        state.incomes.forEach(item => {
+          rows.push(['Income', item.name || '', '', item.amountPerPeriod || 0, '', '', '', '', '', '', '']);
+        });
+      }
+      
+      if ($('essChk').checked) {
+        state.essentials.forEach(item => {
+          rows.push(['Essential', item.name || '', item.category || 'General', item.amountMonthly || 0, '', '', '', '', '', '', item.cadenceMonths || 1]);
+        });
+      }
+      
+      if ($('debChk').checked) {
+        state.debts.forEach(item => {
+          rows.push(['Debt', item.name || '', item.category || 'General', '', item.apr || 0, item.balance || 0, item.min || 0, item.term || 0, '', '', '']);
+        });
+      }
+      
+      if ($('goaChk').checked) {
+        state.goals.forEach(item => {
+          rows.push(['Goal', item.name || '', '', item.goalAmt || 0, '', '', '', '', item.goalDate || '', item.goalNow || 0, '']);
+        });
+      }
+      
+      const csvContent = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      downloadFile(`H3-Budget-Export-${new Date().toISOString().slice(0,10)}.csv`, csvContent, 'text/csv');
+    }
+    
+    // PDF Export (simplified - creates formatted text)
+    function exportPdf() {
+      let content = `H³ Budget Plan - ${state.displayName || 'Untitled'}\n`;
+      content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+      
+      if ($('incChk').checked && state.incomes.length) {
+        content += 'INCOME:\n';
+        state.incomes.forEach(item => {
+          content += `  ${item.name}: ${fmtMoney(item.amountPerPeriod || 0)} per paycheck\n`;
+        });
+        content += `\n  Monthly Total: ${fmtMoney(totalIncomeMonthly())}\n\n`;
+      }
+      
+      if ($('essChk').checked && state.essentials.length) {
+        content += 'ESSENTIALS:\n';
+        state.essentials.forEach(item => {
+          const cadence = item.cadenceMonths === 1 ? '' : ` (${item.cadenceMonths} month cadence)`;
+          content += `  ${item.name} (${item.category}): ${fmtMoney(item.amountMonthly || 0)}${cadence}\n`;
+        });
+        content += `\n  Monthly Total: ${fmtMoney(totalEssentialsMonthly())}\n\n`;
+      }
+      
+      if ($('debChk').checked && state.debts.length) {
+        content += 'DEBTS:\n';
+        state.debts.forEach(item => {
+          content += `  ${item.name} (${item.category}): Balance ${fmtMoney(item.balance || 0)}, APR ${item.apr || 0}%, Min ${fmtMoney(item.min || 0)}\n`;
+        });
+        content += '\n';
+      }
+      
+      if ($('goaChk').checked && state.goals.length) {
+        content += 'GOALS:\n';
+        state.goals.forEach(item => {
+          content += `  ${item.name}: Target ${fmtMoney(item.goalAmt || 0)} by ${item.goalDate || 'TBD'}, Saved ${fmtMoney(item.goalNow || 0)}\n`;
+        });
+        content += '\n';
+      }
+      
+      if ($('sumChk').checked) {
+        content += 'SUMMARY:\n';
+        content += `  Monthly Income: ${$('incomeTotal').textContent}\n`;
+        content += `  Monthly Essentials: ${$('essentialsTotal').textContent}\n`;
+        content += `  Free Cash: ${$('extraPool').textContent}\n`;
+        content += `  Debt-to-Income: ${$('dti').textContent}\n`;
+        content += `  Strategy: ${state.strategy}\n`;
+        content += `  Target Debt: ${$('targetDebt').textContent}\n`;
+      }
+      
+      // For actual PDF, this would need a PDF library. For now, we'll download as text.
+      downloadFile(`H3-Budget-Plan-${new Date().toISOString().slice(0,10)}.txt`, content, 'text/plain');
+    }
+    
+    // Blank CSV Template
+    function downloadBlankCsv() {
+      const headers = ['Type', 'Name', 'Category', 'Amount', 'APR', 'Balance', 'Min Payment', 'Term', 'Goal Date', 'Saved So Far', 'Cadence'];
+      const examples = [
+        ['Income', 'Salary', '', '3000', '', '', '', '', '', '', ''],
+        ['Essential', 'Rent', 'Housing', '1200', '', '', '', '', '', '', '1'],
+        ['Essential', 'Car Insurance', 'Transportation', '120', '', '', '', '', '', '', '6'],
+        ['Debt', 'Credit Card', 'Credit Card', '', '18.5', '5000', '150', '', '', '', ''],
+        ['Goal', 'Emergency Fund', '', '10000', '', '', '', '', '2025-12-31', '2500', '']
+      ];
+      
+      const csvContent = [headers, ...examples].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      downloadFile('H3-Budget-Template.csv', csvContent, 'text/csv');
+    }
+    
+    // CSV Import
+    function importCsv(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const csv = e.target.result;
+          const lines = csv.split('\n').filter(line => line.trim());
+          const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+          
+          // Clear existing data (optional - you might want to append instead)
+          const shouldClear = confirm('Clear existing data and import from CSV? (Cancel to append to existing data)');
+          if (shouldClear) {
+            state.incomes = [];
+            state.essentials = [];
+            state.debts = [];
+            state.goals = [];
+          }
+          
+          for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
+            const type = values[0]?.toLowerCase();
+            
+            if (type === 'income') {
+              state.incomes.push({
+                name: values[1] || '',
+                amountPerPeriod: parseMoney(values[3]) || 0
+              });
+            } else if (type === 'essential') {
+              state.essentials.push({
+                name: values[1] || '',
+                category: values[2] || 'General',
+                amountMonthly: parseMoney(values[3]) || 0,
+                cadenceMonths: parseInt(values[10]) || 1
+              });
+            } else if (type === 'debt') {
+              state.debts.push({
+                name: values[1] || '',
+                category: values[2] || 'General',
+                apr: parseMoney(values[4]) || 0,
+                balance: parseMoney(values[5]) || 0,
+                min: parseMoney(values[6]) || 0,
+                term: parseInt(values[7]) || 0
+              });
+            } else if (type === 'goal') {
+              state.goals.push({
+                name: values[1] || '',
+                goalAmt: parseMoney(values[3]) || 0,
+                goalDate: values[8] || todayISO(),
+                goalNow: parseMoney(values[9]) || 0
+              });
+            }
+          }
+          
+          save();
+          renderAll();
+          $('importErrors').textContent = `Successfully imported ${lines.length - 1} items.`;
+          $('importErrors').style.color = 'var(--accent)';
+        } catch (err) {
+          $('importErrors').textContent = `Import error: ${err.message}`;
+          $('importErrors').style.color = 'var(--danger)';
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    // File download helper
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type: type });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+    
+    // Event Listeners for Export/Import buttons
+    $('exportCsv').addEventListener('click', exportCsv);
+    $('exportPdf').addEventListener('click', exportPdf);  
+    $('blankCsv').addEventListener('click', downloadBlankCsv);
+    $('importCsvInput').addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        importCsv(e.target.files[0]);
+        e.target.value = ''; // Reset file input
+      }
+    });
+
   </script>
 </body>
 </html>
